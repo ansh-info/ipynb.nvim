@@ -2,6 +2,41 @@
 
 <!-- version list -->
 
+## v1.1.6 (2026-03-28)
+
+### Bug Fixes
+
+- **lua**: Use file-based base64 decode, support macOS -D flag
+  ([#28](https://github.com/ansh-info/ipynb.nvim/pull/28),
+  [`106e516`](https://github.com/ansh-info/ipynb.nvim/commit/106e516022b5efad1c6ede3edc0888e872f105e5))
+
+- **lua**: Use file-based base64 decode, support macOS -D flag
+  ([`d000416`](https://github.com/ansh-info/ipynb.nvim/commit/d000416baf7a9c0d887d8194affe03df338fc600))
+
+### Documentation
+
+- **docs**: Add tmux allow-passthrough requirement for image rendering
+  ([#27](https://github.com/ansh-info/ipynb.nvim/pull/27),
+  [`9dcd508`](https://github.com/ansh-info/ipynb.nvim/commit/9dcd508c1823cfca8b37ad8e744a60c77116d72b))
+
+- **docs**: Add tmux allow-passthrough requirement for image rendering
+  ([`7b735b7`](https://github.com/ansh-info/ipynb.nvim/commit/7b735b79dca940ed626499e1bd024c1abf1933ce))
+
+- **docs**: Fix image.nvim luarocks install for macOS ImageMagick 7
+  ([#25](https://github.com/ansh-info/ipynb.nvim/pull/25),
+  [`6f1a2cf`](https://github.com/ansh-info/ipynb.nvim/commit/6f1a2cfec3549e7a98b6352da2917b557c8f979c))
+
+- **docs**: Fix image.nvim luarocks install for macOS ImageMagick 7
+  ([`85e6571`](https://github.com/ansh-info/ipynb.nvim/commit/85e6571a449ce18ae9d0aa9001364fa1f38829fc))
+
+- **docs**: Replace lua@5.1 with luajit for macOS magick install
+  ([#26](https://github.com/ansh-info/ipynb.nvim/pull/26),
+  [`5b9bb5c`](https://github.com/ansh-info/ipynb.nvim/commit/5b9bb5c7e3de3838c8411ce12577230fc37a6e58))
+
+- **docs**: Replace lua@5.1 with luajit for macOS magick install
+  ([`1e3c194`](https://github.com/ansh-info/ipynb.nvim/commit/1e3c19425c6e810194c9724c5b8848d59e899286))
+
+
 ## v1.1.5 (2026-03-28)
 
 ### Bug Fixes
