@@ -151,6 +151,17 @@ function M.open(path, bufnr)
 
   -- Mark buffer as not modified after initial load.
   vim.api.nvim_buf_set_option(bufnr, "modified", false)
+
+  -- Move cursor to line 1. BufReadCmd can trigger a shada position restore
+  -- via BufEnter autocmds after this handler returns, so defer until the
+  -- next event loop tick to ensure we win.
+  vim.schedule(function()
+    if not vim.api.nvim_buf_is_valid(bufnr) then return end
+    local win = vim.fn.bufwinid(bufnr)
+    if win ~= -1 then
+      vim.api.nvim_win_set_cursor(win, { 1, 0 })
+    end
+  end)
 end
 
 --- Save the current buffer as a .ipynb file.

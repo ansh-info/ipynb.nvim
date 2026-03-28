@@ -70,18 +70,38 @@ def _strip_ansi(text: str) -> str:
 def _venv_kernel_python() -> Optional[str]:
     """Return the Python from an active venv or conda env, if available.
 
-    When the user activates a venv before launching Neovim, $VIRTUAL_ENV (or
-    $CONDA_PREFIX) is set.  We use that Python for the kernel so that packages
-    installed in the venv (numpy, matplotlib, etc.) are visible in notebooks.
+    Checks $VIRTUAL_ENV and $CONDA_PREFIX.  Also verifies that ipykernel is
+    installed in the venv - without it the kernel process cannot launch.
+    If the venv is found but ipykernel is missing, emits an actionable error
+    and returns None so the default kernel spec is used as fallback.
     """
+    import subprocess as _sp
+
     for var in ("VIRTUAL_ENV", "CONDA_PREFIX"):
         prefix = os.environ.get(var)
         if not prefix:
             continue
         for rel in ("bin/python3", "bin/python"):
             path = os.path.join(prefix, rel)
-            if os.path.isfile(path) and os.access(path, os.X_OK):
-                return path
+            if not (os.path.isfile(path) and os.access(path, os.X_OK)):
+                continue
+            try:
+                r = _sp.run([path, "-c", "import ipykernel"],
+                            capture_output=True, timeout=5)
+                if r.returncode == 0:
+                    return path
+            except Exception:
+                pass
+            # ipykernel missing - warn and fall back to default kernel spec.
+            send({
+                "type": "error_internal",
+                "message": (
+                    f"Venv detected ({prefix}) but ipykernel is not installed. "
+                    "Run: uv pip install ipykernel  (or: pip install ipykernel). "
+                    "Falling back to system Python kernel."
+                ),
+            })
+            return None
     return None
 
 
@@ -234,11 +254,10 @@ def cmd_start(data: dict) -> None:
             km = KernelManager(kernel_name=kernel_name)
             venv_py = _venv_kernel_python()
             if venv_py:
-                # Replace argv[0] (the Python executable) with the venv Python
-                # so packages installed in the active venv are available.
-                ks_argv = list(km.kernel_spec.argv)
-                ks_argv[0] = venv_py
-                km.kernel_cmd = ks_argv
+                # Modify argv[0] in-place on the cached kernel spec object.
+                # kernel_cmd does not exist in jupyter_client 8.x; mutating
+                # kernel_spec.argv is the correct way to override the executable.
+                km.kernel_spec.argv[0] = venv_py
             km.start_kernel()
             kc = km.blocking_client()
             kc.start_channels()
