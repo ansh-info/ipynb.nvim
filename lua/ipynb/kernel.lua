@@ -1,4 +1,4 @@
---- jupytervim.kernel
+--- ipynb.kernel
 --- Manages the kernel_bridge.py subprocess per buffer and routes all
 --- Jupyter output messages to output.lua for rendering.
 ---
@@ -17,10 +17,10 @@
 ---     line_buf    : string,
 ---   }
 
-local config = require("jupytervim.config")
-local cell   = require("jupytervim.cell")
-local output = require("jupytervim.output")
-local utils  = require("jupytervim.utils")
+local config = require("ipynb.config")
+local cell   = require("ipynb.cell")
+local output = require("ipynb.output")
+local utils  = require("ipynb.utils")
 
 local M = {}
 
@@ -61,7 +61,7 @@ end
 --- Works for both local dev trees and lazy.nvim installs.
 ---@return string
 local function bridge_path()
-  -- debug.getinfo(1).source == "@/abs/path/lua/jupytervim/kernel.lua"
+  -- debug.getinfo(1).source == "@/abs/path/lua/ipynb/kernel.lua"
   local this_file = debug.getinfo(1, "S").source:sub(2)
   local root      = vim.fn.fnamemodify(this_file, ":h:h:h")
   return root .. "/python/kernel_bridge.py"
@@ -86,7 +86,7 @@ end
 local function send(bufnr, msg)
   local s = get_state(bufnr)
   if not s.job_id then
-    utils.warn("No kernel bridge running. Use :JupyterKernelStart.")
+    utils.warn("No kernel bridge running. Use :IpynbKernelStart.")
     return
   end
   vim.fn.chansend(s.job_id, vim.fn.json_encode(msg) .. "\n")
@@ -263,7 +263,7 @@ function M.start(bufnr, kernel_name)
   local cfg = config.get()
 
   if s.job_id then
-    utils.warn("Kernel already running. Use :JupyterKernelRestart to restart.")
+    utils.warn("Kernel already running. Use :IpynbKernelRestart to restart.")
     return
   end
 
@@ -353,7 +353,7 @@ function M.run_current_cell(bufnr)
       vim.defer_fn(_await_and_run, 500)
       return
     end
-    utils.warn("No kernel running. Use :JupyterKernelStart.")
+    utils.warn("No kernel running. Use :IpynbKernelStart.")
     return
   end
 

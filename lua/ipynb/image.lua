@@ -1,4 +1,4 @@
---- jupytervim.image
+--- ipynb.image
 --- Image rendering for cell output using image.nvim.
 ---
 --- image.nvim (github.com/3rd/image.nvim) is an optional dependency.
@@ -38,9 +38,9 @@ end
 --- Return true if image rendering is available and enabled.
 ---@return boolean
 function M.is_supported()
-  local cfg = require("jupytervim.config").get()
+  local cfg = require("ipynb.config").get()
   if not cfg.image.enabled then return false end
-  return require("jupytervim.utils").has_plugin("image")
+  return require("ipynb.utils").has_plugin("image")
 end
 
 -- ── Temp file helpers ─────────────────────────────────────────────────────────
@@ -114,9 +114,9 @@ function M.render(bufnr, cell_state, chunk, text_line_offset)
   local ok_api, image_api = pcall(require, "image")
   if not ok_api then return false end
 
-  local cfg  = require("jupytervim.config").get()
-  local cell = require("jupytervim.cell")
-  local utils = require("jupytervim.utils")
+  local cfg  = require("ipynb.config").get()
+  local cell = require("ipynb.cell")
+  local utils = require("ipynb.utils")
 
   -- Write image data to a temp file.
   local tmp, ext = chunk_to_tmp(chunk)
@@ -140,7 +140,7 @@ function M.render(bufnr, cell_state, chunk, text_line_offset)
 
   -- Build a unique id for this image instance.
   local key    = cell_key(bufnr, cell_state)
-  local img_id = "jupyvim_" .. key:gsub(":", "_") .. "_" .. tostring(os.time())
+  local img_id = "ipynb_" .. key:gsub(":", "_") .. "_" .. tostring(os.time())
 
   local img
   ok_api, img = pcall(image_api.from_file, tmp, {

@@ -1,4 +1,4 @@
---- jupytervim.utils
+--- ipynb.utils
 --- Shared helper utilities used across the plugin.
 
 local M = {}
@@ -7,7 +7,7 @@ local M = {}
 ---@param msg string
 ---@param level integer  vim.log.levels.*
 function M.log(msg, level)
-  vim.notify("[jupytervim] " .. msg, level or vim.log.levels.INFO)
+  vim.notify("[ipynb] " .. msg, level or vim.log.levels.INFO)
 end
 
 function M.warn(msg)  M.log(msg, vim.log.levels.WARN)  end

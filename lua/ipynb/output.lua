@@ -1,4 +1,4 @@
---- jupytervim.output
+--- ipynb.output
 --- Converts raw Jupyter output chunks into Neovim virt_lines and renders
 --- them below the cell that produced them.
 ---
@@ -14,22 +14,22 @@
 ---   output.clear(bufnr, cell_state)            -- wipe all output for a cell
 ---   output.get_chunks(cell_key)                -- return accumulated chunk list
 
-local config = require("jupytervim.config")
-local cell   = require("jupytervim.cell")
+local config = require("ipynb.config")
+local cell   = require("ipynb.cell")
 
 local M = {}
 
 -- ── Highlight groups ──────────────────────────────────────────────────────────
 -- Defined in cell.lua define_highlights(); referenced by name here.
 local HL = {
-  text    = "JupyterOutputText",
-  result  = "JupyterOutputResult",
-  error   = "JupyterOutputError",
-  trace   = "JupyterOutputErrorTrace",
+  text    = "IpynbOutputText",
+  result  = "IpynbOutputResult",
+  error   = "IpynbOutputError",
+  trace   = "IpynbOutputErrorTrace",
   stderr  = "DiagnosticWarn",
-  divider = "JupyterCellBorder",
-  meta    = "JupyterOutputMeta",
-  image   = "JupyterOutputMeta",
+  divider = "IpynbCellBorder",
+  meta    = "IpynbOutputMeta",
+  image   = "IpynbOutputMeta",
 }
 
 -- ── Per-cell output accumulator ───────────────────────────────────────────────
@@ -55,7 +55,7 @@ end
 function M.clear(bufnr, cell_state)
   _store[cell_key(bufnr, cell_state)] = nil
   cell.clear_output(bufnr, cell_state)
-  local ok, image = pcall(require, "jupytervim.image")
+  local ok, image = pcall(require, "ipynb.image")
   if ok then image.clear(bufnr, cell_state) end
 end
 
@@ -131,7 +131,7 @@ local function chunk_to_virt_lines(chunk, max_lines)
     -- image.lua handles actual rendering; return empty here so the image
     -- chunks are tracked in the store but don't produce duplicate text lines.
     -- A placeholder is returned only when image.nvim is unavailable.
-    local ok, image = pcall(require, "jupytervim.image")
+    local ok, image = pcall(require, "ipynb.image")
     if ok and image.is_supported() then
       return {}   -- image.lua renders it; no text virt_line needed
     end
@@ -177,7 +177,7 @@ function M._render(bufnr, cell_state)
     return
   end
 
-  local ok_img, image = pcall(require, "jupytervim.image")
+  local ok_img, image = pcall(require, "ipynb.image")
   local img_supported  = ok_img and image.is_supported()
 
   local all_vl    = {}     -- text virt_lines

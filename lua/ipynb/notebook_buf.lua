@@ -1,4 +1,4 @@
---- jupytervim.notebook_buf
+--- ipynb.notebook_buf
 --- Buffer lifecycle manager: ties together notebook.lua (I/O) and
 --- cell.lua (rendering/extmarks) for a specific buffer.
 ---
@@ -8,15 +8,15 @@
 ---   - Buffer option setup (filetype, conceallevel, etc.)
 ---   - Auto-save after cell execution (if configured)
 
-local notebook = require("jupytervim.notebook")
-local cell     = require("jupytervim.cell")
-local keymaps  = require("jupytervim.keymaps")
-local config   = require("jupytervim.config")
-local utils    = require("jupytervim.utils")
+local notebook = require("ipynb.notebook")
+local cell     = require("ipynb.cell")
+local keymaps  = require("ipynb.keymaps")
+local config   = require("ipynb.config")
+local utils    = require("ipynb.utils")
 
 local M = {}
 
--- Track which buffers jupytervim has already initialised.
+-- Track which buffers ipynb has already initialised.
 local managed = {}
 
 -- ── Buffer setup ──────────────────────────────────────────────────────────────
@@ -44,9 +44,9 @@ end
 local function set_buf_name(bufnr, path)
   local short = vim.fn.fnamemodify(path, ":t")
   vim.api.nvim_buf_set_name(bufnr, path)
-  -- The statusline can read b:jupyter_name for a custom display.
-  vim.api.nvim_buf_set_var(bufnr, "jupyter_name", short)
-  vim.api.nvim_buf_set_var(bufnr, "jupyter_path", path)
+  -- The statusline can read b:ipynb_name for a custom display.
+  vim.api.nvim_buf_set_var(bufnr, "ipynb_name", short)
+  vim.api.nvim_buf_set_var(bufnr, "ipynb_path", path)
 end
 
 -- ── Sync: buffer → notebook model ────────────────────────────────────────────
@@ -101,12 +101,12 @@ function M.open(path, bufnr)
   keymaps.attach(bufnr)
 
   -- Attach kernel completions (omnifunc + optional nvim-cmp source).
-  local ok_cmp, completion = pcall(require, "jupytervim.completion")
+  local ok_cmp, completion = pcall(require, "ipynb.completion")
   if ok_cmp then completion.attach(bufnr) end
 
   -- Register inspector keymap.
   vim.keymap.set("n", "<leader>ji", function()
-    require("jupytervim.inspector").open(bufnr)
+    require("ipynb.inspector").open(bufnr)
   end, { buffer = bufnr, silent = true, desc = "Jupyter: variable inspector" })
 
   -- Auto-clean state on buffer wipe.
@@ -116,7 +116,7 @@ function M.open(path, bufnr)
     callback = function()
       cell.on_buf_delete(bufnr)
       -- Stop kernel bridge if one is running for this buffer.
-      local ok, kernel = pcall(require, "jupytervim.kernel")
+      local ok, kernel = pcall(require, "ipynb.kernel")
       if ok then kernel.on_buf_delete(bufnr) end
       managed[bufnr] = nil
     end,
@@ -137,7 +137,7 @@ function M.open(path, bufnr)
   -- rendered before the kernel subprocess is spawned.
   if config.get().kernel.auto_start then
     vim.schedule(function()
-      local ok, kernel = pcall(require, "jupytervim.kernel")
+      local ok, kernel = pcall(require, "ipynb.kernel")
       if ok then kernel.start(bufnr, nil) end
     end)
   end
@@ -172,7 +172,7 @@ function M.save(bufnr)
   end
 end
 
---- Return true if the buffer is managed by jupytervim.
+--- Return true if the buffer is managed by ipynb.
 ---@param bufnr integer
 ---@return boolean
 function M.is_managed(bufnr)
