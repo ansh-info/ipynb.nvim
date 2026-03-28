@@ -139,6 +139,43 @@ function M.open(path, bufnr)
     end,
   })
 
+  -- Re-render images when the viewport scrolls so that:
+  --   a) images follow the cell as it moves on screen (fixes flicker), and
+  --   b) images whose initial render failed because the output was off-screen
+  --      get a second chance once the user scrolls them into view.
+  local ok_img = pcall(require, "ipynb.image")
+  if ok_img then
+    local scroll_timer = nil
+
+    vim.api.nvim_create_autocmd("WinScrolled", {
+      buffer   = bufnr,
+      callback = function()
+        if scroll_timer then
+          scroll_timer:stop()
+        else
+          scroll_timer = vim.loop.new_timer()
+        end
+        scroll_timer:start(80, 0, vim.schedule_wrap(function()
+          if not vim.api.nvim_buf_is_valid(bufnr) then return end
+          local ok2, image = pcall(require, "ipynb.image")
+          if ok2 then image.rerender_all(bufnr) end
+        end))
+      end,
+    })
+
+    vim.api.nvim_create_autocmd("BufDelete", {
+      buffer   = bufnr,
+      once     = true,
+      callback = function()
+        if scroll_timer then
+          scroll_timer:stop()
+          scroll_timer:close()
+          scroll_timer = nil
+        end
+      end,
+    })
+  end
+
   -- Auto-start the kernel immediately so it is ready by the time the user
   -- first presses <leader>r.  Use vim.schedule so the buffer is fully
   -- rendered before the kernel subprocess is spawned.
