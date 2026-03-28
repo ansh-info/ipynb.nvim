@@ -46,6 +46,12 @@ brew install luarocks imagemagick luajit
 luarocks --local --lua-dir=$(brew --prefix luajit) --lua-version=5.1 install magick
 ```
 
+```bash
+# Linux (Debian/Ubuntu)
+sudo apt install luarocks libmagickwand-dev
+luarocks --local --lua-version=5.1 install magick
+```
+
 **Optional - richer markdown cells**
 
 - [render-markdown.nvim](https://github.com/MeanderingProgrammer/render-markdown.nvim)
