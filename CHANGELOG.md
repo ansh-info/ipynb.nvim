@@ -2,6 +2,38 @@
 
 <!-- version list -->
 
+## v1.1.11 (2026-03-28)
+
+### Bug Fixes
+
+- Re-anchor cell borders after typing or pasting
+  ([#38](https://github.com/ansh-info/ipynb.nvim/pull/38),
+  [`d2fb4ae`](https://github.com/ansh-info/ipynb.nvim/commit/d2fb4ae0ff7caabc274207037d103390752d427c))
+
+- **lua**: Add reanchor_end_marks to fix cell border after o/paste
+  ([#38](https://github.com/ansh-info/ipynb.nvim/pull/38),
+  [`d2fb4ae`](https://github.com/ansh-info/ipynb.nvim/commit/d2fb4ae0ff7caabc274207037d103390752d427c))
+
+- **lua**: Add reanchor_end_marks to fix cell border after o/paste
+  ([`c984b21`](https://github.com/ansh-info/ipynb.nvim/commit/c984b21dfbc84f7c8da883fea20bfd388eb4a2f9))
+
+- **lua**: Call reanchor_end_marks on InsertLeave and TextChanged
+  ([#38](https://github.com/ansh-info/ipynb.nvim/pull/38),
+  [`d2fb4ae`](https://github.com/ansh-info/ipynb.nvim/commit/d2fb4ae0ff7caabc274207037d103390752d427c))
+
+- **lua**: Call reanchor_end_marks on InsertLeave and TextChanged
+  ([`74f58f7`](https://github.com/ansh-info/ipynb.nvim/commit/74f58f7ed326502e3d5fa935cec006edfdd490c9))
+
+### Documentation
+
+- **docs**: Remove Testing locally section from CLAUDE.md
+  ([#39](https://github.com/ansh-info/ipynb.nvim/pull/39),
+  [`cee4b4f`](https://github.com/ansh-info/ipynb.nvim/commit/cee4b4f44cf89297e91846666eb4eed0fdcf899d))
+
+- **docs**: Remove Testing locally section from CLAUDE.md
+  ([`f19cf3d`](https://github.com/ansh-info/ipynb.nvim/commit/f19cf3d27baa883bc3713d37ae49a29052a32a02))
+
+
 ## v1.1.10 (2026-03-28)
 
 ### Bug Fixes
