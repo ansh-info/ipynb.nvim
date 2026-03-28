@@ -31,10 +31,17 @@ rendering, full Vim modal editing, live kernel execution, and inline output.
 - Python >= 3.12
 - [uv](https://github.com/astral-sh/uv) (recommended) or python3 (built-in venv fallback)
 
-**Optional - image rendering**
+**Optional - image rendering** (matplotlib plots, inline PNG/JPEG)
 
 - [3rd/image.nvim](https://github.com/3rd/image.nvim)
-- Kitty, Ghostty, or WezTerm terminal (Kitty graphics protocol), or `ueberzugpp`
+- Kitty, Ghostty, or WezTerm terminal (Kitty graphics protocol), or `ueberzugpp` for others
+- `luarocks` + `magick` luarock + `imagemagick` system library (required by image.nvim)
+
+```bash
+# macOS
+brew install luarocks imagemagick
+luarocks --local install magick 1.0.0-1
+```
 
 **Optional - richer markdown cells**
 
@@ -74,6 +81,14 @@ return {
 **With optional dependencies:**
 
 ```lua
+-- Add this to your init.lua BEFORE the lazy.nvim setup call.
+-- It lets Neovim find the magick luarock installed with luarocks --local.
+package.path = package.path
+  .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/?/init.lua"
+  .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/?.lua"
+```
+
+```lua
 return {
   {
     "ansh-info/ipynb.nvim",
@@ -81,7 +96,16 @@ return {
     build = "uv sync --project python/ || (python3 -m venv python/.venv && python/.venv/bin/pip install ./python/)",
     dependencies = {
       "nvim-treesitter/nvim-treesitter",
-      { "3rd/image.nvim", opts = {} },
+      {
+        "3rd/image.nvim",
+        build = "luarocks --local install magick 1.0.0-1",
+        opts = {
+          backend = "kitty",              -- "kitty" for Kitty/Ghostty/WezTerm
+          -- backend = "ueberzugpp",      -- for iTerm2 / other terminals
+          kitty_method = "normal",
+          max_height_window_percentage = 50,
+        },
+      },
       { "MeanderingProgrammer/render-markdown.nvim", opts = {} },
       { "hrsh7th/nvim-cmp" },
     },
@@ -89,6 +113,10 @@ return {
   },
 }
 ```
+
+> **Note:** Without the `package.path` addition, Neovim cannot find the `magick`
+> luarock even after installing it. Plots will show
+> `[png image - install image.nvim for rendering]` until this is in place.
 
 ### packer.nvim
 
