@@ -93,6 +93,12 @@ function M.setup()
     if idx then cell_mod.delete_cell(bufnr, idx) end
   end, { desc = "Delete the cell under the cursor" })
 
+  -- ── Inspector ──────────────────────────────────────────────────────────
+
+  vim.api.nvim_create_user_command("JupyterInspect", function()
+    require("jupytervim.inspector").open(vim.api.nvim_get_current_buf())
+  end, { desc = "Open variable inspector for the current notebook" })
+
   -- ── Misc ───────────────────────────────────────────────────────────────
 
   vim.api.nvim_create_user_command("JupyterHelp", function()
