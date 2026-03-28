@@ -470,7 +470,8 @@ function M.update_status(bufnr, cell_state, status, elapsed_ms)
   local win_width = vim.api.nvim_win_get_width(0)
   local bot_vl = bottom_border(status, elapsed_ms, win_width)
 
-  vim.api.nvim_buf_set_extmark(bufnr, NS, 0, 0, {
+  local _, e = cell_line_range(bufnr, cell_state)
+  vim.api.nvim_buf_set_extmark(bufnr, NS, e, 0, {
     id               = cell_state.end_mark,
     virt_lines       = { bot_vl },
     virt_lines_above = false,
