@@ -2,6 +2,52 @@
 
 <!-- version list -->
 
+## v1.1.2 (2026-03-28)
+
+### Bug Fixes
+
+- Cursor at bottom on open, venv ipykernel check
+  ([#18](https://github.com/ansh-info/ipynb.nvim/pull/18),
+  [`7b5ee7d`](https://github.com/ansh-info/ipynb.nvim/commit/7b5ee7d873c2a664b7ac589fae3ff15109208575))
+
+- **lua**: Reset cursor to line 1 after notebook opens
+  ([#18](https://github.com/ansh-info/ipynb.nvim/pull/18),
+  [`7b5ee7d`](https://github.com/ansh-info/ipynb.nvim/commit/7b5ee7d873c2a664b7ac589fae3ff15109208575))
+
+- **lua**: Reset cursor to line 1 after notebook opens
+  ([`583229a`](https://github.com/ansh-info/ipynb.nvim/commit/583229a47366ee3c1d659774fb3c409170b68750))
+
+- **python**: Use kernel_spec.argv[0] mutation to set venv Python
+  ([#18](https://github.com/ansh-info/ipynb.nvim/pull/18),
+  [`7b5ee7d`](https://github.com/ansh-info/ipynb.nvim/commit/7b5ee7d873c2a664b7ac589fae3ff15109208575))
+
+- **python**: Use kernel_spec.argv[0] mutation to set venv Python
+  ([`c44a0f7`](https://github.com/ansh-info/ipynb.nvim/commit/c44a0f735a7443954d5a3e09534670037f4c9a90))
+
+- **python**: Verify ipykernel in venv before using it as kernel Python
+  ([#18](https://github.com/ansh-info/ipynb.nvim/pull/18),
+  [`7b5ee7d`](https://github.com/ansh-info/ipynb.nvim/commit/7b5ee7d873c2a664b7ac589fae3ff15109208575))
+
+- **python**: Verify ipykernel in venv before using it as kernel Python
+  ([`458a50a`](https://github.com/ansh-info/ipynb.nvim/commit/458a50ab2a34a8ae794e809ef166019568d6e633))
+
+### Documentation
+
+- **docs**: Add pre-commit testing checklist and review process
+  ([#18](https://github.com/ansh-info/ipynb.nvim/pull/18),
+  [`7b5ee7d`](https://github.com/ansh-info/ipynb.nvim/commit/7b5ee7d873c2a664b7ac589fae3ff15109208575))
+
+- **docs**: Add pre-commit testing checklist and review process
+  ([`8d436f2`](https://github.com/ansh-info/ipynb.nvim/commit/8d436f23a2ad8d3edae07287f02eb44eb72c791a))
+
+- **docs**: Document project venv setup for numpy/matplotlib in README
+  ([#18](https://github.com/ansh-info/ipynb.nvim/pull/18),
+  [`7b5ee7d`](https://github.com/ansh-info/ipynb.nvim/commit/7b5ee7d873c2a664b7ac589fae3ff15109208575))
+
+- **docs**: Document project venv setup for numpy/matplotlib in README
+  ([`b11aead`](https://github.com/ansh-info/ipynb.nvim/commit/b11aead0eeaa4c0c0ae9476ce9a9ded144fb2137))
+
+
 ## v1.1.1 (2026-03-28)
 
 ### Bug Fixes
