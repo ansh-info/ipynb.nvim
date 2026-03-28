@@ -51,7 +51,7 @@ rendering, full Vim modal editing, live kernel execution, and inline output.
 {
   "ansh-info/jupytervim",
   lazy = false,
-  build = "uv sync --project python/ || pip3 install ./python/",
+  build = "uv sync --project python/ || (python3 -m venv python/.venv && python/.venv/bin/pip install ./python/)",
   dependencies = {
     "nvim-treesitter/nvim-treesitter",
   },
@@ -63,9 +63,10 @@ rendering, full Vim modal editing, live kernel execution, and inline output.
 > so it can intercept `.ipynb` files via `BufReadCmd`.
 
 > The `build` hook installs the Python kernel bridge dependencies
-> (`jupyter_client`, `ipykernel`, `nbformat`) on first install and on updates.
-> It tries `uv` first for an isolated venv; falls back to `pip3` if `uv` is not
-> installed. Run `:Lazy build jupytervim` to re-run it manually if needed.
+> (`jupyter_client`, `ipykernel`, `nbformat`) into an isolated venv at
+> `python/.venv/`. It tries `uv` first; if `uv` is not installed it falls back
+> to the standard `python3 -m venv`. Run `:Lazy build jupytervim` to re-run it
+> manually after updates.
 
 **With optional dependencies:**
 
@@ -73,7 +74,7 @@ rendering, full Vim modal editing, live kernel execution, and inline output.
 {
   "ansh-info/jupytervim",
   lazy = false,
-  build = "uv sync --project python/ || pip3 install ./python/",
+  build = "uv sync --project python/ || (python3 -m venv python/.venv && python/.venv/bin/pip install ./python/)",
   dependencies = {
     "nvim-treesitter/nvim-treesitter",
     { "3rd/image.nvim", opts = {} },
