@@ -1,4 +1,4 @@
-# CLAUDE.md — jupytervim
+# CLAUDE.md - jupytervim
 
 Project-specific instructions for Claude Code. Read this before touching any file.
 
@@ -11,7 +11,7 @@ Neovim with Google Colab-style cell rendering, full Vim modal editing, Jupyter
 kernel execution via ZMQ, inline text/image output, and a variable inspector.
 
 **All four development phases are complete.** Future work is bug-fixing, testing,
-and polish — not new phases.
+and polish - not new phases.
 
 ---
 
@@ -23,7 +23,7 @@ jupytervim/
 │   ├── init.lua          # Entry point: setup(), BufReadCmd/BufWriteCmd autocmds
 │   ├── config.lua        # Typed defaults + user deep-merge (JupytervimConfig)
 │   ├── utils.lua         # log/warn/err, read_file/write_file, uid, has_plugin
-│   ├── notebook.lua      # .ipynb parse / serialise — nbformat 3 & 4
+│   ├── notebook.lua      # .ipynb parse / serialise - nbformat 3 & 4
 │   ├── notebook_buf.lua  # Buffer lifecycle: open, save, sync, cleanup hooks
 │   ├── cell.lua          # Cell rendering (extmarks), navigation, add/delete
 │   ├── keymaps.lua       # Buffer-local keymaps + floating help overlay
@@ -35,8 +35,8 @@ jupytervim/
 │   ├── completion.lua    # omnifunc + nvim-cmp async source
 │   └── inspector.lua     # Variable inspector floating window
 ├── python/
-│   ├── pyproject.toml    # uv project, Python >=3.12 — runtime deps
-│   ├── uv.lock           # Reproducible lockfile — always commit alongside toml
+│   ├── pyproject.toml    # uv project, Python >=3.12 - runtime deps
+│   ├── uv.lock           # Reproducible lockfile - always commit alongside toml
 │   └── kernel_bridge.py  # Full ZMQ ↔ JSON-line stdio daemon
 ├── plugin/
 │   └── jupytervim.lua    # Auto-setup shim (sets guard flag)
@@ -53,7 +53,7 @@ jupytervim/
 
 ---
 
-## Development phases — all complete
+## Development phases - all complete
 
 | Phase | Status | Scope |
 |---|---|---|
@@ -64,10 +64,10 @@ jupytervim/
 
 ---
 
-## Python tooling — uv (for development)
+## Python tooling - uv (for development)
 
 Always use uv for development. The end-user build hook falls back to
-`python3 -m venv` when uv is absent — but never use that fallback yourself.
+`python3 -m venv` when uv is absent - but never use that fallback yourself.
 
 ```bash
 # Sync / install all dependencies
@@ -82,19 +82,27 @@ uv add --project python/ --dev <package>
 # Run a script inside the venv without activating it
 uv run --project python/ python python/kernel_bridge.py
 
-# The venv lives at python/.venv/ — it is gitignored
+# The venv lives at python/.venv/ - it is gitignored
 ```
 
 `pyproject.toml` is at `python/pyproject.toml`. Python version pin: **>=3.12**.
 After `uv add`, always commit both `python/pyproject.toml` and `python/uv.lock`
 as **separate commits** (toml first, then lockfile).
 
-There is also a root-level `pyproject.toml` and `uv.lock` — these are for
+There is also a root-level `pyproject.toml` and `uv.lock` - these are for
 `python-semantic-release` (dev tooling only, not the kernel bridge).
 
 ---
 
-## Git workflow — mandatory rules
+## Writing style - mandatory rules
+
+### No em or en dashes
+Never use em dashes (—) or en dashes (–) anywhere — in docs, comments, or commit
+messages. Use a regular hyphen (-) instead.
+
+---
+
+## Git workflow - mandatory rules
 
 ### One file per commit
 Every commit must contain **exactly one file**. No exceptions.
@@ -134,7 +142,7 @@ Scopes: `lua`, `python`, `plugin`, `docs`, `config`
 
 ---
 
-## Architecture decisions — do not change without discussion
+## Architecture decisions - do not change without discussion
 
 ### Extmark-only rendering
 All cell borders, status indicators, and output blocks are rendered via
@@ -144,7 +152,7 @@ Never insert decorations or output as real buffer lines.
 ### JSON-line stdio daemon (not pynvim)
 `kernel_bridge.py` is spawned by `vim.fn.jobstart()` and communicates via
 newline-delimited JSON on stdin/stdout. Do not switch to pynvim remote plugin
-architecture — the stdio model is simpler and avoids registration overhead.
+architecture - the stdio model is simpler and avoids registration overhead.
 
 ### ZMQ → Lua msg_id translation in the bridge
 `kernel_bridge.py` maintains a `_pending` dict mapping ZMQ msg_ids → Lua msg_ids
@@ -153,7 +161,7 @@ internally. All messages emitted to stdout carry the original Lua `msg_id` so
 
 ### image.nvim delegation
 All image rendering goes through `image.nvim`. Do not write raw Kitty escape
-sequences in Lua — `image.nvim` handles Kitty / ueberzugpp / sixel backends
+sequences in Lua - `image.nvim` handles Kitty / ueberzugpp / sixel backends
 transparently.
 
 ### pcall guard on phase-gated modules
@@ -200,7 +208,7 @@ vim.wait(timeout_ms, predicate, interval_ms)
 ## Testing locally
 
 ```bash
-# lazy.nvim dev mode — add to your Neovim config:
+# lazy.nvim dev mode - add to your Neovim config:
 { dir = "/home/oneai/jupytervim", lazy = false }
 
 # Open a notebook
@@ -220,7 +228,7 @@ uv run --project python/ python python/kernel_bridge.py
 ## What to do at the start of each session
 
 1. Read this file.
-2. Run `git log --oneline` and `git status` — branch should be `feature/jupyter-notebook-plugin`, clean.
-3. All phases are complete — focus is on bug reports, tests, or polish.
+2. Run `git log --oneline` and `git status` - branch should be `feature/jupyter-notebook-plugin`, clean.
+3. All phases are complete - focus is on bug reports, tests, or polish.
 4. If adding a new feature: Python first → Lua → docs, one file per commit.
 5. If fixing a bug: read the affected module, understand the design, minimal fix.
