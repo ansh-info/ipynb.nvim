@@ -181,16 +181,14 @@ function M._render(bufnr, cell_state)
   local img_supported  = ok_img and image.is_supported()
 
   local all_vl    = {}     -- text virt_lines
-  -- Image chunks with the text line count at the point they appear.
-  local img_queue = {}
+  local img_queue = {}    -- image chunks to render after text virt_lines are placed
 
   -- Top divider.
   all_vl[#all_vl + 1] = divider()
 
   for i, chunk in ipairs(chunks) do
     if chunk.type == "image" and img_supported then
-      -- Record image with the current text line count as offset.
-      img_queue[#img_queue + 1] = { chunk = chunk, offset = #all_vl }
+      img_queue[#img_queue + 1] = chunk
     else
       local vl = chunk_to_virt_lines(chunk, max_lines)
       for _, line in ipairs(vl) do
@@ -212,8 +210,8 @@ function M._render(bufnr, cell_state)
     -- 2. Clear old images then render new ones below the text block.
     if ok_img then
       image.clear(bufnr, cell_state)
-      for _, entry in ipairs(img_queue) do
-        image.render(bufnr, cell_state, entry.chunk, entry.offset)
+      for _, chunk in ipairs(img_queue) do
+        image.render(bufnr, cell_state, chunk)
       end
     end
   end)
