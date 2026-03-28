@@ -52,13 +52,21 @@ end
 ---@return string|nil path
 local function write_b64_to_tmp(b64, ext)
   local tmp = vim.fn.tempname() .. "." .. ext
-  -- Use the system base64 utility — reliable across platforms.
+  -- Write the base64 payload to an intermediate file so we avoid shell
+  -- argument-length limits (large plots can exceed ARG_MAX on some systems).
+  local b64_tmp = vim.fn.tempname() .. ".b64"
+  local f = io.open(b64_tmp, "w")
+  if not f then return nil end
+  f:write(b64)
+  f:close()
+  -- macOS base64 uses -D for decode; Linux uses -d.  Try both.
   local cmd = string.format(
-    "printf '%%s' %s | base64 -d > %s",
-    vim.fn.shellescape(b64),
-    vim.fn.shellescape(tmp)
+    "base64 -d < %s > %s 2>/dev/null || base64 -D < %s > %s 2>/dev/null",
+    vim.fn.shellescape(b64_tmp), vim.fn.shellescape(tmp),
+    vim.fn.shellescape(b64_tmp), vim.fn.shellescape(tmp)
   )
   vim.fn.system(cmd)
+  os.remove(b64_tmp)
   if vim.fn.filereadable(tmp) == 1 and vim.fn.getfsize(tmp) > 0 then
     return tmp
   end
