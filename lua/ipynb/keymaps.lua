@@ -1,9 +1,9 @@
---- jupytervim.keymaps
+--- ipynb.keymaps
 --- Default buffer-local keymaps installed when a .ipynb file is opened.
 --- All mappings are buffer-local so they don't leak into other buffers.
 
-local config = require("jupytervim.config")
-local utils  = require("jupytervim.utils")
+local config = require("ipynb.config")
+local utils  = require("ipynb.utils")
 
 local M = {}
 
@@ -23,17 +23,17 @@ function M.attach(bufnr)
 
   -- ── Cell navigation ────────────────────────────────────────────────────
   map("n", km.next_cell, function()
-    require("jupytervim.cell").goto_next_cell(bufnr)
+    require("ipynb.cell").goto_next_cell(bufnr)
   end, "Jupyter: next cell")
 
   map("n", km.prev_cell, function()
-    require("jupytervim.cell").goto_prev_cell(bufnr)
+    require("ipynb.cell").goto_prev_cell(bufnr)
   end, "Jupyter: previous cell")
 
   -- ── Cell execution ─────────────────────────────────────────────────────
   map({ "n", "i" }, km.run_cell, function()
     -- Defer to kernel module (loaded in Phase 2).
-    local ok, kernel = pcall(require, "jupytervim.kernel")
+    local ok, kernel = pcall(require, "ipynb.kernel")
     if ok then
       kernel.run_current_cell(bufnr)
     else
@@ -42,36 +42,36 @@ function M.attach(bufnr)
   end, "Jupyter: run current cell")
 
   map("n", km.run_all_above, function()
-    local ok, kernel = pcall(require, "jupytervim.kernel")
+    local ok, kernel = pcall(require, "ipynb.kernel")
     if ok then kernel.run_all_above(bufnr) end
   end, "Jupyter: run all cells above")
 
   map("n", km.run_all_below, function()
-    local ok, kernel = pcall(require, "jupytervim.kernel")
+    local ok, kernel = pcall(require, "ipynb.kernel")
     if ok then kernel.run_all_below(bufnr) end
   end, "Jupyter: run all cells below cursor")
 
   -- ── Kernel control ─────────────────────────────────────────────────────
   map("n", km.interrupt_kernel, function()
-    local ok, kernel = pcall(require, "jupytervim.kernel")
+    local ok, kernel = pcall(require, "ipynb.kernel")
     if ok then kernel.interrupt(bufnr) end
   end, "Jupyter: interrupt kernel")
 
   -- ── Cell editing ───────────────────────────────────────────────────────
   map("n", km.add_cell_below, function()
-    local cell_mod = require("jupytervim.cell")
+    local cell_mod = require("ipynb.cell")
     local _, idx = cell_mod.cell_at_cursor(bufnr)
     if idx then cell_mod.add_cell_below(bufnr, idx) end
   end, "Jupyter: add cell below")
 
   map("n", km.add_cell_above, function()
-    local cell_mod = require("jupytervim.cell")
+    local cell_mod = require("ipynb.cell")
     local _, idx = cell_mod.cell_at_cursor(bufnr)
     if idx then cell_mod.add_cell_above(bufnr, idx) end
   end, "Jupyter: add cell above")
 
   map("n", km.delete_cell, function()
-    local cell_mod = require("jupytervim.cell")
+    local cell_mod = require("ipynb.cell")
     local _, idx = cell_mod.cell_at_cursor(bufnr)
     if idx then cell_mod.delete_cell(bufnr, idx) end
   end, "Jupyter: delete current cell")
@@ -79,12 +79,12 @@ function M.attach(bufnr)
   -- ── Save ───────────────────────────────────────────────────────────────
   -- Override :w so it saves back to .ipynb format.
   map("n", "<leader>w", function()
-    require("jupytervim.notebook_buf").save(bufnr)
+    require("ipynb.notebook_buf").save(bufnr)
   end, "Jupyter: save notebook")
 
   -- Also hook ZZ / :wq equivalents through the same path.
-  vim.api.nvim_buf_create_user_command(bufnr, "JupyterSave", function()
-    require("jupytervim.notebook_buf").save(bufnr)
+  vim.api.nvim_buf_create_user_command(bufnr, "IpynbSave", function()
+    require("ipynb.notebook_buf").save(bufnr)
   end, { desc = "Save Jupyter notebook to disk" })
 
   -- ── Help overlay ───────────────────────────────────────────────────────
@@ -99,7 +99,7 @@ function M.show_help()
   local km  = cfg.keymaps
 
   local lines = {
-    " jupytervim — keymaps ",
+    " ipynb — keymaps ",
     string.rep("─", 40),
     "",
     "  Navigation",

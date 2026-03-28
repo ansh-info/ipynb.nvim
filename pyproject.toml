@@ -1,5 +1,5 @@
 [project]
-name = "jupytervim"
+name = "ipynb"
 version = "1.0.3"
 description = "Neovim plugin for editing Jupyter notebooks natively with kernel execution and inline output"
 readme = "README.md"

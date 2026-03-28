@@ -1,4 +1,4 @@
---- jupytervim.cell
+--- ipynb.cell
 --- Cell lifecycle: render cells into a buffer, anchor them with extmarks,
 --- and expose mutation helpers (add, delete, split, merge).
 ---
@@ -24,13 +24,13 @@
 ---     bufnr          : integer,
 ---   }
 
-local config   = require("jupytervim.config")
-local utils    = require("jupytervim.utils")
+local config   = require("ipynb.config")
+local utils    = require("ipynb.utils")
 
 local M = {}
 
 -- Namespace for all cell-related extmarks.
-local NS = vim.api.nvim_create_namespace("jupytervim_cells")
+local NS = vim.api.nvim_create_namespace("ipynb_cells")
 
 -- ── Highlight groups (defined once on first load) ─────────────────────────────
 
@@ -40,25 +40,25 @@ local function define_highlights()
   hl_defined = true
 
   -- Cell border colours.
-  vim.api.nvim_set_hl(0, "JupyterCellBorder",       { fg = "#4a9eff", bold = true })
-  vim.api.nvim_set_hl(0, "JupyterCellBorderMd",     { fg = "#f9c74f", bold = true })
-  vim.api.nvim_set_hl(0, "JupyterCellBorderRaw",    { fg = "#aaaaaa"              })
-  vim.api.nvim_set_hl(0, "JupyterCellTag",          { fg = "#a0c4ff", italic = true })
+  vim.api.nvim_set_hl(0, "IpynbCellBorder",       { fg = "#4a9eff", bold = true })
+  vim.api.nvim_set_hl(0, "IpynbCellBorderMd",     { fg = "#f9c74f", bold = true })
+  vim.api.nvim_set_hl(0, "IpynbCellBorderRaw",    { fg = "#aaaaaa"              })
+  vim.api.nvim_set_hl(0, "IpynbCellTag",          { fg = "#a0c4ff", italic = true })
 
   -- Output colours.
-  vim.api.nvim_set_hl(0, "JupyterOutputText",       { fg = "#d4d4d4"              })
-  vim.api.nvim_set_hl(0, "JupyterOutputError",      { fg = "#f28b82", bold = true })
-  vim.api.nvim_set_hl(0, "JupyterOutputErrorTrace", { fg = "#e88080"              })
-  vim.api.nvim_set_hl(0, "JupyterOutputResult",     { fg = "#a8d8a8", italic = true })
-  vim.api.nvim_set_hl(0, "JupyterOutputMeta",       { fg = "#888888", italic = true })
+  vim.api.nvim_set_hl(0, "IpynbOutputText",       { fg = "#d4d4d4"              })
+  vim.api.nvim_set_hl(0, "IpynbOutputError",      { fg = "#f28b82", bold = true })
+  vim.api.nvim_set_hl(0, "IpynbOutputErrorTrace", { fg = "#e88080"              })
+  vim.api.nvim_set_hl(0, "IpynbOutputResult",     { fg = "#a8d8a8", italic = true })
+  vim.api.nvim_set_hl(0, "IpynbOutputMeta",       { fg = "#888888", italic = true })
 
   -- Active cell background.
-  vim.api.nvim_set_hl(0, "JupyterActiveCell",       { bg = "#1a2233"              })
+  vim.api.nvim_set_hl(0, "IpynbActiveCell",       { bg = "#1a2233"              })
 
   -- Status icons.
-  vim.api.nvim_set_hl(0, "JupyterStatusIdle",       { fg = "#50fa7b"              })
-  vim.api.nvim_set_hl(0, "JupyterStatusBusy",       { fg = "#f1fa8c"              })
-  vim.api.nvim_set_hl(0, "JupyterStatusError",      { fg = "#f28b82"              })
+  vim.api.nvim_set_hl(0, "IpynbStatusIdle",       { fg = "#50fa7b"              })
+  vim.api.nvim_set_hl(0, "IpynbStatusBusy",       { fg = "#f1fa8c"              })
+  vim.api.nvim_set_hl(0, "IpynbStatusError",      { fg = "#f28b82"              })
 end
 
 -- ── Border builders ───────────────────────────────────────────────────────────
@@ -67,9 +67,9 @@ end
 ---@param cell_type string
 ---@return string hl_group
 local function border_hl(cell_type)
-  if cell_type == "markdown" then return "JupyterCellBorderMd"  end
-  if cell_type == "raw"      then return "JupyterCellBorderRaw" end
-  return "JupyterCellBorder"
+  if cell_type == "markdown" then return "IpynbCellBorderMd"  end
+  if cell_type == "raw"      then return "IpynbCellBorderRaw" end
+  return "IpynbCellBorder"
 end
 
 --- Build the top border virt_line for a cell.
@@ -114,7 +114,7 @@ end
 local function bottom_border(status, elapsed_ms, width)
   local cfg = config.get()
   local bc  = cfg.ui.border_chars
-  local hl  = "JupyterCellBorder"
+  local hl  = "IpynbCellBorder"
 
   -- Status icon + elapsed time.
   local meta = ""
@@ -129,10 +129,10 @@ local function bottom_border(status, elapsed_ms, width)
     meta = "  ✓ "
   end
 
-  local meta_hl = "JupyterOutputMeta"
-  if status == "error" then meta_hl = "JupyterStatusError" end
-  if status == "busy"  then meta_hl = "JupyterStatusBusy"  end
-  if status == "idle"  then meta_hl = "JupyterStatusIdle"  end
+  local meta_hl = "IpynbOutputMeta"
+  if status == "error" then meta_hl = "IpynbStatusError" end
+  if status == "busy"  then meta_hl = "IpynbStatusBusy"  end
+  if status == "idle"  then meta_hl = "IpynbStatusIdle"  end
 
   local left = bc.bottom_left .. bc.horizontal
   local fill_len = math.max(2, width
@@ -206,7 +206,7 @@ function M.render(bufnr, notebook)
     vim.api.nvim_buf_set_lines(bufnr, current_line, current_line, false, source_lines)
     local end_line = current_line + #source_lines - 1  -- last line of this cell (0-based, inclusive)
 
-    local language = require("jupytervim.notebook").cell_language(notebook, cell)
+    local language = require("ipynb.notebook").cell_language(notebook, cell)
 
     -- ── Top border extmark ──────────────────────────────────────────────
     local top_vl = top_border(cell.cell_type, language, cell.execution_count, win_width)
@@ -253,7 +253,7 @@ function M.render(bufnr, notebook)
   -- Deferred so extmark positions are stable before markdown.render() reads them.
   vim.schedule(function()
     if vim.api.nvim_buf_is_valid(bufnr) then
-      local ok, markdown = pcall(require, "jupytervim.markdown")
+      local ok, markdown = pcall(require, "ipynb.markdown")
       if ok then markdown.render(bufnr) end
     end
   end)
@@ -361,8 +361,8 @@ function M.add_cell_below(bufnr, idx)
 
   -- Insert a new empty cell into the notebook model.
   local new_cell = {
-    id              = require("jupytervim.notebook").gen_cell_id and
-                      require("jupytervim.notebook").gen_cell_id() or utils.uid(),
+    id              = require("ipynb.notebook").gen_cell_id and
+                      require("ipynb.notebook").gen_cell_id() or utils.uid(),
     cell_type       = "code",
     source          = "",
     outputs         = {},

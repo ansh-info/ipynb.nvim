@@ -1,4 +1,4 @@
---- jupytervim.completion
+--- ipynb.completion
 --- Kernel-backed completions for Jupyter notebook buffers.
 ---
 --- Two integration points:
@@ -7,14 +7,14 @@
 ---                  <C-x><C-o> in insert mode.  Uses vim.wait() to block
 ---                  briefly for kernel response (max 1.5 s).
 ---
----   2. nvim-cmp source — registers as a cmp source named "jupytervim"
+---   2. nvim-cmp source — registers as a cmp source named "ipynb"
 ---                  when nvim-cmp is present.  Fully async via cmp callbacks.
 ---
 --- Usage (automatic):
 ---   completion.attach(bufnr) is called from notebook_buf.open().
 ---
 --- Usage (manual in config):
----   require("cmp").setup.buffer({ sources = {{ name = "jupytervim" }} })
+---   require("cmp").setup.buffer({ sources = {{ name = "ipynb" }} })
 
 local M = {}
 
@@ -69,7 +69,7 @@ function M.omnifunc(findstart, base)
   end
 
   -- Completion phase: ask the kernel.
-  local ok, kernel = pcall(require, "jupytervim.kernel")
+  local ok, kernel = pcall(require, "ipynb.kernel")
   if not ok then return {} end
   if kernel.status(bufnr) ~= "idle" then return {} end
 
@@ -91,7 +91,7 @@ end
 -- ── nvim-cmp source ───────────────────────────────────────────────────────────
 
 --- nvim-cmp source implementation.
---- Register with: require("cmp").register_source("jupytervim", source)
+--- Register with: require("cmp").register_source("ipynb", source)
 local CmpSource = {}
 CmpSource.__index = CmpSource
 
@@ -100,22 +100,22 @@ function CmpSource.new()
 end
 
 function CmpSource:get_debug_name()
-  return "jupytervim"
+  return "ipynb"
 end
 
 --- cmp calls this to know whether the source applies at the current position.
 function CmpSource:is_available()
   local bufnr = vim.api.nvim_get_current_buf()
-  local ok_nb, nb_buf = pcall(require, "jupytervim.notebook_buf")
+  local ok_nb, nb_buf = pcall(require, "ipynb.notebook_buf")
   if not ok_nb or not nb_buf.is_managed(bufnr) then return false end
-  local ok_k, kernel = pcall(require, "jupytervim.kernel")
+  local ok_k, kernel = pcall(require, "ipynb.kernel")
   return ok_k and kernel.status(bufnr) == "idle"
 end
 
 --- cmp calls this to request completions asynchronously.
 function CmpSource:complete(params, callback)
   local bufnr = vim.api.nvim_get_current_buf()
-  local ok, kernel = pcall(require, "jupytervim.kernel")
+  local ok, kernel = pcall(require, "ipynb.kernel")
   if not ok then callback({ items = {}, isIncomplete = false }) return end
 
   local line       = params.context.cursor_before_line
@@ -151,7 +151,7 @@ end
 function M.attach(bufnr)
   -- Set omnifunc so <C-x><C-o> works without any extra plugins.
   vim.api.nvim_buf_set_option(bufnr, "omnifunc",
-    "v:lua.require'jupytervim.completion'.omnifunc")
+    "v:lua.require'ipynb.completion'.omnifunc")
 
   -- Register nvim-cmp source once if cmp is available.
   local ok, cmp = pcall(require, "cmp")
@@ -159,14 +159,14 @@ function M.attach(bufnr)
 
   -- Only register once globally.
   if not M._cmp_registered then
-    cmp.register_source("jupytervim", CmpSource.new())
+    cmp.register_source("ipynb", CmpSource.new())
     M._cmp_registered = true
   end
 
   -- Add source to this buffer's cmp config.
   cmp.setup.buffer({
     sources = cmp.config.sources({
-      { name = "jupytervim", priority = 1000 },
+      { name = "ipynb", priority = 1000 },
     }, {
       { name = "buffer" },
     }),

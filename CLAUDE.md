@@ -1,4 +1,4 @@
-# CLAUDE.md - jupytervim
+# CLAUDE.md - ipynb
 
 Project-specific instructions for Claude Code. Read this before touching any file.
 
@@ -6,7 +6,7 @@ Project-specific instructions for Claude Code. Read this before touching any fil
 
 ## What this project is
 
-A Neovim plugin (`jupytervim`) that opens `.ipynb` Jupyter notebooks natively in
+A Neovim plugin (`ipynb`) that opens `.ipynb` Jupyter notebooks natively in
 Neovim with Google Colab-style cell rendering, full Vim modal editing, Jupyter
 kernel execution via ZMQ, inline text/image output, and a variable inspector.
 
@@ -18,10 +18,10 @@ and polish - not new phases.
 ## Repository layout
 
 ```
-jupytervim/
-├── lua/jupytervim/
+ipynb/
+├── lua/ipynb/
 │   ├── init.lua          # Entry point: setup(), BufReadCmd/BufWriteCmd autocmds
-│   ├── config.lua        # Typed defaults + user deep-merge (JupytervimConfig)
+│   ├── config.lua        # Typed defaults + user deep-merge (IpynbConfig)
 │   ├── utils.lua         # log/warn/err, read_file/write_file, uid, has_plugin
 │   ├── notebook.lua      # .ipynb parse / serialise - nbformat 3 & 4
 │   ├── notebook_buf.lua  # Buffer lifecycle: open, save, sync, cleanup hooks
@@ -39,7 +39,7 @@ jupytervim/
 │   ├── uv.lock           # Reproducible lockfile - always commit alongside toml
 │   └── kernel_bridge.py  # Full ZMQ ↔ JSON-line stdio daemon
 ├── plugin/
-│   └── jupytervim.lua    # Auto-setup shim (sets guard flag)
+│   └── ipynb.lua    # Auto-setup shim (sets guard flag)
 ├── ftdetect/
 │   └── ipynb.vim         # Sets filetype=ipynb for *.ipynb files
 ├── .github/
@@ -109,7 +109,7 @@ Every commit must contain **exactly one file**. No exceptions.
 
 ```bash
 # Correct
-git add lua/jupytervim/kernel.lua
+git add lua/ipynb/kernel.lua
 git commit -m "feat(lua): ..."
 
 # Wrong
@@ -209,9 +209,9 @@ is missing or if optional dependencies (image.nvim, nvim-cmp) are absent.
 
 | Namespace | Owner | Purpose |
 |---|---|---|
-| `jupytervim_cells` | `cell.lua` | Cell border + output extmarks |
-| `jupytervim_markdown` | `markdown.lua` | Markdown decoration extmarks |
-| `jupyvim_inspector_hl` | `inspector.lua` | Inspector window highlights |
+| `ipynb_cells` | `cell.lua` | Cell border + output extmarks |
+| `ipynb_markdown` | `markdown.lua` | Markdown decoration extmarks |
+| `ipynb_inspector_hl` | `inspector.lua` | Inspector window highlights |
 
 ---
 
@@ -219,7 +219,7 @@ is missing or if optional dependencies (image.nvim, nvim-cmp) are absent.
 
 ```lua
 -- Extmarks
-vim.api.nvim_create_namespace("jupytervim_cells")
+vim.api.nvim_create_namespace("ipynb_cells")
 vim.api.nvim_buf_set_extmark(bufnr, ns, line, col, { virt_lines = {...} })
 vim.api.nvim_buf_get_extmark_by_id(bufnr, ns, mark_id, {})
 vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
@@ -243,7 +243,7 @@ vim.wait(timeout_ms, predicate, interval_ms)
 
 ```bash
 # lazy.nvim dev mode - add to your Neovim config:
-{ dir = "/home/oneai/jupytervim", lazy = false }
+{ dir = "/home/oneai/ipynb", lazy = false }
 
 # Open a notebook
 nvim /path/to/notebook.ipynb

@@ -1,9 +1,9 @@
---- jupytervim — main entry point
+--- ipynb — main entry point
 ---
 --- Usage (lazy.nvim):
 ---
 ---   {
----     "ansh-info/jupytervim",
+---     "ansh-info/ipynb.nvim",
 ---     ft = "ipynb",
 ---     dependencies = {
 ---       "nvim-treesitter/nvim-treesitter",
@@ -17,7 +17,7 @@
 ---
 --- Or manually:
 ---
----   require("jupytervim").setup({})
+---   require("ipynb").setup({})
 
 local M = {}
 
@@ -30,18 +30,18 @@ function M.setup(opts)
   _setup_done = true
 
   -- Merge user options into defaults.
-  require("jupytervim.config").setup(opts)
+  require("ipynb.config").setup(opts)
 
   -- Register :Jupyter* commands.
-  require("jupytervim.commands").setup()
+  require("ipynb.commands").setup()
 
   -- Register the BufReadCmd autocmd that intercepts .ipynb file opens.
   M._register_autocmds()
 end
 
---- Register the autocmds that make .ipynb files load through jupytervim.
+--- Register the autocmds that make .ipynb files load through ipynb.
 function M._register_autocmds()
-  local group = vim.api.nvim_create_augroup("Jupytervim", { clear = true })
+  local group = vim.api.nvim_create_augroup("Ipynb", { clear = true })
 
   -- BufReadCmd fires instead of the normal file-read when Neovim opens the
   -- matching file, giving us full control over buffer population.
@@ -51,9 +51,9 @@ function M._register_autocmds()
     callback = function(ev)
       local path  = vim.fn.expand(ev.match)
       local bufnr = ev.buf
-      require("jupytervim.notebook_buf").open(path, bufnr)
+      require("ipynb.notebook_buf").open(path, bufnr)
     end,
-    desc = "jupytervim: open .ipynb notebook",
+    desc = "ipynb: open .ipynb notebook",
   })
 
   -- BufWriteCmd fires instead of the normal write, so :w saves through our
@@ -63,14 +63,14 @@ function M._register_autocmds()
     pattern = "*.ipynb",
     callback = function(ev)
       local bufnr = ev.buf
-      if require("jupytervim.notebook_buf").is_managed(bufnr) then
-        require("jupytervim.notebook_buf").save(bufnr)
+      if require("ipynb.notebook_buf").is_managed(bufnr) then
+        require("ipynb.notebook_buf").save(bufnr)
       else
         -- Fall through to normal write for unmanaged buffers.
         vim.cmd("noautocmd write")
       end
     end,
-    desc = "jupytervim: save .ipynb notebook",
+    desc = "ipynb: save .ipynb notebook",
   })
 
   -- WinResized: re-render borders when the window width changes (border
@@ -79,12 +79,12 @@ function M._register_autocmds()
     group   = group,
     callback = function()
       local bufnr = vim.api.nvim_get_current_buf()
-      if require("jupytervim.notebook_buf").is_managed(bufnr) then
-        local nb = require("jupytervim.cell").get_notebook(bufnr)
-        if nb then require("jupytervim.cell").render(bufnr, nb) end
+      if require("ipynb.notebook_buf").is_managed(bufnr) then
+        local nb = require("ipynb.cell").get_notebook(bufnr)
+        if nb then require("ipynb.cell").render(bufnr, nb) end
       end
     end,
-    desc = "jupytervim: re-render on window resize",
+    desc = "ipynb: re-render on window resize",
   })
 end
 
@@ -94,19 +94,19 @@ end
 ---@param path string
 function M.open(path)
   local bufnr = vim.api.nvim_get_current_buf()
-  require("jupytervim.notebook_buf").open(vim.fn.expand(path), bufnr)
+  require("ipynb.notebook_buf").open(vim.fn.expand(path), bufnr)
 end
 
 --- Save the notebook in the current buffer.
 function M.save()
-  require("jupytervim.notebook_buf").save(vim.api.nvim_get_current_buf())
+  require("ipynb.notebook_buf").save(vim.api.nvim_get_current_buf())
 end
 
 --- Return the internal notebook data for the current buffer (useful for
 --- scripting and extension development).
 ---@return table|nil
 function M.get_notebook()
-  return require("jupytervim.cell").get_notebook(vim.api.nvim_get_current_buf())
+  return require("ipynb.cell").get_notebook(vim.api.nvim_get_current_buf())
 end
 
 return M

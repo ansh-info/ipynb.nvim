@@ -1,10 +1,10 @@
---- jupytervim.config
+--- ipynb.config
 --- Default configuration and user-merge logic.
---- All values here can be overridden via require("jupytervim").setup(opts).
+--- All values here can be overridden via require("ipynb").setup(opts).
 
 local M = {}
 
----@class JupytervimConfig
+---@class IpynbConfig
 ---@field cell CellConfig
 ---@field ui UIConfig
 ---@field keymaps KeymapConfig
@@ -59,7 +59,7 @@ local M = {}
 ---@field auto_save boolean        Save .ipynb after every cell execution
 ---@field default_kernel_name string
 
----@type JupytervimConfig
+---@type IpynbConfig
 M.defaults = {
   cell = {
     highlight_cell = true,
@@ -125,7 +125,7 @@ M.defaults = {
 }
 
 --- Merged active config (set once by setup()).
----@type JupytervimConfig
+---@type IpynbConfig
 M.options = {}
 
 --- Deep-merge user options on top of defaults.
@@ -137,7 +137,7 @@ end
 
 --- Convenience getter — returns the active config, initialising with defaults
 --- if setup() was never called.
----@return JupytervimConfig
+---@return IpynbConfig
 function M.get()
   if vim.tbl_isempty(M.options) then
     M.setup()

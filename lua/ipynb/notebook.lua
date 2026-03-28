@@ -1,4 +1,4 @@
---- jupytervim.notebook
+--- ipynb.notebook
 --- Parses .ipynb JSON files into an internal notebook data structure,
 --- renders cells into a Neovim buffer, and serialises changes back to disk.
 ---
@@ -20,7 +20,7 @@
 ---     execution_count : integer|nil,
 ---   }
 
-local utils = require("jupytervim.utils")
+local utils = require("ipynb.utils")
 
 local M = {}
 

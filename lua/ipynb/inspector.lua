@@ -1,11 +1,11 @@
---- jupytervim.inspector
+--- ipynb.inspector
 --- Variable inspector: executes a Python snippet in the kernel to retrieve
 --- all user-defined variables and displays them in a floating window.
 ---
 --- Invoked via:
----   :JupyterInspect          — show variable inspector
+---   :IpynbInspect          — show variable inspector
 ---   <leader>ji               — keymap (registered by keymaps.lua)
----   require("jupytervim.inspector").open(bufnr)
+---   require("ipynb.inspector").open(bufnr)
 ---
 --- The inspector window shows:
 ---   Name       Type        Value (truncated)
@@ -58,11 +58,11 @@ local _hl_done = false
 local function define_highlights()
   if _hl_done then return end
   _hl_done = true
-  vim.api.nvim_set_hl(0, "JupyterInspectorHeader", { fg = "#7aa2f7", bold = true })
-  vim.api.nvim_set_hl(0, "JupyterInspectorName",   { fg = "#c0caf5"              })
-  vim.api.nvim_set_hl(0, "JupyterInspectorType",   { fg = "#e0af68", italic = true })
-  vim.api.nvim_set_hl(0, "JupyterInspectorValue",  { fg = "#9ece6a"              })
-  vim.api.nvim_set_hl(0, "JupyterInspectorBorder", { fg = "#3b4261"              })
+  vim.api.nvim_set_hl(0, "IpynbInspectorHeader", { fg = "#7aa2f7", bold = true })
+  vim.api.nvim_set_hl(0, "IpynbInspectorName",   { fg = "#c0caf5"              })
+  vim.api.nvim_set_hl(0, "IpynbInspectorType",   { fg = "#e0af68", italic = true })
+  vim.api.nvim_set_hl(0, "IpynbInspectorValue",  { fg = "#9ece6a"              })
+  vim.api.nvim_set_hl(0, "IpynbInspectorBorder", { fg = "#3b4261"              })
 end
 
 -- ── Result parsing ────────────────────────────────────────────────────────────
@@ -149,13 +149,13 @@ end
 
 --- Apply syntax highlights to the inspector buffer.
 local function highlight_inspector_buf(ibuf, line_map)
-  local ins_ns = vim.api.nvim_create_namespace("jupyvim_inspector_hl")
+  local ins_ns = vim.api.nvim_create_namespace("ipynb_inspector_hl")
   vim.api.nvim_buf_clear_namespace(ibuf, ins_ns, 0, -1)
 
   -- Header row.
   vim.api.nvim_buf_set_extmark(ibuf, ins_ns, 0, 0, {
     end_col  = 200,
-    hl_group = "JupyterInspectorHeader",
+    hl_group = "IpynbInspectorHeader",
     priority = 50,
   })
 
@@ -165,19 +165,19 @@ local function highlight_inspector_buf(ibuf, line_map)
     -- Name column: cols 2–21
     vim.api.nvim_buf_set_extmark(ibuf, ins_ns, row, 2, {
       end_col  = 22,
-      hl_group = "JupyterInspectorName",
+      hl_group = "IpynbInspectorName",
       priority = 50,
     })
     -- Type column: cols 24–39
     vim.api.nvim_buf_set_extmark(ibuf, ins_ns, row, 24, {
       end_col  = 40,
-      hl_group = "JupyterInspectorType",
+      hl_group = "IpynbInspectorType",
       priority = 50,
     })
     -- Value column: from col 42 onwards
     vim.api.nvim_buf_set_extmark(ibuf, ins_ns, row, 42, {
       end_col  = 200,
-      hl_group = "JupyterInspectorValue",
+      hl_group = "IpynbInspectorValue",
       priority = 50,
     })
   end
@@ -188,17 +188,17 @@ end
 function M.open(bufnr)
   define_highlights()
 
-  local ok, kernel = pcall(require, "jupytervim.kernel")
+  local ok, kernel = pcall(require, "ipynb.kernel")
   if not ok then
-    require("jupytervim.utils").warn("Kernel module not available.")
+    require("ipynb.utils").warn("Kernel module not available.")
     return
   end
   if kernel.status(bufnr) ~= "idle" then
-    require("jupytervim.utils").warn("Kernel is busy. Wait for it to become idle.")
+    require("ipynb.utils").warn("Kernel is busy. Wait for it to become idle.")
     return
   end
 
-  require("jupytervim.utils").info("Fetching variables…")
+  require("ipynb.utils").info("Fetching variables…")
 
   -- ── Send introspection code to the kernel ─────────────────────────────────
   -- We abuse kernel.complete() is not right here; we need to execute code and
@@ -214,8 +214,8 @@ function M.open(bufnr)
   -- We implement this by directly sending a JSON execute command and watching
   -- the kernel's output via a dedicated listener registered on the _state.
 
-  local utils     = require("jupytervim.utils")
-  local cell_mod  = require("jupytervim.cell")
+  local utils     = require("ipynb.utils")
+  local cell_mod  = require("ipynb.cell")
 
   -- Build a throwaway cell_state so output.lua has somewhere to route messages.
   -- We don't add it to the buffer; we just use it as a key for the pending map.
@@ -224,7 +224,7 @@ function M.open(bufnr)
   local done         = false
 
   -- Monkey-patch: temporarily override output.append for our key.
-  local output = require("jupytervim.output")
+  local output = require("ipynb.output")
   local orig_append = output.append
 
   output.append = function(b, cs, chunk)
@@ -240,13 +240,13 @@ function M.open(bufnr)
   end
 
   -- Execute snippet via the internal send path.
-  local state_mod = require("jupytervim.kernel")
+  local state_mod = require("ipynb.kernel")
   local mid = "jvim_inspect_" .. tostring(os.time())
 
   -- Access the per-buffer state table directly to register the pending entry.
   -- kernel.lua exposes no state getter, so we reach in via the closure by
   -- calling run_current_cell on a synthetic stub. Instead, we use a simpler
-  -- approach: just use JupyterRun on hidden code via vim.schedule.
+  -- approach: just use IpynbRun on hidden code via vim.schedule.
   --
   -- The cleanest approach: add a kernel.execute_raw() helper and call it here.
   -- For now, we directly use vim.fn.chansend via the existing jobstart handle.
@@ -340,7 +340,7 @@ end
 ---@param bufnr integer
 ---@param var_name string
 function M.inspect_var(bufnr, var_name)
-  local ok, kernel = pcall(require, "jupytervim.kernel")
+  local ok, kernel = pcall(require, "ipynb.kernel")
   if not ok then return end
 
   kernel.inspect(bufnr, var_name, #var_name, function(msg)

@@ -1,4 +1,4 @@
-# jupytervim
+# ipynb
 
 Neovim plugin for editing Jupyter notebooks (`.ipynb`) natively - Colab-style cell
 rendering, full Vim modal editing, live kernel execution, and inline output.
@@ -50,7 +50,7 @@ rendering, full Vim modal editing, live kernel execution, and inline output.
 ```lua
 return {
   {
-    "ansh-info/jupytervim",
+    "ansh-info/ipynb.nvim",
     lazy = false,
     build = "uv sync --project python/ || (python3 -m venv python/.venv && python/.venv/bin/pip install ./python/)",
     dependencies = {
@@ -67,7 +67,7 @@ return {
 > The `build` hook installs the Python kernel bridge dependencies
 > (`jupyter_client`, `ipykernel`, `nbformat`) into an isolated venv at
 > `python/.venv/`. It tries `uv` first; if `uv` is not installed it falls back
-> to the standard `python3 -m venv`. Run `:Lazy build jupytervim` to re-run it
+> to the standard `python3 -m venv`. Run `:Lazy build ipynb` to re-run it
 > manually after updates.
 
 **With optional dependencies:**
@@ -75,7 +75,7 @@ return {
 ```lua
 return {
   {
-    "ansh-info/jupytervim",
+    "ansh-info/ipynb.nvim",
     lazy = false,
     build = "uv sync --project python/ || (python3 -m venv python/.venv && python/.venv/bin/pip install ./python/)",
     dependencies = {
@@ -93,10 +93,10 @@ return {
 
 ```lua
 use({
-  "ansh-info/jupytervim",
+  "ansh-info/ipynb.nvim",
   run = "uv sync --project python/ || (python3 -m venv python/.venv && python/.venv/bin/pip install ./python/)",
   config = function()
-    require("jupytervim").setup({})
+    require("ipynb").setup({})
   end,
 })
 ```
@@ -107,7 +107,7 @@ Setup is called automatically when you pass `opts = {}` to lazy.nvim. If you
 manage setup yourself:
 
 ```lua
-require("jupytervim").setup({})
+require("ipynb").setup({})
 ```
 
 ## Usage
@@ -119,7 +119,7 @@ nvim my_notebook.ipynb
 ```
 
 The kernel starts automatically when you run your first cell. No manual
-`:JupyterKernelStart` needed unless `auto_start` is disabled.
+`:IpynbKernelStart` needed unless `auto_start` is disabled.
 
 ```
 <leader>r      run the cell under the cursor
@@ -152,20 +152,20 @@ Press `<leader>jh` to show the help overlay at any time.
 
 | Command | Description |
 |---|---|
-| `:JupyterOpen [path]` | Open a notebook |
-| `:JupyterSave` | Save the current notebook |
-| `:JupyterKernelStart [name]` | Start a kernel (`python3` default) |
-| `:JupyterKernelStop` | Stop the kernel |
-| `:JupyterKernelRestart` | Restart kernel and clear all output |
-| `:JupyterKernelInterrupt` | Send interrupt (Ctrl-C) |
-| `:JupyterKernelInfo` | Show kernel status window |
-| `:JupyterRun` | Run current cell |
-| `:JupyterRunAll` | Run all cells |
-| `:JupyterRunAbove` | Run all cells above cursor |
-| `:JupyterCellAdd` | Add code cell below |
-| `:JupyterCellDelete` | Delete current cell |
-| `:JupyterInspect` | Open variable inspector |
-| `:JupyterHelp` | Show keymap reference |
+| `:IpynbOpen [path]` | Open a notebook |
+| `:IpynbSave` | Save the current notebook |
+| `:IpynbKernelStart [name]` | Start a kernel (`python3` default) |
+| `:IpynbKernelStop` | Stop the kernel |
+| `:IpynbKernelRestart` | Restart kernel and clear all output |
+| `:IpynbKernelInterrupt` | Send interrupt (Ctrl-C) |
+| `:IpynbKernelInfo` | Show kernel status window |
+| `:IpynbRun` | Run current cell |
+| `:IpynbRunAll` | Run all cells |
+| `:IpynbRunAbove` | Run all cells above cursor |
+| `:IpynbCellAdd` | Add code cell below |
+| `:IpynbCellDelete` | Delete current cell |
+| `:IpynbInspect` | Open variable inspector |
+| `:IpynbHelp` | Show keymap reference |
 
 ## Configuration
 
@@ -173,7 +173,7 @@ The following is the default configuration. Pass any subset of these to `opts`
 or `setup()` to override.
 
 ```lua
-require("jupytervim").setup({
+require("ipynb").setup({
   kernel = {
     default_kernel = "python3",
     auto_start     = true,       -- start kernel automatically on first run
@@ -210,7 +210,7 @@ require("jupytervim").setup({
 
 ## Contributing
 
-Issues and pull requests are welcome at https://github.com/ansh-info/jupytervim.
+Issues and pull requests are welcome at https://github.com/ansh-info/ipynb.nvim.
 
 ## License
 

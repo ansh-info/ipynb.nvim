@@ -247,7 +247,7 @@ def cmd_kernel_info(_data: dict) -> None:
 def cmd_execute(data: dict) -> None:
     """Send an execute_request to the kernel."""
     if _kc is None:
-        send({"type": "error_internal", "message": "No kernel connected. Run :JupyterKernelStart first."})
+        send({"type": "error_internal", "message": "No kernel connected. Run :IpynbKernelStart first."})
         return
     code   = data.get("code", "")
     lua_id = data.get("msg_id", "")
