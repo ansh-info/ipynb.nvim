@@ -108,15 +108,11 @@ end
 
 --- Render one image chunk below a cell.
 ---
---- text_line_offset is the number of text virt_lines already placed above
---- this image so we can position the image correctly.
----
 ---@param bufnr integer
 ---@param cell_state table
 ---@param chunk table   { type="image", mime, data }
----@param text_line_offset integer  text virt_lines already above this image
 ---@return boolean  true if image was rendered
-function M.render(bufnr, cell_state, chunk, text_line_offset)
+function M.render(bufnr, cell_state, chunk)
   if not M.is_supported() then return false end
 
   local ok_api, image_api = pcall(require, "image")
@@ -138,10 +134,6 @@ function M.render(bufnr, cell_state, chunk, text_line_offset)
   local em_pos  = vim.api.nvim_buf_get_extmark_by_id(bufnr, ns, cell_state.end_mark, {})
   local end_row = (em_pos and em_pos[1]) or 0
 
-  -- y position: end of cell + 1 (bottom border virt_line) + divider + text lines
-  -- All in 0-based terminal rows.
-  local y = end_row + 1 + text_line_offset + 1
-
   -- Get the window showing this buffer (prefer current window).
   local winnr = vim.fn.bufwinid(bufnr)
   if winnr == -1 then winnr = 0 end
@@ -155,12 +147,10 @@ function M.render(bufnr, cell_state, chunk, text_line_offset)
     id     = img_id,
     buffer = bufnr,
     window = winnr,
-    geometry = {
-      x      = 2,
-      y      = y,
-      width  = cfg.image.max_width,
-      height = cfg.image.max_height,
-    },
+    x      = 2,
+    y      = end_row,
+    width  = cfg.image.max_width,
+    height = cfg.image.max_height,
     with_virtual_padding = true,
   })
 
