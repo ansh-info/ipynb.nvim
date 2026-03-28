@@ -129,6 +129,18 @@ function M.open(path, bufnr)
     end,
   })
 
+  -- Re-anchor cell end marks after text edits.
+  -- Pressing 'o' on the last line of a cell inserts content below end_mark;
+  -- on InsertLeave / TextChanged we recompute and reposition end_mark so the
+  -- bottom border always wraps the actual cell content.
+  vim.api.nvim_create_autocmd({ "InsertLeave", "TextChanged" }, {
+    buffer   = bufnr,
+    callback = function()
+      if not vim.api.nvim_buf_is_valid(bufnr) then return end
+      cell.reanchor_end_marks(bufnr)
+    end,
+  })
+
   -- Re-render borders when the window is resized (border widths depend on
   -- the window width).
   vim.api.nvim_create_autocmd("VimResized", {
