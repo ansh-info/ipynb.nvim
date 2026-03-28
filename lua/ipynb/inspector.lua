@@ -25,9 +25,10 @@ local M = {}
 -- We use a private prefix to avoid polluting the namespace.
 local INTROSPECT_CODE = [[
 import json as __jvim_json
+__jvim_skip = {'In', 'Out', 'exit', 'quit', 'get_ipython', 'open'}
 __jvim_vars = {}
 for __jvim_name in sorted(dir()):
-    if __jvim_name.startswith('_') or __jvim_name.startswith('__jvim'):
+    if __jvim_name.startswith('_') or __jvim_name in __jvim_skip:
         continue
     try:
         __jvim_val  = eval(__jvim_name)
@@ -49,7 +50,7 @@ for __jvim_name in sorted(dir()):
     except Exception:
         pass
 print(__jvim_json.dumps(__jvim_vars))
-del __jvim_json, __jvim_vars, __jvim_name, __jvim_val, __jvim_type, __jvim_repr, __jvim_entry
+del __jvim_json, __jvim_skip, __jvim_vars, __jvim_name, __jvim_val, __jvim_type, __jvim_repr, __jvim_entry
 ]]
 
 -- ── Highlight groups ──────────────────────────────────────────────────────────
