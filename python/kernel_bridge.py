@@ -42,6 +42,8 @@ raw ZMQ id.  This makes Lua-side tracking trivial.
 from __future__ import annotations
 
 import json
+import os
+import queue
 import re
 import sys
 import threading
@@ -63,6 +65,46 @@ _ANSI_RE = re.compile(r"\x1b(?:\[[0-9;?]*[A-Za-z]|\][^\x07]*\x07|[()][0-9A-Z])")
 
 def _strip_ansi(text: str) -> str:
     return _ANSI_RE.sub("", text)
+
+
+def _venv_kernel_python() -> Optional[str]:
+    """Return the Python from an active venv or conda env, if available.
+
+    When the user activates a venv before launching Neovim, $VIRTUAL_ENV (or
+    $CONDA_PREFIX) is set.  We use that Python for the kernel so that packages
+    installed in the venv (numpy, matplotlib, etc.) are visible in notebooks.
+    """
+    for var in ("VIRTUAL_ENV", "CONDA_PREFIX"):
+        prefix = os.environ.get(var)
+        if not prefix:
+            continue
+        for rel in ("bin/python3", "bin/python"):
+            path = os.path.join(prefix, rel)
+            if os.path.isfile(path) and os.access(path, os.X_OK):
+                return path
+    return None
+
+
+def _get_shell_reply(zmq_id: str, timeout: float = 10.0) -> dict:
+    """Fetch the shell reply whose parent msg_id matches zmq_id.
+
+    In jupyter_client >= 8.x, KernelClient.complete() and .inspect() return
+    the ZMQ msg_id (str) rather than the reply dict.  This helper polls
+    get_shell_msg() until the matching reply arrives, discarding unrelated
+    messages (e.g. execute_reply for a concurrently running cell).
+    """
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            break
+        try:
+            reply = _kc.get_shell_msg(timeout=min(1.0, remaining))  # type: ignore[union-attr]
+        except queue.Empty:
+            break
+        if reply.get("parent_header", {}).get("msg_id") == zmq_id:
+            return reply.get("content", {})
+    return {}
 
 
 # ── Global kernel state ────────────────────────────────────────────────────────
@@ -190,6 +232,13 @@ def cmd_start(data: dict) -> None:
         kernel_name = data.get("kernel", "python3")
         try:
             km = KernelManager(kernel_name=kernel_name)
+            venv_py = _venv_kernel_python()
+            if venv_py:
+                # Replace argv[0] (the Python executable) with the venv Python
+                # so packages installed in the active venv are available.
+                ks_argv = list(km.kernel_spec.argv)
+                ks_argv[0] = venv_py
+                km.kernel_cmd = ks_argv
             km.start_kernel()
             kc = km.blocking_client()
             kc.start_channels()
@@ -267,8 +316,8 @@ def cmd_complete(data: dict) -> None:
     cursor_pos = data.get("cursor_pos", len(code))
     lua_id     = data.get("msg_id", "")
     try:
-        reply   = _kc.complete(code, cursor_pos)
-        content = reply.get("content", {})
+        zmq_id  = _kc.complete(code, cursor_pos)
+        content = _get_shell_reply(zmq_id)
         send({
             "type":         "complete",
             "matches":      content.get("matches", []),
@@ -288,8 +337,8 @@ def cmd_inspect(data: dict) -> None:
     cursor_pos = data.get("cursor_pos", len(code))
     lua_id     = data.get("msg_id", "")
     try:
-        reply    = _kc.inspect(code, cursor_pos)
-        content  = reply.get("content", {})
+        zmq_id   = _kc.inspect(code, cursor_pos)
+        content  = _get_shell_reply(zmq_id)
         raw_text = content.get("data", {}).get("text/plain", "")
         send({"type": "inspect", "text": _strip_ansi(raw_text), "msg_id": lua_id})
     except Exception as exc:
