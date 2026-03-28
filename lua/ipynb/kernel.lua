@@ -114,19 +114,28 @@ local function dispatch(bufnr, msg)
 
     local pending = (id ~= "") and s.pending[id] or nil
     if pending and type(pending) == "table" then
-      if state == "busy" then
-        cell.update_status(bufnr, pending.cell_state, "busy", nil)
-      elseif state == "idle" then
-        local elapsed_ms = vim.loop.now() - pending.start_ms
-        cell.update_status(bufnr, pending.cell_state, "idle", elapsed_ms)
-        s.pending[id] = nil
+      if pending._snippet_cb then
+        -- Snippet execution (e.g. variable inspector): signal done.
+        if state == "idle" then
+          pending._snippet_cb(table.concat(pending._accumulated, ""), nil)
+          s.pending[id] = nil
+        end
+      else
+        if state == "busy" then
+          cell.update_status(bufnr, pending.cell_state, "busy", nil)
+        elseif state == "idle" then
+          local elapsed_ms = vim.loop.now() - pending.start_ms
+          cell.update_status(bufnr, pending.cell_state, "idle", elapsed_ms)
+          s.pending[id] = nil
+        end
       end
     end
 
   -- ── execute_input (kernel echoes code back with execution count) ──────────
   elseif t == "execute_input" then
     local pending = (id ~= "") and s.pending[id] or nil
-    if pending and type(pending) == "table" and msg.exec_count then
+    if pending and type(pending) == "table" and not pending._snippet_cb
+        and msg.exec_count then
       cell.update_execution_count(bufnr, pending.cell_state, msg.exec_count)
       local nb = cell.get_notebook(bufnr)
       if nb and pending.cell_state.index then
@@ -139,9 +148,16 @@ local function dispatch(bufnr, msg)
       or t == "image"  or t == "clear_output" then
     local pending = (id ~= "") and s.pending[id] or nil
     if pending and type(pending) == "table" then
-      output.append(bufnr, pending.cell_state, msg)
-      if t == "error" then
-        cell.update_status(bufnr, pending.cell_state, "error", nil)
+      if pending._snippet_cb then
+        -- Snippet: accumulate stdout text; ignore other output types.
+        if t == "stream" and (msg.name or "stdout") == "stdout" then
+          pending._accumulated[#pending._accumulated + 1] = msg.text or ""
+        end
+      else
+        output.append(bufnr, pending.cell_state, msg)
+        if t == "error" then
+          cell.update_status(bufnr, pending.cell_state, "error", nil)
+        end
       end
     else
       utils.warn("output dropped — no pending cell for msg_id=" .. tostring(id)
@@ -492,24 +508,22 @@ function M.show_info(bufnr)
   end
 end
 
---- Execute arbitrary code and route output to a given cell_state.
---- Used by inspector.lua to run introspection snippets without touching
---- the notebook buffer or requiring a real cell under the cursor.
+--- Execute an arbitrary code snippet and deliver the combined stdout to cb.
+--- Bypasses the cell output pipeline entirely - no extmarks are touched.
+--- cb is called as cb(text, err) where text is the accumulated stdout string
+--- and err is a string on failure or nil on success.
 ---@param bufnr integer
 ---@param code string
----@param msg_id string  caller-chosen id (must be unique)
----@param cell_state table  synthetic cell_state used as output routing key
-function M._execute_raw(bufnr, code, msg_id, cell_state)
+---@param cb function  called with (text: string|nil, err: string|nil)
+function M.execute_snippet(bufnr, code, cb)
   local s = get_state(bufnr)
   if not s.job_id then
-    error("No kernel running for buffer " .. bufnr)
+    cb(nil, "No kernel running.")
+    return
   end
-  s.pending[msg_id] = {
-    cell_state = cell_state,
-    bufnr      = bufnr,
-    start_ms   = vim.loop.now(),
-  }
-  send(bufnr, { cmd = "execute", code = code, msg_id = msg_id })
+  local mid = next_msg_id(bufnr)
+  s.pending[mid] = { _snippet_cb = cb, _accumulated = {} }
+  send(bufnr, { cmd = "execute", code = code, msg_id = mid })
 end
 
 --- Return the kernel status for a buffer.
