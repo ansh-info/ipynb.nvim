@@ -2,6 +2,40 @@
 
 <!-- version list -->
 
+## v1.1.5 (2026-03-28)
+
+### Bug Fixes
+
+- Inspector extmark crash and image.nvim setup docs
+  ([#24](https://github.com/ansh-info/ipynb.nvim/pull/24),
+  [`b78d386`](https://github.com/ansh-info/ipynb.nvim/commit/b78d3862a8c4435c154706c15ce6f062e846c22d))
+
+- **lua**: Clamp extmark end_col to actual line length in inspector
+  ([#24](https://github.com/ansh-info/ipynb.nvim/pull/24),
+  [`b78d386`](https://github.com/ansh-info/ipynb.nvim/commit/b78d3862a8c4435c154706c15ce6f062e846c22d))
+
+- **lua**: Clamp extmark end_col to actual line length in inspector
+  ([`392c54b`](https://github.com/ansh-info/ipynb.nvim/commit/392c54bdbc44a264e5ef1a3a434d53aa19772cfd))
+
+### Documentation
+
+- **docs**: Document image.nvim setup with luarocks and magick
+  ([#24](https://github.com/ansh-info/ipynb.nvim/pull/24),
+  [`b78d386`](https://github.com/ansh-info/ipynb.nvim/commit/b78d3862a8c4435c154706c15ce6f062e846c22d))
+
+- **docs**: Document image.nvim setup with luarocks and magick
+  ([`cec5cb0`](https://github.com/ansh-info/ipynb.nvim/commit/cec5cb0e88aa14eb382e6f709c56e620e791e880))
+
+### Testing
+
+- **docs**: Remove matplotlib.use('Agg') from test notebook
+  ([#23](https://github.com/ansh-info/ipynb.nvim/pull/23),
+  [`fbba075`](https://github.com/ansh-info/ipynb.nvim/commit/fbba075d5b31e9fe5de387b8751ab00a9bf8b68b))
+
+- **docs**: Remove matplotlib.use('Agg') from test notebook
+  ([`dc488d4`](https://github.com/ansh-info/ipynb.nvim/commit/dc488d47f3927e8b8a7cc2530d21ca59bf895019))
+
+
 ## v1.1.4 (2026-03-28)
 
 ### Bug Fixes
