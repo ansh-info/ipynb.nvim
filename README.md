@@ -48,14 +48,16 @@ rendering, full Vim modal editing, live kernel execution, and inline output.
 ### lazy.nvim
 
 ```lua
-{
-  "ansh-info/jupytervim",
-  lazy = false,
-  build = "uv sync --project python/ || (python3 -m venv python/.venv && python/.venv/bin/pip install ./python/)",
-  dependencies = {
-    "nvim-treesitter/nvim-treesitter",
+return {
+  {
+    "ansh-info/jupytervim",
+    lazy = false,
+    build = "uv sync --project python/ || (python3 -m venv python/.venv && python/.venv/bin/pip install ./python/)",
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter",
+    },
+    opts = {},
   },
-  opts = {},
 }
 ```
 
@@ -71,30 +73,32 @@ rendering, full Vim modal editing, live kernel execution, and inline output.
 **With optional dependencies:**
 
 ```lua
-{
-  "ansh-info/jupytervim",
-  lazy = false,
-  build = "uv sync --project python/ || (python3 -m venv python/.venv && python/.venv/bin/pip install ./python/)",
-  dependencies = {
-    "nvim-treesitter/nvim-treesitter",
-    { "3rd/image.nvim", opts = {} },
-    { "MeanderingProgrammer/render-markdown.nvim", opts = {} },
-    { "hrsh7th/nvim-cmp" },
+return {
+  {
+    "ansh-info/jupytervim",
+    lazy = false,
+    build = "uv sync --project python/ || (python3 -m venv python/.venv && python/.venv/bin/pip install ./python/)",
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter",
+      { "3rd/image.nvim", opts = {} },
+      { "MeanderingProgrammer/render-markdown.nvim", opts = {} },
+      { "hrsh7th/nvim-cmp" },
+    },
+    opts = {},
   },
-  opts = {},
 }
 ```
 
 ### packer.nvim
 
 ```lua
-use {
+use({
   "ansh-info/jupytervim",
   run = "uv sync --project python/ || (python3 -m venv python/.venv && python/.venv/bin/pip install ./python/)",
   config = function()
     require("jupytervim").setup({})
   end,
-}
+})
 ```
 
 ## Setup
