@@ -280,21 +280,27 @@ def cmd_start(data: dict) -> None:
             # Assign to globals only after fully ready (CPython GIL keeps this safe).
             _km = km
             _kc = kc
-            send({"type": "status", "state": "starting", "msg_id": ""})
+            # Start IOPub listener before the setup execute so that the
+            # _setup_ids filter is in place when IOPub messages arrive.
             _start_iopub_thread()
-            _send_kernel_info_request()
-            # Auto-configure the IPython inline backend so that
-            # plt.show() emits display_data (image/png) instead of
-            # raising the FigureCanvasAgg non-interactive warning.
-            # We register the ZMQ id in _setup_ids so all IOPub replies
-            # (including ModuleNotFoundError if matplotlib is absent) are
-            # silently discarded and never forwarded to Lua.
+            # Auto-configure the IPython inline backend.  We WAIT for the
+            # execute_reply on the shell channel (via _get_shell_reply) before
+            # notifying Lua that the kernel is ready.  This eliminates a race
+            # where Lua would mark the kernel "idle" and the user's first cell
+            # would be sent to the kernel before %matplotlib inline had run,
+            # causing the FigureCanvasAgg non-interactive warning.
+            # IOPub replies for this id are suppressed by _setup_ids so that
+            # ModuleNotFoundError (when matplotlib is absent) never reaches Lua.
             try:
                 setup_id = _kc.execute("%matplotlib inline",
                                        silent=True, store_history=False)
                 _setup_ids.add(setup_id)
+                _get_shell_reply(setup_id, timeout=5.0)
             except Exception:
                 pass
+            # Kernel is fully ready and setup is complete — notify Lua.
+            send({"type": "status", "state": "starting", "msg_id": ""})
+            _send_kernel_info_request()
         except Exception as exc:
             send({"type": "error_internal",
                   "message": f"Failed to start kernel '{kernel_name}': {exc}"})

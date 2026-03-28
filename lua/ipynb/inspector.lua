@@ -93,12 +93,10 @@ local function build_display(vars)
   local col_type  = 16
   local col_value = 40
 
-  local header = string.format(
-    "  %-*s  %-*s  %s",
-    col_name, "Name",
-    col_type, "Type",
-    "Value"
-  )
+  -- LuaJIT string.format does not support C-style dynamic-width specifiers.
+  -- Build the format string with literal column widths instead.
+  local row_fmt = "  %-" .. col_name .. "s  %-" .. col_type .. "s  %s"
+  local header  = string.format(row_fmt, "Name", "Type", "Value")
   local rule = "  " .. string.rep("─", col_name + col_type + col_value + 4)
 
   local lines   = { header, rule }
@@ -125,9 +123,9 @@ local function build_display(vars)
     end
 
     local display_line = string.format(
-      "  %-*s  %-*s  %s",
-      col_name, name:sub(1, col_name),
-      col_type, type_str:sub(1, col_type),
+      row_fmt,
+      name:sub(1, col_name),
+      type_str:sub(1, col_type),
       repr_str
     )
 
