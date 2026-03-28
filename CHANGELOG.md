@@ -2,6 +2,29 @@
 
 <!-- version list -->
 
+## v1.1.10 (2026-03-28)
+
+### Bug Fixes
+
+- Rerender images on scroll to fix flicker and off-screen rendering
+  ([#37](https://github.com/ansh-info/ipynb.nvim/pull/37),
+  [`c491706`](https://github.com/ansh-info/ipynb.nvim/commit/c491706737dcd765571409773bd32532651b9f7c))
+
+- **lua**: Register image in registry before render for scroll retry
+  ([#37](https://github.com/ansh-info/ipynb.nvim/pull/37),
+  [`c491706`](https://github.com/ansh-info/ipynb.nvim/commit/c491706737dcd765571409773bd32532651b9f7c))
+
+- **lua**: Register image in registry before render for scroll retry
+  ([`089add1`](https://github.com/ansh-info/ipynb.nvim/commit/089add1369e3660bbcfa7711af836f47ac6ad9dd))
+
+- **lua**: Rerender images on WinScrolled with 80ms debounce
+  ([#37](https://github.com/ansh-info/ipynb.nvim/pull/37),
+  [`c491706`](https://github.com/ansh-info/ipynb.nvim/commit/c491706737dcd765571409773bd32532651b9f7c))
+
+- **lua**: Rerender images on WinScrolled with 80ms debounce
+  ([`dba38e2`](https://github.com/ansh-info/ipynb.nvim/commit/dba38e2e612eeb18b287a9328a147d6524366197))
+
+
 ## v1.1.9 (2026-03-28)
 
 ### Bug Fixes
