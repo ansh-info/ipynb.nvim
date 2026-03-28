@@ -1,6 +1,6 @@
 [project]
 name = "jupytervim"
-version = "1.0.2"
+version = "1.0.3"
 description = "Neovim plugin for editing Jupyter notebooks natively with kernel execution and inline output"
 readme = "README.md"
 requires-python = ">=3.12"
