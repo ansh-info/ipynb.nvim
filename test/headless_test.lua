@@ -109,6 +109,21 @@ check("kernel_bridge.py sends status:starting AFTER setup completes",
   end)(),
   "status:starting is sent before setup completes")
 
+-- ── 7. highlight_inspector_buf: no hard-coded end_col = 200 ──────────────────
+
+local ok_insp2, insp_src2 = pcall(function()
+  local h = io.open("/home/oneai/jupytervim/lua/ipynb/inspector.lua", "r")
+  local s = h:read("*all"); h:close(); return s
+end)
+if ok_insp2 then
+  check("highlight_inspector_buf uses no hard-coded end_col=200",
+    insp_src2:find("end_col%s*=%s*200") == nil,
+    "found 'end_col = 200' - will crash on short lines")
+  check("highlight_inspector_buf clamps end_col with math.min",
+    insp_src2:find("math%.min") ~= nil,
+    "math.min clamping not found in highlight_inspector_buf")
+end
+
 -- ── Summary ───────────────────────────────────────────────────────────────────
 
 print(string.format("\n%d passed, %d failed", pass, fail))
