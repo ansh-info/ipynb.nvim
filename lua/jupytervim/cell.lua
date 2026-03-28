@@ -284,7 +284,15 @@ function M.cell_at_cursor(bufnr)
 
   for i, cs in ipairs(state.cells) do
     local s, e = cell_line_range(bufnr, cs)
-    if cur_row >= s and cur_row <= e then
+    -- Extend the range to cover the blank separator line that follows each
+    -- cell (inserted by render()).  The upper boundary is the start of the
+    -- next cell (exclusive), so the separator belongs to the cell above it.
+    local limit = e
+    if i < #state.cells then
+      local ns, _ = cell_line_range(bufnr, state.cells[i + 1])
+      limit = ns - 1  -- include blank line(s) between the two cells
+    end
+    if cur_row >= s and cur_row <= limit then
       return cs, i
     end
   end
