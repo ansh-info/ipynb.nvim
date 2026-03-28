@@ -2,6 +2,29 @@
 
 <!-- version list -->
 
+## v1.1.8 (2026-03-28)
+
+### Bug Fixes
+
+- Image always rendered at top of buffer due to wrong geometry API
+  ([#31](https://github.com/ansh-info/ipynb.nvim/pull/31),
+  [`3e0d4b5`](https://github.com/ansh-info/ipynb.nvim/commit/3e0d4b5060f6e0f25b2bfa33f97746c068f9296c))
+
+- **lua**: Drop text_line_offset from image render queue
+  ([#31](https://github.com/ansh-info/ipynb.nvim/pull/31),
+  [`3e0d4b5`](https://github.com/ansh-info/ipynb.nvim/commit/3e0d4b5060f6e0f25b2bfa33f97746c068f9296c))
+
+- **lua**: Drop text_line_offset from image render queue
+  ([`e762b4c`](https://github.com/ansh-info/ipynb.nvim/commit/e762b4ca8809c37517a8851ce0a4eb84b3b2b062))
+
+- **lua**: Pass geometry as flat options to image.nvim from_file
+  ([#31](https://github.com/ansh-info/ipynb.nvim/pull/31),
+  [`3e0d4b5`](https://github.com/ansh-info/ipynb.nvim/commit/3e0d4b5060f6e0f25b2bfa33f97746c068f9296c))
+
+- **lua**: Pass geometry as flat options to image.nvim from_file
+  ([`162f789`](https://github.com/ansh-info/ipynb.nvim/commit/162f78900c839b0844a54e2b2ce1b9019f81c450))
+
+
 ## v1.1.7 (2026-03-28)
 
 ### Bug Fixes
