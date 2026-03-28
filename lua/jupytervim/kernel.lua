@@ -324,7 +324,17 @@ function M.run_current_cell(bufnr)
   if not s.job_id then
     if cfg.kernel.auto_start then
       M.start(bufnr, nil)
-      vim.defer_fn(function() M.run_current_cell(bufnr) end, 2000)
+      -- Poll every 500 ms until the kernel signals idle, then run.
+      local function _await_and_run()
+        local st = get_state(bufnr)
+        if not st.job_id or st.status == "stopped" then return end
+        if st.status == "idle" then
+          M.run_current_cell(bufnr)
+        else
+          vim.defer_fn(_await_and_run, 500)
+        end
+      end
+      vim.defer_fn(_await_and_run, 500)
       return
     end
     utils.warn("No kernel running. Use :JupyterKernelStart.")
