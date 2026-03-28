@@ -36,6 +36,7 @@ rendering, full Vim modal editing, live kernel execution, and inline output.
 - [3rd/image.nvim](https://github.com/3rd/image.nvim)
 - Kitty, Ghostty, or WezTerm terminal (Kitty graphics protocol), or `ueberzugpp` for others
 - `luarocks` + `magick` luarock + `imagemagick` system library (required by image.nvim)
+- **tmux users:** add `set -g allow-passthrough on` to `~/.tmux.conf` and restart tmux, otherwise image.nvim will error on startup
 
 ```bash
 # macOS — use luajit (lua@5.1 was removed from Homebrew).
