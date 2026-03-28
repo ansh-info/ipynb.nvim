@@ -28,8 +28,8 @@ and image/plot rendering via the Kitty graphics protocol.
 | Cell navigation (`]c` / `[c`) | ✅ Phase 1 |
 | Add / delete cells | ✅ Phase 1 |
 | Save back to `.ipynb` | ✅ Phase 1 |
-| Jupyter kernel execution | 🔜 Phase 2 |
-| Text / error output as inline virtual lines | 🔜 Phase 2 |
+| Jupyter kernel execution | ✅ Phase 2 |
+| Text / error output as inline virtual lines | ✅ Phase 2 |
 | Image / plot rendering (Kitty / ueberzugpp) | 🔜 Phase 3 |
 | Markdown cell rendering | 🔜 Phase 4 |
 | Kernel completions (LSP-style) | 🔜 Phase 4 |
