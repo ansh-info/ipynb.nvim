@@ -278,7 +278,7 @@ wheels = [
 ]
 
 [[package]]
-name = "jupytervim"
+name = "ipynb-nvim"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
