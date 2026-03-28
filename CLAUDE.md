@@ -98,8 +98,12 @@ git add lua/ python/
 git commit -m "..."
 ```
 
-### No co-author lines
-Never add `Co-Authored-By:` or any attribution trailer.
+### Co-author
+Always add this trailer to every commit:
+```
+Co-authored-by: Apoorva Gupta <apoorvaagupta.info@gmail.com>
+```
+Do **not** add any Claude Code or AI attribution.
 
 ### Conventional commits
 ```
