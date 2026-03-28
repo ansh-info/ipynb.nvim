@@ -100,6 +100,15 @@ function M.open(path, bufnr)
   cell.render(bufnr, nb)
   keymaps.attach(bufnr)
 
+  -- Attach kernel completions (omnifunc + optional nvim-cmp source).
+  local ok_cmp, completion = pcall(require, "jupytervim.completion")
+  if ok_cmp then completion.attach(bufnr) end
+
+  -- Register inspector keymap.
+  vim.keymap.set("n", "<leader>ji", function()
+    require("jupytervim.inspector").open(bufnr)
+  end, { buffer = bufnr, silent = true, desc = "Jupyter: variable inspector" })
+
   -- Auto-clean state on buffer wipe.
   vim.api.nvim_create_autocmd("BufDelete", {
     buffer  = bufnr,
