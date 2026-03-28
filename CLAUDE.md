@@ -97,7 +97,7 @@ There is also a root-level `pyproject.toml` and `uv.lock` - these are for
 ## Writing style - mandatory rules
 
 ### No em or en dashes
-Never use em dashes (—) or en dashes (–) anywhere — in docs, comments, or commit
+Never use em dashes (—) or en dashes (–) anywhere - in docs, comments, or commit
 messages. Use a regular hyphen (-) instead.
 
 ---
@@ -139,6 +139,40 @@ Scopes: `lua`, `python`, `plugin`, `docs`, `config`
 1. Python file (if any)
 2. Lua file(s) one at a time
 3. README / CLAUDE.md last
+
+### Branch naming
+```
+feat/<short-description>     new feature
+fix/<short-description>      bug fix or cleanup
+docs/<short-description>     documentation only
+chore/<short-description>    tooling, config, CI
+```
+
+Examples:
+```
+feat/run-and-advance
+fix/em-dash-cleanup
+chore/upgrade-actions-node24
+```
+
+### Pull request description
+Every PR must follow this structure:
+
+```
+## Summary
+
+- <bullet: what changed and why>
+- <bullet: ...>
+
+## Test plan
+
+- [ ] <what to verify manually>
+- [ ] <...>
+```
+
+- No "Generated with Claude Code" or AI attribution
+- Title follows conventional commit format: `feat: ...` / `fix: ...`
+- Keep title under 72 characters
 
 ---
 
