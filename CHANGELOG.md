@@ -2,6 +2,154 @@
 
 <!-- version list -->
 
+## v1.1.0 (2026-03-28)
+
+### Bug Fixes
+
+- Restore version bumps and upgrade to Node.js 24 actions
+  ([#16](https://github.com/ansh-info/ipynb.nvim/pull/16),
+  [`3d56aaa`](https://github.com/ansh-info/ipynb.nvim/commit/3d56aaae8eb3b5231ca60bc9aee894c42ec24e31))
+
+- **ci**: Upgrade actions/checkout to v6 and setup-python to v6 for Node.js 24
+  ([#16](https://github.com/ansh-info/ipynb.nvim/pull/16),
+  [`3d56aaa`](https://github.com/ansh-info/ipynb.nvim/commit/3d56aaae8eb3b5231ca60bc9aee894c42ec24e31))
+
+- **ci**: Upgrade actions/checkout to v6 and setup-python to v6 for Node.js 24
+  ([`22a8b12`](https://github.com/ansh-info/ipynb.nvim/commit/22a8b12c8a8e11f9562e2ca3908e0b3cf8dd11db))
+
+- **config**: Set ignore_merge_commits = false so PR titles drive version bumps
+  ([#16](https://github.com/ansh-info/ipynb.nvim/pull/16),
+  [`3d56aaa`](https://github.com/ansh-info/ipynb.nvim/commit/3d56aaae8eb3b5231ca60bc9aee894c42ec24e31))
+
+- **config**: Set ignore_merge_commits = false so PR titles drive version bumps
+  ([`a0d0b5f`](https://github.com/ansh-info/ipynb.nvim/commit/a0d0b5f6214e02115e6fdb3ab87bf4ca5758d430))
+
+### Chores
+
+- **config**: Regenerate python/uv.lock after ipynb-nvim rename
+  ([#15](https://github.com/ansh-info/ipynb.nvim/pull/15),
+  [`6c868e4`](https://github.com/ansh-info/ipynb.nvim/commit/6c868e484d9bde213a60988812b61fa7f98b6ebf))
+
+- **config**: Regenerate python/uv.lock after ipynb-nvim rename
+  ([`e51e9ed`](https://github.com/ansh-info/ipynb.nvim/commit/e51e9ed85ab052de5ac5951d604f93003c01ae70))
+
+- **config**: Regenerate root uv.lock after ipynb-nvim rename
+  ([#15](https://github.com/ansh-info/ipynb.nvim/pull/15),
+  [`6c868e4`](https://github.com/ansh-info/ipynb.nvim/commit/6c868e484d9bde213a60988812b61fa7f98b6ebf))
+
+- **config**: Regenerate root uv.lock after ipynb-nvim rename
+  ([`adab316`](https://github.com/ansh-info/ipynb.nvim/commit/adab316c9574405fa47f74e77b07297706ac96d8))
+
+- **config**: Update bug report template commands for ipynb.nvim
+  ([#15](https://github.com/ansh-info/ipynb.nvim/pull/15),
+  [`6c868e4`](https://github.com/ansh-info/ipynb.nvim/commit/6c868e484d9bde213a60988812b61fa7f98b6ebf))
+
+- **config**: Update bug report template commands for ipynb.nvim
+  ([`7c5da81`](https://github.com/ansh-info/ipynb.nvim/commit/7c5da8185b7ac9aaa6a148bc0826aa93bab51c24))
+
+- **config**: Update issue template config URL for ipynb.nvim
+  ([#15](https://github.com/ansh-info/ipynb.nvim/pull/15),
+  [`6c868e4`](https://github.com/ansh-info/ipynb.nvim/commit/6c868e484d9bde213a60988812b61fa7f98b6ebf))
+
+- **config**: Update issue template config URL for ipynb.nvim
+  ([`bc9a386`](https://github.com/ansh-info/ipynb.nvim/commit/bc9a38653d1f223ea213b27e44b0f16a43c5bfaa))
+
+- **config**: Update python/uv.lock for ipynb-nvim rename
+  ([#15](https://github.com/ansh-info/ipynb.nvim/pull/15),
+  [`6c868e4`](https://github.com/ansh-info/ipynb.nvim/commit/6c868e484d9bde213a60988812b61fa7f98b6ebf))
+
+- **config**: Update python/uv.lock for ipynb-nvim rename
+  ([`231c885`](https://github.com/ansh-info/ipynb.nvim/commit/231c88504e1515e7100e8d3efb077da39b13cc36))
+
+- **config**: Update root uv.lock for ipynb-nvim rename
+  ([#15](https://github.com/ansh-info/ipynb.nvim/pull/15),
+  [`6c868e4`](https://github.com/ansh-info/ipynb.nvim/commit/6c868e484d9bde213a60988812b61fa7f98b6ebf))
+
+- **config**: Update root uv.lock for ipynb-nvim rename
+  ([`2d1799c`](https://github.com/ansh-info/ipynb.nvim/commit/2d1799ca49a5ae3a64dd2d9bccb1ba561b10ad12))
+
+### Documentation
+
+- **docs**: Document both uv projects and correct sync/lock workflow
+  ([#16](https://github.com/ansh-info/ipynb.nvim/pull/16),
+  [`3d56aaa`](https://github.com/ansh-info/ipynb.nvim/commit/3d56aaae8eb3b5231ca60bc9aee894c42ec24e31))
+
+- **docs**: Document both uv projects and correct sync/lock workflow
+  ([`fe94528`](https://github.com/ansh-info/ipynb.nvim/commit/fe94528fb54917cf86cb9459659857c60c049b42))
+
+- **docs**: Update CHANGELOG repo URLs for ipynb.nvim rename
+  ([#15](https://github.com/ansh-info/ipynb.nvim/pull/15),
+  [`6c868e4`](https://github.com/ansh-info/ipynb.nvim/commit/6c868e484d9bde213a60988812b61fa7f98b6ebf))
+
+- **docs**: Update CHANGELOG repo URLs for ipynb.nvim rename
+  ([`49f30d1`](https://github.com/ansh-info/ipynb.nvim/commit/49f30d1a42defc475740aa9ae65521acd5ca7b39))
+
+- **docs**: Update CLAUDE.md for ipynb.nvim rename
+  ([#15](https://github.com/ansh-info/ipynb.nvim/pull/15),
+  [`6c868e4`](https://github.com/ansh-info/ipynb.nvim/commit/6c868e484d9bde213a60988812b61fa7f98b6ebf))
+
+- **docs**: Update CLAUDE.md for ipynb.nvim rename
+  ([`71edec5`](https://github.com/ansh-info/ipynb.nvim/commit/71edec542bf9c288d28669a171c267d11b80fef3))
+
+- **docs**: Update README for ipynb.nvim rename
+  ([#15](https://github.com/ansh-info/ipynb.nvim/pull/15),
+  [`6c868e4`](https://github.com/ansh-info/ipynb.nvim/commit/6c868e484d9bde213a60988812b61fa7f98b6ebf))
+
+- **docs**: Update README for ipynb.nvim rename
+  ([`59bfdc0`](https://github.com/ansh-info/ipynb.nvim/commit/59bfdc00452a0b1cb9778b7322cbcedb7c21e678))
+
+### Features
+
+- Rename plugin to ipynb.nvim ([#15](https://github.com/ansh-info/ipynb.nvim/pull/15),
+  [`6c868e4`](https://github.com/ansh-info/ipynb.nvim/commit/6c868e484d9bde213a60988812b61fa7f98b6ebf))
+
+### Refactoring
+
+- **config**: Rename python package to ipynb-nvim
+  ([#15](https://github.com/ansh-info/ipynb.nvim/pull/15),
+  [`6c868e4`](https://github.com/ansh-info/ipynb.nvim/commit/6c868e484d9bde213a60988812b61fa7f98b6ebf))
+
+- **config**: Rename python package to ipynb-nvim
+  ([`02114c3`](https://github.com/ansh-info/ipynb.nvim/commit/02114c3baf2afb0b0edd3609970700fc640aa7f2))
+
+- **config**: Rename root package to ipynb-nvim
+  ([#15](https://github.com/ansh-info/ipynb.nvim/pull/15),
+  [`6c868e4`](https://github.com/ansh-info/ipynb.nvim/commit/6c868e484d9bde213a60988812b61fa7f98b6ebf))
+
+- **config**: Rename root package to ipynb-nvim
+  ([`905f752`](https://github.com/ansh-info/ipynb.nvim/commit/905f752221721401efdb872072f693c8f37035e4))
+
+- **lua**: Rename lua/jupytervim/ to lua/ipynb/
+  ([#15](https://github.com/ansh-info/ipynb.nvim/pull/15),
+  [`6c868e4`](https://github.com/ansh-info/ipynb.nvim/commit/6c868e484d9bde213a60988812b61fa7f98b6ebf))
+
+- **lua**: Rename lua/jupytervim/ to lua/ipynb/
+  ([`8d4546a`](https://github.com/ansh-info/ipynb.nvim/commit/8d4546a352a9a86a17a153d28cd3f38e8ecd502e))
+
+- **plugin**: Rename plugin/jupytervim.lua to plugin/ipynb.lua
+  ([#15](https://github.com/ansh-info/ipynb.nvim/pull/15),
+  [`6c868e4`](https://github.com/ansh-info/ipynb.nvim/commit/6c868e484d9bde213a60988812b61fa7f98b6ebf))
+
+- **plugin**: Rename plugin/jupytervim.lua to plugin/ipynb.lua
+  ([`d3c9c49`](https://github.com/ansh-info/ipynb.nvim/commit/d3c9c49753836efc950d390dc40d190b30298ed8))
+
+- **python**: Update command references to IpynbKernelStart
+  ([#15](https://github.com/ansh-info/ipynb.nvim/pull/15),
+  [`6c868e4`](https://github.com/ansh-info/ipynb.nvim/commit/6c868e484d9bde213a60988812b61fa7f98b6ebf))
+
+- **python**: Update command references to IpynbKernelStart
+  ([`20e9f3a`](https://github.com/ansh-info/ipynb.nvim/commit/20e9f3a36224310d71152c9019be02145999d484))
+
+### Testing
+
+- Update test notebook strings for ipynb.nvim rename
+  ([#15](https://github.com/ansh-info/ipynb.nvim/pull/15),
+  [`6c868e4`](https://github.com/ansh-info/ipynb.nvim/commit/6c868e484d9bde213a60988812b61fa7f98b6ebf))
+
+- Update test notebook strings for ipynb.nvim rename
+  ([`a518243`](https://github.com/ansh-info/ipynb.nvim/commit/a5182432ec9ecfe3ba81aa6fce2e4f755462c8f8))
+
+
 ## v1.0.3 (2026-03-28)
 
 ### Bug Fixes
