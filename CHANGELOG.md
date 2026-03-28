@@ -2,6 +2,18 @@
 
 <!-- version list -->
 
+## v1.1.13 (2026-03-28)
+
+### Bug Fixes
+
+- **lua**: Guard against re-entrant image renders in output._render
+  ([#41](https://github.com/ansh-info/ipynb.nvim/pull/41),
+  [`22853ad`](https://github.com/ansh-info/ipynb.nvim/commit/22853ad2647fc2ec265cf0e769b5045d0d203a5f))
+
+- **lua**: Guard against re-entrant image renders in output._render
+  ([`02f0ad6`](https://github.com/ansh-info/ipynb.nvim/commit/02f0ad6af9554ddeb1b47405e1b0d86caffb3dd6))
+
+
 ## v1.1.12 (2026-03-28)
 
 ### Bug Fixes
