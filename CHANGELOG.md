@@ -2,6 +2,37 @@
 
 <!-- version list -->
 
+## v1.1.4 (2026-03-28)
+
+### Bug Fixes
+
+- Inspector format crash and matplotlib race condition
+  ([#20](https://github.com/ansh-info/ipynb.nvim/pull/20),
+  [`c2f1dae`](https://github.com/ansh-info/ipynb.nvim/commit/c2f1dae721d5c29369c144325a31bfaae2ff3ba2))
+
+- **lua**: Replace %-*s dynamic-width format spec with literal widths
+  ([#20](https://github.com/ansh-info/ipynb.nvim/pull/20),
+  [`c2f1dae`](https://github.com/ansh-info/ipynb.nvim/commit/c2f1dae721d5c29369c144325a31bfaae2ff3ba2))
+
+- **lua**: Replace %-*s dynamic-width format spec with literal widths
+  ([`3d2b233`](https://github.com/ansh-info/ipynb.nvim/commit/3d2b233786e077c5428807cdb83e693eef43634d))
+
+- **python**: Wait for %matplotlib inline before notifying Lua kernel is ready
+  ([#20](https://github.com/ansh-info/ipynb.nvim/pull/20),
+  [`c2f1dae`](https://github.com/ansh-info/ipynb.nvim/commit/c2f1dae721d5c29369c144325a31bfaae2ff3ba2))
+
+- **python**: Wait for %matplotlib inline before notifying Lua kernel is ready
+  ([`876357f`](https://github.com/ansh-info/ipynb.nvim/commit/876357f6d73402bc844e14824c1f94b08a4cfa05))
+
+### Testing
+
+- **lua**: Add headless Neovim test suite ([#20](https://github.com/ansh-info/ipynb.nvim/pull/20),
+  [`c2f1dae`](https://github.com/ansh-info/ipynb.nvim/commit/c2f1dae721d5c29369c144325a31bfaae2ff3ba2))
+
+- **lua**: Add headless Neovim test suite
+  ([`84c1453`](https://github.com/ansh-info/ipynb.nvim/commit/84c1453a2226783224b8305e30d3cfea5cb1f3f5))
+
+
 ## v1.1.3 (2026-03-28)
 
 ### Bug Fixes
