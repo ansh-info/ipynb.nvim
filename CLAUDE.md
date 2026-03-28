@@ -46,8 +46,8 @@ jupytervim/
 |---|---|---|
 | **1** | ✅ Done | Notebook parser, cell renderer, navigation, save |
 | **2** | ✅ Done | kernel_bridge.py (ZMQ), kernel.lua, output.lua (inline text/error) |
-| **3** | 🔜 Next | image.lua (Kitty protocol), image.nvim integration, plot rendering |
-| **4** | Planned | Markdown cell rendering, kernel completions, variable inspector |
+| **3** | ✅ Done | image.lua (Kitty protocol), image.nvim integration, plot rendering |
+| **4** | 🔜 Next | Markdown cell rendering, kernel completions, variable inspector |
 
 Always check this table before starting work. Never skip ahead — each phase
 builds on the last.
