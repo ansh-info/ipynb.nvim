@@ -38,9 +38,11 @@ rendering, full Vim modal editing, live kernel execution, and inline output.
 - `luarocks` + `magick` luarock + `imagemagick` system library (required by image.nvim)
 
 ```bash
-# macOS
-brew install luarocks imagemagick
-luarocks --local install magick 1.0.0-1
+# macOS — lua@5.1 is required so luarocks targets Neovim's LuaJIT runtime.
+# Do NOT pin version 1.0.0-1: it only supports ImageMagick 6.
+# Omitting the version installs the latest rock, which supports ImageMagick 7.
+brew install luarocks imagemagick lua@5.1
+luarocks --local --lua-dir=$(brew --prefix lua@5.1) install magick
 ```
 
 **Optional - richer markdown cells**
@@ -98,7 +100,7 @@ return {
       "nvim-treesitter/nvim-treesitter",
       {
         "3rd/image.nvim",
-        build = "luarocks --local install magick 1.0.0-1",
+        build = "luarocks --local --lua-dir=$(brew --prefix lua@5.1) install magick",
         opts = {
           backend = "kitty",              -- "kitty" for Kitty/Ghostty/WezTerm
           -- backend = "ueberzugpp",      -- for iTerm2 / other terminals
