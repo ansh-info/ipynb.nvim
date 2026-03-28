@@ -150,34 +150,31 @@ local function highlight_inspector_buf(ibuf, line_map)
   local ins_ns = vim.api.nvim_create_namespace("ipynb_inspector_hl")
   vim.api.nvim_buf_clear_namespace(ibuf, ins_ns, 0, -1)
 
-  -- Header row.
-  vim.api.nvim_buf_set_extmark(ibuf, ins_ns, 0, 0, {
-    end_col  = 200,
-    hl_group = "IpynbInspectorHeader",
-    priority = 50,
-  })
+  -- Fetch all lines once so we can clamp end_col to actual line length.
+  -- nvim_buf_set_extmark raises "end_col out of range" if end_col exceeds
+  -- the line length, so we never pass a fixed large value.
+  local all_lines = vim.api.nvim_buf_get_lines(ibuf, 0, -1, false)
+
+  local function mark(row, scol, ecol, hl)
+    local len = #(all_lines[row + 1] or "")
+    if scol >= len then return end
+    vim.api.nvim_buf_set_extmark(ibuf, ins_ns, row, scol, {
+      end_col  = math.min(ecol, len),
+      hl_group = hl,
+      priority = 50,
+    })
+  end
+
+  -- Header row (full line).
+  mark(0, 0, #(all_lines[1] or ""), "IpynbInspectorHeader")
 
   -- Variable rows: highlight name, type, value in different colours.
   for lnum, _ in pairs(line_map) do
     local row = lnum - 1
-    -- Name column: cols 2–21
-    vim.api.nvim_buf_set_extmark(ibuf, ins_ns, row, 2, {
-      end_col  = 22,
-      hl_group = "IpynbInspectorName",
-      priority = 50,
-    })
-    -- Type column: cols 24–39
-    vim.api.nvim_buf_set_extmark(ibuf, ins_ns, row, 24, {
-      end_col  = 40,
-      hl_group = "IpynbInspectorType",
-      priority = 50,
-    })
-    -- Value column: from col 42 onwards
-    vim.api.nvim_buf_set_extmark(ibuf, ins_ns, row, 42, {
-      end_col  = 200,
-      hl_group = "IpynbInspectorValue",
-      priority = 50,
-    })
+    local len = #(all_lines[lnum] or "")
+    mark(row, 2,  22,  "IpynbInspectorName")
+    mark(row, 24, 40,  "IpynbInspectorType")
+    mark(row, 42, len, "IpynbInspectorValue")
   end
 end
 
