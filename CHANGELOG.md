@@ -2,6 +2,18 @@
 
 <!-- version list -->
 
+## v1.1.14 (2026-03-28)
+
+### Bug Fixes
+
+- **lua**: Use pattern= not match= in nvim_exec_autocmds for FileType
+  ([#42](https://github.com/ansh-info/ipynb.nvim/pull/42),
+  [`be5a706`](https://github.com/ansh-info/ipynb.nvim/commit/be5a706817d9a8787e613cf3821fd69c36748186))
+
+- **lua**: Use pattern= not match= in nvim_exec_autocmds for FileType
+  ([`7c2b65b`](https://github.com/ansh-info/ipynb.nvim/commit/7c2b65b8f79bffe402141aa5a6c6f5497c49d6e3))
+
+
 ## v1.1.13 (2026-03-28)
 
 ### Bug Fixes
