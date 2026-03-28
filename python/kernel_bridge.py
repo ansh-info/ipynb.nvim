@@ -184,22 +184,27 @@ def _start_iopub_thread() -> None:
 
 
 def cmd_start(data: dict) -> None:
-    """Start a new kernel process."""
-    global _km, _kc
-    kernel_name = data.get("kernel", "python3")
-    try:
-        _km = KernelManager(kernel_name=kernel_name)
-        _km.start_kernel()
-        _kc = _km.blocking_client()
-        _kc.start_channels()
-        _kc.wait_for_ready(timeout=60)
-        send({"type": "status", "state": "starting", "msg_id": ""})
-        _start_iopub_thread()
-        # Request kernel_info to get language + version.
-        _send_kernel_info_request()
-    except Exception as exc:
-        send({"type": "error_internal",
-              "message": f"Failed to start kernel '{kernel_name}': {exc}"})
+    """Start a new kernel process (non-blocking — spawns a background thread)."""
+    def _do_start() -> None:
+        global _km, _kc
+        kernel_name = data.get("kernel", "python3")
+        try:
+            km = KernelManager(kernel_name=kernel_name)
+            km.start_kernel()
+            kc = km.blocking_client()
+            kc.start_channels()
+            kc.wait_for_ready(timeout=60)
+            # Assign to globals only after fully ready (CPython GIL keeps this safe).
+            _km = km
+            _kc = kc
+            send({"type": "status", "state": "starting", "msg_id": ""})
+            _start_iopub_thread()
+            _send_kernel_info_request()
+        except Exception as exc:
+            send({"type": "error_internal",
+                  "message": f"Failed to start kernel '{kernel_name}': {exc}"})
+
+    threading.Thread(target=_do_start, daemon=True).start()
 
 
 def cmd_attach(data: dict) -> None:
