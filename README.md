@@ -28,7 +28,7 @@ rendering, full Vim modal editing, live kernel execution, and inline output.
 - Neovim >= 0.10.0
 - [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
 - Python >= 3.12
-- [uv](https://github.com/astral-sh/uv) (recommended) or pip3
+- [uv](https://github.com/astral-sh/uv) (recommended) or python3 (built-in venv fallback)
 
 **Optional — image rendering**
 
@@ -90,7 +90,7 @@ rendering, full Vim modal editing, live kernel execution, and inline output.
 ```lua
 use {
   "ansh-info/jupytervim",
-  run = "uv sync --project python/ || pip3 install ./python/",
+  run = "uv sync --project python/ || (python3 -m venv python/.venv && python/.venv/bin/pip install ./python/)",
   config = function()
     require("jupytervim").setup({})
   end,
