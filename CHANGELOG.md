@@ -2,6 +2,50 @@
 
 <!-- version list -->
 
+## v1.1.3 (2026-03-28)
+
+### Bug Fixes
+
+- Variable inspector and matplotlib inline backend
+  ([#19](https://github.com/ansh-info/ipynb.nvim/pull/19),
+  [`1eeafaa`](https://github.com/ansh-info/ipynb.nvim/commit/1eeafaae4fa2e1809694bbbd0ae47f4514f352eb))
+
+- **lua**: Add execute_snippet API and route snippet pending in dispatch
+  ([#19](https://github.com/ansh-info/ipynb.nvim/pull/19),
+  [`1eeafaa`](https://github.com/ansh-info/ipynb.nvim/commit/1eeafaae4fa2e1809694bbbd0ae47f4514f352eb))
+
+- **lua**: Add execute_snippet API and route snippet pending in dispatch
+  ([`e0027a0`](https://github.com/ansh-info/ipynb.nvim/commit/e0027a0d67b1563ec9e506def0a7d3c370a07305))
+
+- **lua**: Rewrite inspector to use kernel.execute_snippet
+  ([#19](https://github.com/ansh-info/ipynb.nvim/pull/19),
+  [`1eeafaa`](https://github.com/ansh-info/ipynb.nvim/commit/1eeafaae4fa2e1809694bbbd0ae47f4514f352eb))
+
+- **lua**: Rewrite inspector to use kernel.execute_snippet
+  ([`8b64d54`](https://github.com/ansh-info/ipynb.nvim/commit/8b64d54ae72803aedbbbe05a56da9eb3c6ba5d28))
+
+- **lua**: Skip execution when cursor is inside a markdown cell
+  ([#19](https://github.com/ansh-info/ipynb.nvim/pull/19),
+  [`1eeafaa`](https://github.com/ansh-info/ipynb.nvim/commit/1eeafaae4fa2e1809694bbbd0ae47f4514f352eb))
+
+- **lua**: Skip execution when cursor is inside a markdown cell
+  ([`e1ec012`](https://github.com/ansh-info/ipynb.nvim/commit/e1ec012653d46c796933337cae3339f5fac49ded))
+
+- **python**: Auto-configure matplotlib inline backend on kernel start
+  ([#19](https://github.com/ansh-info/ipynb.nvim/pull/19),
+  [`1eeafaa`](https://github.com/ansh-info/ipynb.nvim/commit/1eeafaae4fa2e1809694bbbd0ae47f4514f352eb))
+
+- **python**: Auto-configure matplotlib inline backend on kernel start
+  ([`9ba714c`](https://github.com/ansh-info/ipynb.nvim/commit/9ba714cc0c6f5e5c74a6ada7f8c2b535ffbf76ba))
+
+- **python**: Suppress IOPub output from silent kernel setup commands
+  ([#19](https://github.com/ansh-info/ipynb.nvim/pull/19),
+  [`1eeafaa`](https://github.com/ansh-info/ipynb.nvim/commit/1eeafaae4fa2e1809694bbbd0ae47f4514f352eb))
+
+- **python**: Suppress IOPub output from silent kernel setup commands
+  ([`f2dce0d`](https://github.com/ansh-info/ipynb.nvim/commit/f2dce0dbc1aaafc107326aa39dfdfc482335165f))
+
+
 ## v1.1.2 (2026-03-28)
 
 ### Bug Fixes
