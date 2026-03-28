@@ -33,6 +33,13 @@ local function setup_buf_options(bufnr)
   -- Python filetype for treesitter / LSP.
   vim.api.nvim_buf_set_option(bufnr, "filetype", "python")
 
+  -- Disable formatters. The buffer holds raw cell source from multiple cells;
+  -- running ruff/black/conform over it would corrupt multi-cell content and
+  -- trigger spurious re-renders.
+  vim.b[bufnr].conform_format_on_save         = false
+  vim.b[bufnr].conform_format_on_insert_leave = false
+  vim.bo[bufnr].formatexpr                    = ""
+
   -- Conceal decorations look better without full conceallevel in insert mode.
   vim.api.nvim_win_set_option(0, "conceallevel", 0)
   vim.api.nvim_win_set_option(0, "signcolumn",   "yes")
