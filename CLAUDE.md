@@ -99,8 +99,9 @@ git commit -m "..."
 ```
 
 ### Co-author
-Always add this trailer to every commit:
+Always add these trailers to every commit, in this order:
 ```
+Co-authored-by: Ansh Kumar <anshkumar.info@gmail.com>
 Co-authored-by: Apoorva Gupta <apoorvaagupta.info@gmail.com>
 ```
 Do **not** add any Claude Code or AI attribution.
