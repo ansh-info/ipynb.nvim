@@ -132,6 +132,16 @@ function M.open(path, bufnr)
     end,
   })
 
+  -- Auto-start the kernel immediately so it is ready by the time the user
+  -- first presses <leader>r.  Use vim.schedule so the buffer is fully
+  -- rendered before the kernel subprocess is spawned.
+  if config.get().kernel.auto_start then
+    vim.schedule(function()
+      local ok, kernel = pcall(require, "jupytervim.kernel")
+      if ok then kernel.start(bufnr, nil) end
+    end)
+  end
+
   -- Mark buffer as not modified after initial load.
   vim.api.nvim_buf_set_option(bufnr, "modified", false)
 end
