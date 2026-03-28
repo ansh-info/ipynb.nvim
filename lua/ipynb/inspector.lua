@@ -198,142 +198,75 @@ function M.open(bufnr)
     return
   end
 
-  require("ipynb.utils").info("Fetching variables…")
+  local utils = require("ipynb.utils")
+  utils.info("Fetching variables...")
 
-  -- ── Send introspection code to the kernel ─────────────────────────────────
-  -- We abuse kernel.complete() is not right here; we need to execute code and
-  -- capture the output.  Use a dedicated execution with a unique msg_id and
-  -- intercept the result via the pending callback mechanism.
-  -- Since kernel.run_current_cell() modifies the notebook, we instead use the
-  -- lower-level send() path by temporarily injecting a pending entry.
-  --
-  -- Simpler: temporarily attach a one-shot stream listener by executing the
-  -- snippet via run_current_cell logic, but against a synthetic cell_state
-  -- that captures stdout into our own handler.
-  --
-  -- We implement this by directly sending a JSON execute command and watching
-  -- the kernel's output via a dedicated listener registered on the _state.
+  -- Execute the introspection snippet via the dedicated snippet path.
+  -- kernel.execute_snippet bypasses the cell output pipeline entirely so no
+  -- extmarks or cell state are touched. The callback fires asynchronously
+  -- once the kernel sends status:idle for this execution.
+  kernel.execute_snippet(bufnr, INTROSPECT_CODE, function(raw_text, err)
+    if err then
+      utils.warn("Inspector: " .. err)
+      return
+    end
 
-  local utils     = require("ipynb.utils")
-  local cell_mod  = require("ipynb.cell")
+    local vars = parse_json_from_output(raw_text or "") or {}
+    local lines, line_map = build_display(vars)
 
-  -- Build a throwaway cell_state so output.lua has somewhere to route messages.
-  -- We don't add it to the buffer; we just use it as a key for the pending map.
-  local synthetic_cs = { start_mark = -9999, index = nil, cell_type = "code" }
-  local accumulated  = {}
-  local done         = false
+    local width  = 82
+    local height = math.min(#lines, math.floor(vim.o.lines * 0.7))
+    local row    = math.floor((vim.o.lines   - height) / 2)
+    local col    = math.floor((vim.o.columns - width)  / 2)
 
-  -- Monkey-patch: temporarily override output.append for our key.
-  local output = require("ipynb.output")
-  local orig_append = output.append
+    local ibuf = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_buf_set_lines(ibuf, 0, -1, false, lines)
+    vim.api.nvim_buf_set_option(ibuf, "modifiable", false)
+    vim.api.nvim_buf_set_option(ibuf, "buftype",    "nofile")
 
-  output.append = function(b, cs, chunk)
-    if b == bufnr and cs == synthetic_cs then
-      if chunk.type == "stream" and chunk.name == "stdout" then
-        accumulated[#accumulated + 1] = chunk.text
-      elseif chunk.type == "status" and chunk.state == "idle" then
-        done = true
+    highlight_inspector_buf(ibuf, line_map)
+
+    local iwin = vim.api.nvim_open_win(ibuf, true, {
+      relative  = "editor",
+      row       = row,
+      col       = col,
+      width     = width,
+      height    = height,
+      style     = "minimal",
+      border    = "rounded",
+      title     = " Variable Inspector ",
+      title_pos = "center",
+    })
+    vim.api.nvim_set_option_value("cursorline", true, { win = iwin })
+
+    -- ── Keymaps inside the inspector window ──────────────────────────────────
+
+    local function close()
+      if vim.api.nvim_win_is_valid(iwin) then
+        vim.api.nvim_win_close(iwin, true)
       end
-    else
-      orig_append(b, cs, chunk)
     end
-  end
 
-  -- Execute snippet via the internal send path.
-  local state_mod = require("ipynb.kernel")
-  local mid = "jvim_inspect_" .. tostring(os.time())
-
-  -- Access the per-buffer state table directly to register the pending entry.
-  -- kernel.lua exposes no state getter, so we reach in via the closure by
-  -- calling run_current_cell on a synthetic stub. Instead, we use a simpler
-  -- approach: just use IpynbRun on hidden code via vim.schedule.
-  --
-  -- The cleanest approach: add a kernel.execute_raw() helper and call it here.
-  -- For now, we directly use vim.fn.chansend via the existing jobstart handle.
-
-  -- Get job_id by asking kernel for status (it has it internally).
-  -- We call kernel's internal _send via pcall on a known path.
-  local sent = false
-  local function try_send()
-    -- Reach job_id through kernel state (since kernel.lua has no getter,
-    -- we expose it temporarily via a thin wrapper call).
-    local ok2, result2 = pcall(function()
-      state_mod._execute_raw(bufnr, INTROSPECT_CODE, mid, synthetic_cs)
-    end)
-    if not ok2 then
-      -- Fallback: restore and show an error.
-      output.append = orig_append
-      utils.warn("Inspector: could not send introspection code: " .. tostring(result2))
-    else
-      sent = true
+    -- q / Esc - close.
+    for _, key in ipairs({ "q", "<Esc>" }) do
+      vim.keymap.set("n", key, close, { buffer = ibuf, noremap = true, silent = true })
     end
-  end
 
-  try_send()
-  if not sent then return end
+    -- r - refresh.
+    vim.keymap.set("n", "r", function()
+      close()
+      M.open(bufnr)
+    end, { buffer = ibuf, noremap = true, silent = true })
 
-  -- Wait for output (max 3 s).
-  vim.wait(3000, function() return done end, 50)
-  output.append = orig_append  -- always restore
-
-  -- ── Parse and display ──────────────────────────────────────────────────────
-  local raw_text = table.concat(accumulated, "")
-  local vars     = parse_json_from_output(raw_text) or {}
-
-  local lines, line_map = build_display(vars)
-
-  local width  = 82
-  local height = math.min(#lines, math.floor(vim.o.lines * 0.7))
-  local row    = math.floor((vim.o.lines   - height) / 2)
-  local col    = math.floor((vim.o.columns - width)  / 2)
-
-  local ibuf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_lines(ibuf, 0, -1, false, lines)
-  vim.api.nvim_buf_set_option(ibuf, "modifiable", false)
-  vim.api.nvim_buf_set_option(ibuf, "buftype",    "nofile")
-
-  highlight_inspector_buf(ibuf, line_map)
-
-  local iwin = vim.api.nvim_open_win(ibuf, true, {
-    relative  = "editor",
-    row       = row,
-    col       = col,
-    width     = width,
-    height    = height,
-    style     = "minimal",
-    border    = "rounded",
-    title     = " Variable Inspector ",
-    title_pos = "center",
-  })
-  vim.api.nvim_set_option_value("cursorline", true, { win = iwin })
-
-  -- ── Keymaps inside the inspector window ────────────────────────────────────
-
-  local function close()
-    if vim.api.nvim_win_is_valid(iwin) then
-      vim.api.nvim_win_close(iwin, true)
-    end
-  end
-
-  -- q / Esc — close.
-  for _, key in ipairs({ "q", "<Esc>" }) do
-    vim.keymap.set("n", key, close, { buffer = ibuf, noremap = true, silent = true })
-  end
-
-  -- r — refresh.
-  vim.keymap.set("n", "r", function()
-    close()
-    M.open(bufnr)
-  end, { buffer = ibuf, noremap = true, silent = true })
-
-  -- <CR> — deeper inspect on the variable under cursor.
-  vim.keymap.set("n", "<CR>", function()
-    local cur_lnum = vim.api.nvim_win_get_cursor(iwin)[1]
-    local var_name = line_map[cur_lnum]
-    if not var_name then return end
-    close()
-    M.inspect_var(bufnr, var_name)
-  end, { buffer = ibuf, noremap = true, silent = true })
+    -- <CR> - deeper inspect on the variable under cursor.
+    vim.keymap.set("n", "<CR>", function()
+      local cur_lnum = vim.api.nvim_win_get_cursor(iwin)[1]
+      local var_name = line_map[cur_lnum]
+      if not var_name then return end
+      close()
+      M.inspect_var(bufnr, var_name)
+    end, { buffer = ibuf, noremap = true, silent = true })
+  end)
 end
 
 --- Show a deeper inspect popup for a specific variable name.

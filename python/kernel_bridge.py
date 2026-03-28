@@ -138,6 +138,11 @@ _iopub_thread: Optional[threading.Thread] = None
 # Protected by a simple dict (CPython GIL ensures atomic set/get).
 _pending: dict[str, str] = {}
 
+# ZMQ msg_ids of silent kernel-setup commands (e.g. %matplotlib inline).
+# All IOPub messages whose parent msg_id is in this set are discarded so
+# that transient errors (e.g. matplotlib not installed) never reach Lua.
+_setup_ids: set[str] = set()
+
 
 # ── Output helpers ─────────────────────────────────────────────────────────────
 
@@ -176,6 +181,16 @@ def _process_iopub(msg: dict) -> None:
     msg_type = msg.get("header", {}).get("msg_type", "")
     content  = msg.get("content", {})
     zmq_pid  = msg.get("parent_header", {}).get("msg_id", "")
+
+    # Silently discard all output from kernel-setup commands (e.g.
+    # %matplotlib inline).  Clean up the set on status:idle so it
+    # doesn't grow unboundedly.
+    if zmq_pid and zmq_pid in _setup_ids:
+        if (msg_type == "status"
+                and content.get("execution_state") == "idle"):
+            _setup_ids.discard(zmq_pid)
+        return
+
     lid      = _lua_id(zmq_pid)
 
     if msg_type == "status":
@@ -268,6 +283,18 @@ def cmd_start(data: dict) -> None:
             send({"type": "status", "state": "starting", "msg_id": ""})
             _start_iopub_thread()
             _send_kernel_info_request()
+            # Auto-configure the IPython inline backend so that
+            # plt.show() emits display_data (image/png) instead of
+            # raising the FigureCanvasAgg non-interactive warning.
+            # We register the ZMQ id in _setup_ids so all IOPub replies
+            # (including ModuleNotFoundError if matplotlib is absent) are
+            # silently discarded and never forwarded to Lua.
+            try:
+                setup_id = _kc.execute("%matplotlib inline",
+                                       silent=True, store_history=False)
+                _setup_ids.add(setup_id)
+            except Exception:
+                pass
         except Exception as exc:
             send({"type": "error_internal",
                   "message": f"Failed to start kernel '{kernel_name}': {exc}"})
