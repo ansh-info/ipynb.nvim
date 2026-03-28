@@ -351,6 +351,10 @@ function M.run_current_cell(bufnr)
   local cfg = config.get()
   local cs, _ = cell.cell_at_cursor(bufnr)
   if not cs then utils.warn("Cursor is not inside a cell.") return end
+  if cs.cell_type ~= "code" then
+    utils.info("Not a code cell - skipping execution.")
+    return
+  end
 
   local s = get_state(bufnr)
   if not s.job_id then
