@@ -70,18 +70,38 @@ def _strip_ansi(text: str) -> str:
 def _venv_kernel_python() -> Optional[str]:
     """Return the Python from an active venv or conda env, if available.
 
-    When the user activates a venv before launching Neovim, $VIRTUAL_ENV (or
-    $CONDA_PREFIX) is set.  We use that Python for the kernel so that packages
-    installed in the venv (numpy, matplotlib, etc.) are visible in notebooks.
+    Checks $VIRTUAL_ENV and $CONDA_PREFIX.  Also verifies that ipykernel is
+    installed in the venv - without it the kernel process cannot launch.
+    If the venv is found but ipykernel is missing, emits an actionable error
+    and returns None so the default kernel spec is used as fallback.
     """
+    import subprocess as _sp
+
     for var in ("VIRTUAL_ENV", "CONDA_PREFIX"):
         prefix = os.environ.get(var)
         if not prefix:
             continue
         for rel in ("bin/python3", "bin/python"):
             path = os.path.join(prefix, rel)
-            if os.path.isfile(path) and os.access(path, os.X_OK):
-                return path
+            if not (os.path.isfile(path) and os.access(path, os.X_OK)):
+                continue
+            try:
+                r = _sp.run([path, "-c", "import ipykernel"],
+                            capture_output=True, timeout=5)
+                if r.returncode == 0:
+                    return path
+            except Exception:
+                pass
+            # ipykernel missing - warn and fall back to default kernel spec.
+            send({
+                "type": "error_internal",
+                "message": (
+                    f"Venv detected ({prefix}) but ipykernel is not installed. "
+                    "Run: uv pip install ipykernel  (or: pip install ipykernel). "
+                    "Falling back to system Python kernel."
+                ),
+            })
+            return None
     return None
 
 
