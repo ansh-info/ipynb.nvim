@@ -2,6 +2,18 @@
 
 <!-- version list -->
 
+## v1.1.12 (2026-03-28)
+
+### Bug Fixes
+
+- **lua**: Attach LSP clients when opening a notebook buffer
+  ([#40](https://github.com/ansh-info/ipynb.nvim/pull/40),
+  [`3a98311`](https://github.com/ansh-info/ipynb.nvim/commit/3a98311e344f9b55ea1a9e14ac401edb48958244))
+
+- **lua**: Attach LSP clients when opening a notebook buffer
+  ([`9d129ef`](https://github.com/ansh-info/ipynb.nvim/commit/9d129ef82fd11883ddfcbf1d3c93087d160df3f9))
+
+
 ## v1.1.11 (2026-03-28)
 
 ### Bug Fixes
