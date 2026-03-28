@@ -30,7 +30,7 @@ and image/plot rendering via the Kitty graphics protocol.
 | Save back to `.ipynb` | ✅ Phase 1 |
 | Jupyter kernel execution | ✅ Phase 2 |
 | Text / error output as inline virtual lines | ✅ Phase 2 |
-| Image / plot rendering (Kitty / ueberzugpp) | 🔜 Phase 3 |
+| Image / plot rendering (Kitty / ueberzugpp) | ✅ Phase 3 |
 | Markdown cell rendering | 🔜 Phase 4 |
 | Kernel completions (LSP-style) | 🔜 Phase 4 |
 
