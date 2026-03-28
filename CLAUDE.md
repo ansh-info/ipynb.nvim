@@ -35,13 +35,20 @@ jupytervim/
 │   ├── completion.lua    # omnifunc + nvim-cmp async source
 │   └── inspector.lua     # Variable inspector floating window
 ├── python/
-│   ├── pyproject.toml    # uv project, Python >=3.12
+│   ├── pyproject.toml    # uv project, Python >=3.12 — runtime deps
 │   ├── uv.lock           # Reproducible lockfile — always commit alongside toml
 │   └── kernel_bridge.py  # Full ZMQ ↔ JSON-line stdio daemon
 ├── plugin/
-│   └── jupytervim.lua    # Auto-setup shim on VimEnter
+│   └── jupytervim.lua    # Auto-setup shim (sets guard flag)
+├── ftdetect/
+│   └── ipynb.vim         # Sets filetype=ipynb for *.ipynb files
+├── .github/
+│   └── workflows/
+│       └── release.yml   # python-semantic-release on push to main
+├── pyproject.toml        # Root: semantic release config + dev deps
+├── uv.lock               # Root lockfile for semantic release
 ├── CLAUDE.md             # This file
-└── README.md             # User-facing docs with Mermaid diagrams
+└── README.md             # User-facing install and usage docs
 ```
 
 ---
@@ -57,12 +64,13 @@ jupytervim/
 
 ---
 
-## Python tooling — uv (mandatory)
+## Python tooling — uv (for development)
 
-**Never use pip directly.** Always use uv.
+Always use uv for development. The end-user build hook falls back to
+`python3 -m venv` when uv is absent — but never use that fallback yourself.
 
 ```bash
-# Sync / install all dependencies (run from repo root)
+# Sync / install all dependencies
 uv sync --project python/
 
 # Add a new runtime dependency
@@ -80,6 +88,9 @@ uv run --project python/ python python/kernel_bridge.py
 `pyproject.toml` is at `python/pyproject.toml`. Python version pin: **>=3.12**.
 After `uv add`, always commit both `python/pyproject.toml` and `python/uv.lock`
 as **separate commits** (toml first, then lockfile).
+
+There is also a root-level `pyproject.toml` and `uv.lock` — these are for
+`python-semantic-release` (dev tooling only, not the kernel bridge).
 
 ---
 
@@ -190,7 +201,7 @@ vim.wait(timeout_ms, predicate, interval_ms)
 
 ```bash
 # lazy.nvim dev mode — add to your Neovim config:
-{ dir = "/home/oneai/jupytervim", ft = "ipynb" }
+{ dir = "/home/oneai/jupytervim", lazy = false }
 
 # Open a notebook
 nvim /path/to/notebook.ipynb
@@ -209,7 +220,7 @@ uv run --project python/ python python/kernel_bridge.py
 ## What to do at the start of each session
 
 1. Read this file.
-2. Run `git log --oneline` and `git status` — branch should be `feat`, clean.
+2. Run `git log --oneline` and `git status` — branch should be `feature/jupyter-notebook-plugin`, clean.
 3. All phases are complete — focus is on bug reports, tests, or polish.
 4. If adding a new feature: Python first → Lua → docs, one file per commit.
 5. If fixing a bug: read the affected module, understand the design, minimal fix.
