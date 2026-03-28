@@ -22,7 +22,7 @@ What you expected to happen.
 
 ## Actual behavior
 
-What actually happened. Include any error messages from `:messages` or `:JupyterKernelInfo`.
+What actually happened. Include any error messages from `:messages` or `:IpynbKernelInfo`.
 
 ## Environment
 
