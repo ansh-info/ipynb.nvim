@@ -160,18 +160,35 @@ function M.render(bufnr, cell_state, chunk)
     return false
   end
 
-  local ok_render, render_err = pcall(function() img:render() end)
-  if not ok_render then
-    utils.debug("image.nvim render error: " .. tostring(render_err))
-    os.remove(tmp)
-    return false
-  end
-
-  -- Track for cleanup.
+  -- Register before rendering so WinScrolled can retry if the initial
+  -- render fails because the cell output is off-screen (screenpos = 0,0).
   if not _registry[key] then _registry[key] = {} end
   _registry[key][#_registry[key] + 1] = { img = img, tmp = tmp }
 
+  local ok_render, render_err = pcall(function() img:render() end)
+  if not ok_render then
+    utils.debug("image.nvim render error (will retry on scroll): " .. tostring(render_err))
+  end
+
   return true
+end
+
+-- ── Scroll re-render ─────────────────────────────────────────────────────────
+
+--- Re-render all registered images for a buffer.
+--- Called from the WinScrolled autocmd so images follow the viewport and
+--- any image whose initial render failed (output was off-screen) gets retried.
+---@param bufnr integer
+function M.rerender_all(bufnr)
+  if not M.is_supported() then return end
+  local prefix = tostring(bufnr) .. ":"
+  for key, entries in pairs(_registry) do
+    if key:sub(1, #prefix) == prefix then
+      for _, entry in ipairs(entries) do
+        pcall(function() entry.img:render() end)
+      end
+    end
+  end
 end
 
 -- ── Cleanup ───────────────────────────────────────────────────────────────────
