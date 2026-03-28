@@ -1,4 +1,4 @@
---- plugin/jupytervim.lua
+--- plugin/ipynb.lua
 --- Auto-loaded by Neovim on startup.
 ---
 --- With lazy.nvim (lazy = false) this file is sourced during startup and
@@ -7,10 +7,10 @@
 --- via _register_autocmds() and fires correctly for CLI-opened .ipynb files.
 ---
 --- For manual / packer installs the user must call
----   require("jupytervim").setup(opts)
+---   require("ipynb").setup(opts)
 --- in their own init.lua (before any .ipynb buffer is opened).
 
-if vim.g.loaded_jupytervim or vim.fn.has("nvim") == 0 then
+if vim.g.loaded_ipynb or vim.fn.has("nvim") == 0 then
   return
 end
-vim.g.loaded_jupytervim = true
+vim.g.loaded_ipynb = true
