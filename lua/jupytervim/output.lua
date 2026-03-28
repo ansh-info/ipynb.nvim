@@ -49,12 +49,14 @@ function M.get_chunks(bufnr, cell_state)
   return _store[cell_key(bufnr, cell_state)] or {}
 end
 
---- Wipe accumulated chunks and remove virt_lines for a cell.
+--- Wipe accumulated chunks, virt_lines, and any rendered images for a cell.
 ---@param bufnr integer
 ---@param cell_state table
 function M.clear(bufnr, cell_state)
   _store[cell_key(bufnr, cell_state)] = nil
   cell.clear_output(bufnr, cell_state)
+  local ok, image = pcall(require, "jupytervim.image")
+  if ok then image.clear(bufnr, cell_state) end
 end
 
 -- ── Text → virt_lines conversion ──────────────────────────────────────────────
@@ -126,9 +128,14 @@ local function chunk_to_virt_lines(chunk, max_lines)
     return vl
 
   elseif t == "image" then
-    -- Placeholder — actual rendering happens in image.lua (Phase 3).
-    -- Reserve a line so the cell border doesn't collapse onto the code.
-    return { { { "  [image output — requires Phase 3 image rendering]", HL.image } } }
+    -- image.lua handles actual rendering; return empty here so the image
+    -- chunks are tracked in the store but don't produce duplicate text lines.
+    -- A placeholder is returned only when image.nvim is unavailable.
+    local ok, image = pcall(require, "jupytervim.image")
+    if ok and image.is_supported() then
+      return {}   -- image.lua renders it; no text virt_line needed
+    end
+    return { { { image.placeholder(chunk), HL.image } } }
 
   end
   return {}
@@ -156,8 +163,9 @@ function M.append(bufnr, cell_state, chunk)
   M._render(bufnr, cell_state)
 end
 
---- Re-render all accumulated chunks for a cell into virt_lines.
---- Called after each new chunk and after a cell is re-run.
+--- Re-render all accumulated chunks for a cell.
+--- Text chunks → virt_lines via cell.set_output_virt_lines.
+--- Image chunks → image.lua (positioned after the text block).
 ---@param bufnr integer
 ---@param cell_state table
 function M._render(bufnr, cell_state)
@@ -169,35 +177,54 @@ function M._render(bufnr, cell_state)
     return
   end
 
-  local all_vl = {}
+  local ok_img, image = pcall(require, "jupytervim.image")
+  local img_supported  = ok_img and image.is_supported()
 
-  -- Add a thin top divider before the output block.
+  local all_vl    = {}     -- text virt_lines
+  -- Image chunks with the text line count at the point they appear.
+  local img_queue = {}
+
+  -- Top divider.
   all_vl[#all_vl + 1] = divider()
 
   for i, chunk in ipairs(chunks) do
-    local vl = chunk_to_virt_lines(chunk, max_lines)
-    for _, line in ipairs(vl) do
-      all_vl[#all_vl + 1] = line
-    end
-    -- Divider between consecutive output blocks (not after the last one).
-    if i < #chunks and #vl > 0 then
-      all_vl[#all_vl + 1] = divider()
+    if chunk.type == "image" and img_supported then
+      -- Record image with the current text line count as offset.
+      img_queue[#img_queue + 1] = { chunk = chunk, offset = #all_vl }
+    else
+      local vl = chunk_to_virt_lines(chunk, max_lines)
+      for _, line in ipairs(vl) do
+        all_vl[#all_vl + 1] = line
+      end
+      if i < #chunks and #vl > 0 then
+        all_vl[#all_vl + 1] = divider()
+      end
     end
   end
 
-  -- Ensure virt_lines update runs in the main Neovim event loop.
+  -- Render in the main event loop so extmarks and image positions are stable.
   vim.schedule(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      cell.set_output_virt_lines(bufnr, cell_state, all_vl)
+    if not vim.api.nvim_buf_is_valid(bufnr) then return end
+
+    -- 1. Place text virt_lines.
+    cell.set_output_virt_lines(bufnr, cell_state, all_vl)
+
+    -- 2. Clear old images then render new ones below the text block.
+    if ok_img then
+      image.clear(bufnr, cell_state)
+      for _, entry in ipairs(img_queue) do
+        image.render(bufnr, cell_state, entry.chunk, entry.offset)
+      end
     end
   end)
 end
 
 --- Remove all stored output for every cell in a buffer (called on kernel restart).
 ---@param bufnr integer
+---@param cells table[]
 function M.clear_all(bufnr, cells)
   for _, cs in ipairs(cells or {}) do
-    M.clear(bufnr, cs)
+    M.clear(bufnr, cs)   -- M.clear() already handles images per cell
   end
 end
 
