@@ -277,20 +277,94 @@ vim.wait(timeout_ms, predicate, interval_ms)
 
 ## Testing locally
 
-```bash
-# lazy.nvim dev mode - add to your Neovim config:
-{ dir = "/home/oneai/ipynb", lazy = false }
+### Before every commit - mandatory checklist
 
-# Open a notebook
-nvim /path/to/notebook.ipynb
+**Python changes (`kernel_bridge.py`)**
+
+1. Run the bridge directly and exercise the changed command:
+   ```bash
+   # Without venv - baseline smoke test
+   uv run --project python/ python python/kernel_bridge.py
+   # Type commands manually, e.g.:
+   # {"cmd":"start","kernel":"python3"}
+   # {"cmd":"execute","code":"1+1","msg_id":"t1"}
+   # {"cmd":"complete","code":"imp","cursor_pos":3,"msg_id":"t2"}
+   ```
+
+2. For venv / kernel startup changes, write a subprocess test script:
+   ```bash
+   # Example: test/test_bridge.py (create ad-hoc, do not commit)
+   # Pattern used to catch the kernel_cmd bug (see PR #17/#18):
+   VIRTUAL_ENV=/path/to/test-venv python test/test_bridge.py
+   ```
+   The script should: start the bridge, send commands, read JSON replies,
+   assert expected fields. See the test written during the venv fix as a
+   reference - it caught `km.kernel_cmd` silently not working in
+   `jupyter_client 8.x`.
+
+3. Verify no regression in the full flow - open `test/test_notebook.ipynb`
+   in Neovim and run at least one cell.
+
+**Lua changes**
+
+1. The local dev install points lazy.nvim at this directory:
+   ```lua
+   -- ~/.config/nvim/lua/plugins/jupytervim.lua
+   { dir = "/home/oneai/jupytervim", lazy = false }
+   ```
+   Neovim picks up Lua changes immediately on the next `nvim` invocation -
+   no `:Lazy update` needed for local dev.
+
+2. Open the test notebook and verify the changed behaviour:
+   ```bash
+   nvim test/test_notebook.ipynb
+   ```
+
+3. Check `:messages` for any Lua errors after the operation.
+
+4. For kernel-related Lua changes, also check `:IpynbKernelInfo` to confirm
+   the kernel status is correct.
+
+**What to test per module**
+
+| Module | Minimum test |
+|---|---|
+| `kernel_bridge.py` | Start kernel, execute a cell, get output |
+| `kernel.lua` | Run a cell with `<leader>r`, confirm output appears |
+| `cell.lua` | Add/delete/navigate cells, check borders are correct |
+| `notebook_buf.lua` | Open notebook, save with `<leader>w`, reopen and check content |
+| `completion.lua` | `<C-x><C-o>` in insert mode - completions should appear |
+| `output.lua` | Run a cell that prints text and raises an error |
+| `image.lua` | Run a cell that produces a matplotlib plot |
+
+### Testing locally - nvim setup
+
+```bash
+# Local dev - lazy.nvim points at this repo directly (already configured):
+{ dir = "/home/oneai/jupytervim", lazy = false }
+
+# Open the test notebook
+nvim test/test_notebook.ipynb
 
 # Check for Lua errors
 :messages
 
-# Verify the kernel bridge Python
-uv run --project python/ python python/kernel_bridge.py
-# Type: {"cmd":"start","kernel":"python3"}
-# Expected: {"type":"status","state":"starting",...}
+# Confirm kernel is using the right Python
+:IpynbKernelInfo
+```
+
+### Testing the venv auto-detection
+
+```bash
+# Create a test venv with all required packages
+uv venv /tmp/test-env
+uv pip install ipykernel numpy matplotlib --python /tmp/test-env/bin/python
+
+# Activate it and open nvim - kernel should use /tmp/test-env Python
+source /tmp/test-env/bin/activate
+nvim test/test_notebook.ipynb
+# Run a cell with: import numpy; print(numpy.__version__)
+# Expected: prints the numpy version without ModuleNotFoundError
 ```
 
 ---
@@ -298,7 +372,7 @@ uv run --project python/ python python/kernel_bridge.py
 ## What to do at the start of each session
 
 1. Read this file.
-2. Run `git log --oneline` and `git status` - branch should be `feature/jupyter-notebook-plugin`, clean.
+2. Run `git log --oneline` and `git status` - should be on `main`, clean.
 3. All phases are complete - focus is on bug reports, tests, or polish.
 4. If adding a new feature: Python first → Lua → docs, one file per commit.
 5. If fixing a bug: read the affected module, understand the design, minimal fix.
