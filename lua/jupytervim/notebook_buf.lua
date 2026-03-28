@@ -106,6 +106,9 @@ function M.open(path, bufnr)
     once    = true,
     callback = function()
       cell.on_buf_delete(bufnr)
+      -- Stop kernel bridge if one is running for this buffer.
+      local ok, kernel = pcall(require, "jupytervim.kernel")
+      if ok then kernel.on_buf_delete(bufnr) end
       managed[bufnr] = nil
     end,
   })
