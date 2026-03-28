@@ -183,19 +183,22 @@ end
 
 -- ── stdout line assembler ─────────────────────────────────────────────────────
 
---- jobstart delivers stdout in arbitrary byte chunks.
---- Buffer them until we have a complete newline-terminated JSON line.
+--- Neovim jobstart delivers stdout with newlines REMOVED.
+--- Each element of `data` is the text between two consecutive newlines.
+--- data[1] is a continuation of the previous incomplete line;
+--- data[i>1] means a newline separated data[i-1] from data[i].
 ---@param bufnr integer
 ---@param data string[]
 local function on_stdout_chunks(bufnr, data)
   local s = get_state(bufnr)
-  for _, chunk in ipairs(data) do
-    s.line_buf = s.line_buf .. chunk
-    while true do
-      local nl = s.line_buf:find("\n", 1, true)
-      if not nl then break end
-      local line = vim.trim(s.line_buf:sub(1, nl - 1))
-      s.line_buf  = s.line_buf:sub(nl + 1)
+  for i, chunk in ipairs(data) do
+    if i == 1 then
+      -- First element continues the previous (possibly empty) incomplete line.
+      s.line_buf = s.line_buf .. chunk
+    else
+      -- A newline boundary occurred: s.line_buf is now a complete line.
+      local line = vim.trim(s.line_buf)
+      s.line_buf = chunk   -- start accumulating the next line
       if line ~= "" then
         local ok, msg = pcall(vim.fn.json_decode, line)
         if ok and type(msg) == "table" then
