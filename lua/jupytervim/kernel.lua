@@ -104,8 +104,13 @@ local function dispatch(bufnr, msg)
 
   -- ── status ────────────────────────────────────────────────────────────────
   if t == "status" then
-    local state = msg.state or ""
+    local prev   = s.status
+    local state  = msg.state or ""
     s.status = (state == "busy") and "busy" or "idle"
+    -- First idle after spawning: kernel is ready. Notify the user.
+    if prev == "starting" and s.status == "idle" then
+      utils.info("Kernel ready (" .. (s.kernel_name ~= "" and s.kernel_name or "python3") .. ")")
+    end
 
     local pending = (id ~= "") and s.pending[id] or nil
     if pending and type(pending) == "table" then
@@ -164,7 +169,12 @@ local function dispatch(bufnr, msg)
 
   -- ── internal bridge errors ────────────────────────────────────────────────
   elseif t == "error_internal" then
-    utils.err("kernel_bridge: " .. (msg.message or "unknown error"))
+    -- Suppress "No kernel connected" during the brief startup window — the
+    -- auto-start polling loop will retry once the kernel is actually ready.
+    local m = msg.message or "unknown error"
+    if not m:find("No kernel connected") then
+      utils.err("kernel_bridge: " .. m)
+    end
   end
 end
 
