@@ -254,11 +254,10 @@ def cmd_start(data: dict) -> None:
             km = KernelManager(kernel_name=kernel_name)
             venv_py = _venv_kernel_python()
             if venv_py:
-                # Replace argv[0] (the Python executable) with the venv Python
-                # so packages installed in the active venv are available.
-                ks_argv = list(km.kernel_spec.argv)
-                ks_argv[0] = venv_py
-                km.kernel_cmd = ks_argv
+                # Modify argv[0] in-place on the cached kernel spec object.
+                # kernel_cmd does not exist in jupyter_client 8.x; mutating
+                # kernel_spec.argv is the correct way to override the executable.
+                km.kernel_spec.argv[0] = venv_py
             km.start_kernel()
             kc = km.blocking_client()
             kc.start_channels()
