@@ -69,28 +69,64 @@ ipynb/
 Always use uv for development. The end-user build hook falls back to
 `python3 -m venv` when uv is absent - but never use that fallback yourself.
 
+There are **two separate uv projects** in this repo:
+
+### `python/` - kernel bridge runtime deps
+
+`python/pyproject.toml` declares the runtime deps (`ipykernel`, `jupyter-client`,
+`nbformat`). The venv lives at `python/.venv/` (gitignored).
+
 ```bash
-# Sync / install all dependencies
+# Install / sync after python/pyproject.toml or python/uv.lock changes
 uv sync --project python/
+
+# Regenerate python/uv.lock after editing python/pyproject.toml
+uv lock --project python/
 
 # Add a new runtime dependency
 uv add --project python/ <package>
 
-# Add a dev-only dependency
-uv add --project python/ --dev <package>
-
 # Run a script inside the venv without activating it
 uv run --project python/ python python/kernel_bridge.py
-
-# The venv lives at python/.venv/ - it is gitignored
 ```
 
-`pyproject.toml` is at `python/pyproject.toml`. Python version pin: **>=3.12**.
-After `uv add`, always commit both `python/pyproject.toml` and `python/uv.lock`
-as **separate commits** (toml first, then lockfile).
+### Root project - dev tooling (python-semantic-release)
 
-There is also a root-level `pyproject.toml` and `uv.lock` - these are for
-`python-semantic-release` (dev tooling only, not the kernel bridge).
+Root `pyproject.toml` uses `[dependency-groups]` with a `dev` group for
+`python-semantic-release`. The `dev` group is included by default on every
+`uv sync` - there is **no `--dev` flag** in uv (unlike Poetry/pip).
+
+```bash
+# Install / sync after pyproject.toml or uv.lock changes
+# dev group is always included by default
+uv sync
+
+# Regenerate root uv.lock after editing root pyproject.toml
+uv lock
+
+# Add a package to the dev group
+uv add --dev <package>
+
+# Sync without dev group (for validation only - not for normal dev)
+uv sync --no-dev
+```
+
+### Rule: when pyproject.toml is modified
+
+Always run the matching lock command first, then commit **both files separately**
+(toml first, lockfile second):
+
+```bash
+# python/pyproject.toml changed
+uv lock --project python/
+git add python/pyproject.toml && git commit -m "..."
+git add python/uv.lock       && git commit -m "..."
+
+# root pyproject.toml changed
+uv lock
+git add pyproject.toml && git commit -m "..."
+git add uv.lock        && git commit -m "..."
+```
 
 ---
 
