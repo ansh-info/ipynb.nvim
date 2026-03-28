@@ -83,7 +83,8 @@ pip install jupyter_client nbformat ipykernel
 ```lua
 {
   "ansh-info/jupytervim",
-  ft = "ipynb",
+  lazy = false,   -- must load before any buffer is read
+  build = "uv sync --project python/",
   dependencies = {
     "nvim-treesitter/nvim-treesitter",
     { "3rd/image.nvim", opts = {} },              -- optional: images
