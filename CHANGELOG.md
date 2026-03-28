@@ -2,6 +2,29 @@
 
 <!-- version list -->
 
+## v1.1.1 (2026-03-28)
+
+### Bug Fixes
+
+- Complete/inspect crash, venv auto-detection, formatter corruption
+  ([#17](https://github.com/ansh-info/ipynb.nvim/pull/17),
+  [`4bcdf23`](https://github.com/ansh-info/ipynb.nvim/commit/4bcdf238fe24f3e4b606646c342024bb347a9e51))
+
+- **lua**: Disable formatters on ipynb buffers to prevent code corruption
+  ([#17](https://github.com/ansh-info/ipynb.nvim/pull/17),
+  [`4bcdf23`](https://github.com/ansh-info/ipynb.nvim/commit/4bcdf238fe24f3e4b606646c342024bb347a9e51))
+
+- **lua**: Disable formatters on ipynb buffers to prevent code corruption
+  ([`db9de4b`](https://github.com/ansh-info/ipynb.nvim/commit/db9de4bf7a9678ee0442e8a99b3e2d670008986f))
+
+- **python**: Fix complete/inspect and auto-detect venv Python for kernel
+  ([#17](https://github.com/ansh-info/ipynb.nvim/pull/17),
+  [`4bcdf23`](https://github.com/ansh-info/ipynb.nvim/commit/4bcdf238fe24f3e4b606646c342024bb347a9e51))
+
+- **python**: Fix complete/inspect and auto-detect venv Python for kernel
+  ([`21cab35`](https://github.com/ansh-info/ipynb.nvim/commit/21cab35275a6098e1f8cc29b47890f889fecd908))
+
+
 ## v1.1.0 (2026-03-28)
 
 ### Bug Fixes
