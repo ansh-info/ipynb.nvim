@@ -1,6 +1,6 @@
 # jupytervim
 
-Neovim plugin for editing Jupyter notebooks (`.ipynb`) natively — Colab-style cell
+Neovim plugin for editing Jupyter notebooks (`.ipynb`) natively - Colab-style cell
 rendering, full Vim modal editing, live kernel execution, and inline output.
 
 ```
@@ -30,16 +30,16 @@ rendering, full Vim modal editing, live kernel execution, and inline output.
 - Python >= 3.12
 - [uv](https://github.com/astral-sh/uv) (recommended) or python3 (built-in venv fallback)
 
-**Optional — image rendering**
+**Optional - image rendering**
 
 - [3rd/image.nvim](https://github.com/3rd/image.nvim)
 - Kitty, Ghostty, or WezTerm terminal (Kitty graphics protocol), or `ueberzugpp`
 
-**Optional — richer markdown cells**
+**Optional - richer markdown cells**
 
 - [render-markdown.nvim](https://github.com/MeanderingProgrammer/render-markdown.nvim)
 
-**Optional — completion**
+**Optional - completion**
 
 - [nvim-cmp](https://github.com/hrsh7th/nvim-cmp)
 
@@ -59,7 +59,7 @@ rendering, full Vim modal editing, live kernel execution, and inline output.
 }
 ```
 
-> `lazy = false` is required — the plugin must load before any buffer is opened
+> `lazy = false` is required - the plugin must load before any buffer is opened
 > so it can intercept `.ipynb` files via `BufReadCmd`.
 
 > The `build` hook installs the Python kernel bridge dependencies
@@ -108,7 +108,7 @@ require("jupytervim").setup({})
 
 ## Usage
 
-Open any `.ipynb` file — the plugin renders it automatically:
+Open any `.ipynb` file - the plugin renders it automatically:
 
 ```
 nvim my_notebook.ipynb
@@ -210,4 +210,4 @@ Issues and pull requests are welcome at https://github.com/ansh-info/jupytervim.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT - see [LICENSE](LICENSE).
