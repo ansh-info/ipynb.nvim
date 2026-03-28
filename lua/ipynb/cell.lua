@@ -519,6 +519,85 @@ function M.get_notebook(bufnr)
   return get_state(bufnr).notebook
 end
 
+--- Re-anchor every cell's end_mark after text edits.
+---
+--- Pressing 'o' on a cell's last line inserts a new line BELOW the end_mark
+--- (the insertion point is at the END of that line, past col 0 where the mark
+--- sits).  Neovim therefore leaves end_mark on the original line while new
+--- content grows below it - outside the visible cell border.
+---
+--- This function recomputes the correct last line for each cell by reading the
+--- next cell's start_mark (which tracks correctly) and moving end_mark there.
+--- It also keeps any output_mark co-located with end_mark so output stays
+--- anchored to the bottom of the cell.
+---
+--- Called from InsertLeave and TextChanged autocmds in notebook_buf.lua.
+---@param bufnr integer
+function M.reanchor_end_marks(bufnr)
+  local state = get_state(bufnr)
+  if not state or #state.cells == 0 then return end
+  if not vim.api.nvim_buf_is_valid(bufnr) then return end
+
+  local line_count = vim.api.nvim_buf_line_count(bufnr)
+  local win_width  = vim.api.nvim_win_get_width(0)
+
+  for i, cs in ipairs(state.cells) do
+    local sm = vim.api.nvim_buf_get_extmark_by_id(bufnr, NS, cs.start_mark, {})
+    if not sm or #sm == 0 then goto continue end
+    local start_row = sm[1]
+
+    -- Compute the correct last line for this cell.
+    local new_end
+    if i < #state.cells then
+      local next_sm = vim.api.nvim_buf_get_extmark_by_id(
+        bufnr, NS, state.cells[i + 1].start_mark, {})
+      if next_sm and #next_sm > 0 and next_sm[1] > start_row + 1 then
+        -- Layout: ... [cell lines] [separator blank] [next cell line 0] ...
+        -- separator is at next_sm[1]-1, cell ends at next_sm[1]-2.
+        new_end = math.max(start_row, next_sm[1] - 2)
+      end
+    else
+      new_end = math.max(start_row, line_count - 1)
+    end
+
+    if not new_end then goto continue end
+
+    local cur_em = vim.api.nvim_buf_get_extmark_by_id(bufnr, NS, cs.end_mark, {})
+    if cur_em and #cur_em > 0 and cur_em[1] == new_end then
+      goto continue  -- already at the correct line
+    end
+
+    -- Move end_mark to the correct last line.
+    local bot_vl = bottom_border(cs.status, cs.elapsed_ms, win_width)
+    vim.api.nvim_buf_set_extmark(bufnr, NS, new_end, 0, {
+      id               = cs.end_mark,
+      virt_lines       = { bot_vl },
+      virt_lines_above = false,
+      priority         = 100,
+    })
+
+    -- Keep output_mark co-located with end_mark so output stays at the
+    -- bottom of the cell rather than floating at the old end line.
+    if cs.output_mark then
+      local om = vim.api.nvim_buf_get_extmark_by_id(
+        bufnr, NS, cs.output_mark, { details = true })
+      if om and #om > 0 then
+        local details = om[3]
+        if details and details.virt_lines then
+          vim.api.nvim_buf_set_extmark(bufnr, NS, new_end, 0, {
+            id               = cs.output_mark,
+            virt_lines       = details.virt_lines,
+            virt_lines_above = false,
+            priority         = 90,
+          })
+        end
+      end
+    end
+
+    ::continue::
+  end
+end
+
 --- Return the namespace id (used by other modules that add extmarks).
 ---@return integer
 function M.namespace()
