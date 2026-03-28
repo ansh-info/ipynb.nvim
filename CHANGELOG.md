@@ -2,6 +2,20 @@
 
 <!-- version list -->
 
+## v1.1.7 (2026-03-28)
+
+### Bug Fixes
+
+- Simplify image rendering setup to use magick_cli processor
+  ([#30](https://github.com/ansh-info/ipynb.nvim/pull/30),
+  [`a2ceec3`](https://github.com/ansh-info/ipynb.nvim/commit/a2ceec33afd7102fad5d02d1487e980b3dc9f820))
+
+### Documentation
+
+- **docs**: Simplify image rendering setup to use magick_cli processor
+  ([`99350b4`](https://github.com/ansh-info/ipynb.nvim/commit/99350b4cd5ce462af55492e08ed4475fdbfe2c05))
+
+
 ## v1.1.6 (2026-03-28)
 
 ### Bug Fixes
