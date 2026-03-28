@@ -56,6 +56,44 @@ local function set_buf_name(bufnr, path)
   vim.api.nvim_buf_set_var(bufnr, "ipynb_path", path)
 end
 
+-- ── LSP attachment ───────────────────────────────────────────────────────────
+
+--- Attach Python LSP clients to the notebook buffer.
+---
+--- The buffer is opened via BufReadCmd, which bypasses the normal file-open
+--- path that triggers FileType autocmds with a valid buffer name.  Two
+--- strategies together cover the common cases:
+---
+---   1. Re-fire "FileType python" via nvim_exec_autocmds.  This bypasses the
+---      "filetype unchanged" guard so the event fires even though filetype is
+---      already "python".  nvim-lspconfig, ruff-lsp, and Copilot all hook into
+---      this event, so they will see the correct buffer name and attach.
+---
+---   2. Directly attach any Python LSP client that is already running (e.g.
+---      started from a .py file that was open before this notebook).
+---
+---@param bufnr integer
+local function attach_lsp(bufnr)
+  if not vim.api.nvim_buf_is_valid(bufnr) then return end
+
+  -- Strategy 1: re-fire FileType so lspconfig autostart logic runs.
+  vim.api.nvim_exec_autocmds("FileType", { buffer = bufnr, match = "python" })
+
+  -- Strategy 2: attach any already-running Python LSP client.
+  local get_clients = vim.lsp.get_clients or vim.lsp.get_active_clients
+  for _, client in ipairs(get_clients()) do
+    if vim.lsp.buf_is_attached(bufnr, client.id) then goto continue end
+    local fts = (client.config or {}).filetypes or {}
+    for _, ft in ipairs(fts) do
+      if ft == "python" then
+        pcall(vim.lsp.buf_attach_client, bufnr, client.id)
+        break
+      end
+    end
+    ::continue::
+  end
+end
+
 -- ── Sync: buffer → notebook model ────────────────────────────────────────────
 
 --- Walk all cells and sync their current buffer content back into
@@ -197,6 +235,13 @@ function M.open(path, bufnr)
       if ok then kernel.start(bufnr, nil) end
     end)
   end
+
+  -- Attach LSP clients (pyright, pylsp, ruff-lsp, Copilot, etc.).
+  -- Deferred so the buffer name and filetype are fully committed before
+  -- lspconfig root_dir detection runs.
+  vim.schedule(function()
+    attach_lsp(bufnr)
+  end)
 
   -- Mark buffer as not modified after initial load.
   vim.api.nvim_buf_set_option(bufnr, "modified", false)
