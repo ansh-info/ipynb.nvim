@@ -464,6 +464,26 @@ function M.show_info(bufnr)
   end
 end
 
+--- Execute arbitrary code and route output to a given cell_state.
+--- Used by inspector.lua to run introspection snippets without touching
+--- the notebook buffer or requiring a real cell under the cursor.
+---@param bufnr integer
+---@param code string
+---@param msg_id string  caller-chosen id (must be unique)
+---@param cell_state table  synthetic cell_state used as output routing key
+function M._execute_raw(bufnr, code, msg_id, cell_state)
+  local s = get_state(bufnr)
+  if not s.job_id then
+    error("No kernel running for buffer " .. bufnr)
+  end
+  s.pending[msg_id] = {
+    cell_state = cell_state,
+    bufnr      = bufnr,
+    start_ms   = vim.loop.now(),
+  }
+  send(bufnr, { cmd = "execute", code = code, msg_id = msg_id })
+end
+
 --- Return the kernel status for a buffer.
 ---@param bufnr integer
 ---@return string
