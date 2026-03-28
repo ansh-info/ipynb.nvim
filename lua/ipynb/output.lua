@@ -37,6 +37,21 @@ local HL = {
 -- Value: list of chunk tables
 local _store = {}
 
+-- ── Re-entrancy guards for image rendering ────────────────────────────────────
+-- image.nvim's magick_cli processor uses vim.wait() which runs the Neovim
+-- event loop mid-render.  A second output.append() arriving during that window
+-- would fire another vim.schedule callback that calls image.clear(), deleting
+-- the temp PNG file the first magick process is still reading → crash + freeze.
+--
+-- _active  : cell_key → true while a vim.schedule render callback is executing.
+-- _pending : cell_key → true when a re-render was requested during an active one.
+--
+-- When a callback sees _active, it sets _pending and returns without touching
+-- image.clear().  Once the active render finishes it checks _pending and calls
+-- M._render again so the latest chunks are always shown.
+local _active  = {}
+local _pending = {}
+
 local function cell_key(bufnr, cell_state)
   return tostring(bufnr) .. ":" .. tostring(cell_state.start_mark)
 end
@@ -172,6 +187,7 @@ function M._render(bufnr, cell_state)
   local cfg       = config.get()
   local max_lines = cfg.ui.output_max_lines
   local chunks    = M.get_chunks(bufnr, cell_state)
+  local key       = cell_key(bufnr, cell_state)
   if #chunks == 0 then
     cell.clear_output(bufnr, cell_state)
     return
@@ -204,6 +220,18 @@ function M._render(bufnr, cell_state)
   vim.schedule(function()
     if not vim.api.nvim_buf_is_valid(bufnr) then return end
 
+    -- Guard against re-entrant renders.  image.nvim's magick_cli uses
+    -- vim.wait() which runs the event loop while magick converts the PNG.
+    -- A second output.append() during that window queues another vim.schedule
+    -- callback that would call image.clear(), deleting the temp file the first
+    -- magick process is still reading.  Instead, record the request as pending
+    -- and let it run once the active render finishes.
+    if _active[key] then
+      _pending[key] = true
+      return
+    end
+    _active[key] = true
+
     -- 1. Place text virt_lines.
     cell.set_output_virt_lines(bufnr, cell_state, all_vl)
 
@@ -213,6 +241,15 @@ function M._render(bufnr, cell_state)
       for _, chunk in ipairs(img_queue) do
         image.render(bufnr, cell_state, chunk)
       end
+    end
+
+    _active[key] = nil
+
+    -- If more output arrived while we were rendering, re-render now so the
+    -- latest chunks (e.g. a second matplotlib figure) are always displayed.
+    if _pending[key] then
+      _pending[key] = nil
+      M._render(bufnr, cell_state)
     end
   end)
 end
