@@ -18,6 +18,7 @@ rendering, full Vim modal editing, live kernel execution, and inline output.
 - [Installation](#installation)
 - [Setup](#setup)
 - [Usage](#usage)
+  - [Using packages from a project venv](#using-packages-from-a-project-venv-numpy-matplotlib-etc)
 - [Keymaps](#keymaps)
 - [Commands](#commands)
 - [Configuration](#configuration)
@@ -126,6 +127,30 @@ The kernel starts automatically when you run your first cell. No manual
 ]c / [c        jump to next / previous cell
 <leader>ji     open variable inspector
 ```
+
+### Using packages from a project venv (numpy, matplotlib, etc.)
+
+By default the kernel runs on the plugin's own Python, which only has the
+bridge dependencies (`jupyter_client`, `ipykernel`, `nbformat`). To use
+your own packages, activate your project venv **before** launching Neovim:
+
+```bash
+# One-time setup per venv - ipykernel is required for the kernel to launch
+uv pip install ipykernel numpy matplotlib   # or: pip install ...
+
+# Then just activate and open Neovim as normal
+source .venv/bin/activate
+nvim my_notebook.ipynb
+```
+
+The plugin auto-detects `$VIRTUAL_ENV` (uv/venv) and `$CONDA_PREFIX`
+(conda) and uses that Python as the kernel. No config change needed.
+
+> **Why ipykernel?** The kernel is a separate process launched as
+> `python -m ipykernel_launcher`. That process must be able to import
+> `ipykernel`, so it needs to be installed in your venv alongside your
+> packages. If it is missing you will see an error in `:messages` with
+> install instructions.
 
 ## Keymaps
 
