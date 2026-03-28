@@ -268,6 +268,14 @@ def cmd_start(data: dict) -> None:
             send({"type": "status", "state": "starting", "msg_id": ""})
             _start_iopub_thread()
             _send_kernel_info_request()
+            # Auto-configure the IPython inline backend so that
+            # plt.show() emits display_data (image/png) instead of
+            # raising the FigureCanvasAgg non-interactive warning.
+            try:
+                _kc.execute("%matplotlib inline",
+                            silent=True, store_history=False)
+            except Exception:
+                pass
         except Exception as exc:
             send({"type": "error_internal",
                   "message": f"Failed to start kernel '{kernel_name}': {exc}"})
