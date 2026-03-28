@@ -1,0 +1,277 @@
+--- jupytervim.markdown
+--- Lightweight inline renderer for markdown cells.
+---
+--- Applies extmark-based decorations (highlight groups + concealing) to
+--- every markdown cell in the buffer after cell.render() is called.
+--- Works entirely without external dependencies.
+---
+--- If render-markdown.nvim is installed it is used instead for richer output.
+---
+--- Decoration coverage:
+---   H1–H4 headers     → bold, coloured, # concealed
+---   Horizontal rules  → virtual overlay line
+---   Blockquotes       → dimmed italic, > concealed
+---   Bullet lists      → coloured bullet character
+---   Ordered lists     → coloured number
+---   Inline code       → highlighted span
+---   Bold spans        → bold highlight
+---   Italic spans      → italic highlight
+---   Links             → underlined text, URL concealed
+---   Cell background   → subtle background tint for the whole cell
+---
+--- Public API:
+---   markdown.render(bufnr)   -- decorate all markdown cells
+---   markdown.clear(bufnr)    -- remove all markdown decorations
+
+local cell = require("jupytervim.cell")
+
+local M  = {}
+local NS = vim.api.nvim_create_namespace("jupytervim_markdown")
+
+-- ── Highlights ────────────────────────────────────────────────────────────────
+
+local _hl_done = false
+local function define_highlights()
+  if _hl_done then return end
+  _hl_done = true
+
+  vim.api.nvim_set_hl(0, "JupyterMdH1",     { fg = "#ff9e64", bold = true, underline = true })
+  vim.api.nvim_set_hl(0, "JupyterMdH2",     { fg = "#e0af68", bold = true                  })
+  vim.api.nvim_set_hl(0, "JupyterMdH3",     { fg = "#9ece6a", bold = true                  })
+  vim.api.nvim_set_hl(0, "JupyterMdH4",     { fg = "#7dcfff"                               })
+  vim.api.nvim_set_hl(0, "JupyterMdBold",   { bold = true                                  })
+  vim.api.nvim_set_hl(0, "JupyterMdItalic", { italic = true                                })
+  vim.api.nvim_set_hl(0, "JupyterMdCode",   { fg = "#ff9e64", bg = "#252535"               })
+  vim.api.nvim_set_hl(0, "JupyterMdQuote",  { fg = "#565f89", italic = true                })
+  vim.api.nvim_set_hl(0, "JupyterMdBullet", { fg = "#7aa2f7", bold = true                  })
+  vim.api.nvim_set_hl(0, "JupyterMdRule",   { fg = "#3b4261"                               })
+  vim.api.nvim_set_hl(0, "JupyterMdLink",   { fg = "#7aa2f7", underline = true             })
+  vim.api.nvim_set_hl(0, "JupyterMdCellBg", { bg = "#1a1b2e"                               })
+end
+
+-- ── Per-line decorator ────────────────────────────────────────────────────────
+
+--- Apply extmark decorations to a single line of markdown content.
+---@param bufnr integer
+---@param row integer  0-based line number
+---@param line string  raw line text
+local function decorate_line(bufnr, row, line)
+
+  -- ── Headers ────────────────────────────────────────────────────────────────
+  local hashes, _ = line:match("^(#{1,6})%s+(.*)")
+  if hashes then
+    local level = math.min(#hashes, 4)
+    -- Highlight the whole line.
+    vim.api.nvim_buf_set_extmark(bufnr, NS, row, 0, {
+      end_col  = #line,
+      hl_group = "JupyterMdH" .. level,
+      priority = 60,
+    })
+    -- Conceal the leading "# " prefix.
+    vim.api.nvim_buf_set_extmark(bufnr, NS, row, 0, {
+      end_col  = #hashes + 1,
+      conceal  = "",
+      priority = 70,
+    })
+    return  -- headers don't also get inline processing
+  end
+
+  -- ── Horizontal rule ────────────────────────────────────────────────────────
+  if line:match("^%-%-%-+%s*$") or line:match("^%*%*%*+%s*$")
+      or line:match("^___%s*$") then
+    vim.api.nvim_buf_set_extmark(bufnr, NS, row, 0, {
+      virt_text      = { { string.rep("─", 60), "JupyterMdRule" } },
+      virt_text_pos  = "overlay",
+      priority       = 70,
+    })
+    return
+  end
+
+  -- ── Blockquote ─────────────────────────────────────────────────────────────
+  if line:match("^>") then
+    vim.api.nvim_buf_set_extmark(bufnr, NS, row, 0, {
+      end_col  = #line,
+      hl_group = "JupyterMdQuote",
+      priority = 60,
+    })
+    -- Conceal ">" marker + optional space.
+    local prefix = line:match("^(>%s?)")
+    if prefix then
+      vim.api.nvim_buf_set_extmark(bufnr, NS, row, 0, {
+        end_col = #prefix,
+        conceal = "┃",
+        priority = 70,
+      })
+    end
+    return
+  end
+
+  -- ── Unordered list ─────────────────────────────────────────────────────────
+  local indent, bullet_char = line:match("^(%s*)([-*+])%s")
+  if indent and bullet_char then
+    vim.api.nvim_buf_set_extmark(bufnr, NS, row, #indent, {
+      end_col  = #indent + 1,
+      hl_group = "JupyterMdBullet",
+      virt_text     = { { "●", "JupyterMdBullet" } },
+      virt_text_pos = "overlay",
+      priority = 70,
+    })
+  end
+
+  -- ── Ordered list ───────────────────────────────────────────────────────────
+  local num_prefix = line:match("^%s*%d+%.")
+  if num_prefix then
+    vim.api.nvim_buf_set_extmark(bufnr, NS, row, 0, {
+      end_col  = #num_prefix,
+      hl_group = "JupyterMdBullet",
+      priority = 60,
+    })
+  end
+
+  -- ── Inline code ────────────────────────────────────────────────────────────
+  -- Scan for `...` spans.
+  local col = 0
+  local search = line
+  while true do
+    local s, e = search:find("`([^`]+)`")
+    if not s then break end
+    local abs_s = col + s - 1
+    local abs_e = col + e - 1
+    vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_s, {
+      end_col  = abs_e + 1,
+      hl_group = "JupyterMdCode",
+      priority = 65,
+    })
+    -- Conceal backtick delimiters.
+    vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_s, {
+      end_col = abs_s + 1, conceal = "", priority = 75,
+    })
+    vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_e, {
+      end_col = abs_e + 1, conceal = "", priority = 75,
+    })
+    col    = col + e
+    search = search:sub(e + 1)
+  end
+
+  -- ── Bold **text** ──────────────────────────────────────────────────────────
+  col    = 0
+  search = line
+  while true do
+    local s, e = search:find("%*%*([^%*]+)%*%*")
+    if not s then break end
+    local abs_s = col + s - 1
+    local abs_e = col + e - 1
+    vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_s + 2, {
+      end_col  = abs_e - 1,
+      hl_group = "JupyterMdBold",
+      priority = 65,
+    })
+    -- Conceal ** delimiters.
+    vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_s,     { end_col = abs_s + 2, conceal = "", priority = 75 })
+    vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_e - 1, { end_col = abs_e + 1, conceal = "", priority = 75 })
+    col    = col + e
+    search = search:sub(e + 1)
+  end
+
+  -- ── Italic *text* (single asterisk, not part of **) ───────────────────────
+  col    = 0
+  search = line
+  while true do
+    local s, e = search:find("%f[%*]%*([^%*]+)%*%f[^%*]")
+    if not s then break end
+    local abs_s = col + s - 1
+    local abs_e = col + e - 1
+    vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_s + 1, {
+      end_col  = abs_e,
+      hl_group = "JupyterMdItalic",
+      priority = 65,
+    })
+    vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_s,   { end_col = abs_s + 1, conceal = "", priority = 75 })
+    vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_e,   { end_col = abs_e + 1, conceal = "", priority = 75 })
+    col    = col + e
+    search = search:sub(e + 1)
+  end
+
+  -- ── Markdown links [text](url) ─────────────────────────────────────────────
+  col    = 0
+  search = line
+  while true do
+    local s, link_text, url_s, url_e, e =
+        search:find("%[([^%]]+)%]()%(([^%)]+)%)()")
+    if not s then break end
+    local abs_s     = col + s - 1
+    local abs_url_s = col + url_s - 1
+    local abs_url_e = col + url_e - 2
+    local abs_e     = col + e - 2
+
+    -- Highlight the link text.
+    vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_s + 1, {
+      end_col  = abs_s + 1 + #link_text,
+      hl_group = "JupyterMdLink",
+      priority = 65,
+    })
+    -- Conceal "[", "]", "(" ... ")" leaving only the link text visible.
+    vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_s,    { end_col = abs_s + 1,    conceal = "", priority = 75 })
+    vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_url_s - 2, { end_col = abs_url_s - 1, conceal = "", priority = 75 })
+    vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_url_s - 1, { end_col = abs_url_e + 1, conceal = "", priority = 75 })
+
+    col    = col + e - 1
+    search = search:sub(e)
+  end
+end
+
+-- ── Cell-level renderer ───────────────────────────────────────────────────────
+
+--- Decorate all markdown cells in a buffer.
+---@param bufnr integer
+function M.render(bufnr)
+  define_highlights()
+  vim.api.nvim_buf_clear_namespace(bufnr, NS, 0, -1)
+
+  -- Try render-markdown.nvim first (much richer output).
+  if require("jupytervim.utils").has_plugin("render-markdown") then
+    -- render-markdown.nvim works on markdown buffers; we enable it
+    -- selectively per-buffer by calling its API if available.
+    local ok, rm = pcall(require, "render-markdown")
+    if ok and rm.enable then
+      pcall(rm.enable)
+      return
+    end
+  end
+
+  local ns     = cell.namespace()
+  local cells  = cell.get_cells(bufnr)
+
+  for _, cs in ipairs(cells) do
+    if cs.cell_type == "markdown" then
+      -- Get line range from extmarks.
+      local sm = vim.api.nvim_buf_get_extmark_by_id(bufnr, ns, cs.start_mark, {})
+      local em = vim.api.nvim_buf_get_extmark_by_id(bufnr, ns, cs.end_mark,   {})
+      local start_row = sm[1] or 0
+      local end_row   = em[1] or start_row
+
+      -- Subtle background tint for the whole cell.
+      vim.api.nvim_buf_set_extmark(bufnr, NS, start_row, 0, {
+        end_row      = end_row + 1,
+        end_col      = 0,
+        hl_group     = "JupyterMdCellBg",
+        hl_eol       = true,
+        priority     = 50,
+      })
+
+      -- Decorate each line.
+      local lines = vim.api.nvim_buf_get_lines(bufnr, start_row, end_row + 1, false)
+      for i, line in ipairs(lines) do
+        decorate_line(bufnr, start_row + i - 1, line)
+      end
+    end
+  end
+end
+
+--- Remove all markdown decorations from a buffer.
+---@param bufnr integer
+function M.clear(bufnr)
+  vim.api.nvim_buf_clear_namespace(bufnr, NS, 0, -1)
+end
+
+return M
