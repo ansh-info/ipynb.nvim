@@ -2,6 +2,18 @@
 
 <!-- version list -->
 
+## v1.1.9 (2026-03-28)
+
+### Bug Fixes
+
+- **lua**: Filter IPython builtins from variable inspector
+  ([#32](https://github.com/ansh-info/ipynb.nvim/pull/32),
+  [`36f5699`](https://github.com/ansh-info/ipynb.nvim/commit/36f56999aba34ee1b782159c28db5de490112a7e))
+
+- **lua**: Filter IPython builtins from variable inspector
+  ([`1aa365e`](https://github.com/ansh-info/ipynb.nvim/commit/1aa365e28040603e4e9e2ded6f71cf85a5b2931a))
+
+
 ## v1.1.8 (2026-03-28)
 
 ### Bug Fixes
