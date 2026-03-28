@@ -27,7 +27,8 @@ rendering, full Vim modal editing, live kernel execution, and inline output.
 
 - Neovim >= 0.10.0
 - [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
-- Python >= 3.12 with [uv](https://github.com/astral-sh/uv)
+- Python >= 3.12
+- [uv](https://github.com/astral-sh/uv) (recommended) or pip3
 
 **Optional — image rendering**
 
@@ -50,7 +51,7 @@ rendering, full Vim modal editing, live kernel execution, and inline output.
 {
   "ansh-info/jupytervim",
   lazy = false,
-  build = "uv sync --project python/",
+  build = "uv sync --project python/ || pip3 install ./python/",
   dependencies = {
     "nvim-treesitter/nvim-treesitter",
   },
@@ -61,10 +62,10 @@ rendering, full Vim modal editing, live kernel execution, and inline output.
 > `lazy = false` is required — the plugin must load before any buffer is opened
 > so it can intercept `.ipynb` files via `BufReadCmd`.
 
-> `build = "uv sync --project python/"` installs the Python kernel bridge
-> dependencies (`jupyter_client`, `ipykernel`) into an isolated venv the first
-> time you install or update the plugin. Run `:Lazy build jupytervim` to re-run
-> it manually if needed.
+> The `build` hook installs the Python kernel bridge dependencies
+> (`jupyter_client`, `ipykernel`, `nbformat`) on first install and on updates.
+> It tries `uv` first for an isolated venv; falls back to `pip3` if `uv` is not
+> installed. Run `:Lazy build jupytervim` to re-run it manually if needed.
 
 **With optional dependencies:**
 
@@ -72,7 +73,7 @@ rendering, full Vim modal editing, live kernel execution, and inline output.
 {
   "ansh-info/jupytervim",
   lazy = false,
-  build = "uv sync --project python/",
+  build = "uv sync --project python/ || pip3 install ./python/",
   dependencies = {
     "nvim-treesitter/nvim-treesitter",
     { "3rd/image.nvim", opts = {} },
@@ -88,7 +89,7 @@ rendering, full Vim modal editing, live kernel execution, and inline output.
 ```lua
 use {
   "ansh-info/jupytervim",
-  run = "uv sync --project python/",
+  run = "uv sync --project python/ || pip3 install ./python/",
   config = function()
     require("jupytervim").setup({})
   end,
