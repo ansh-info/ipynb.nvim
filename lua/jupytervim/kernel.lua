@@ -143,6 +143,9 @@ local function dispatch(bufnr, msg)
       if t == "error" then
         cell.update_status(bufnr, pending.cell_state, "error", nil)
       end
+    else
+      utils.warn("output dropped — no pending cell for msg_id=" .. tostring(id)
+        .. " type=" .. t)
     end
 
   -- ── kernel_info ───────────────────────────────────────────────────────────
@@ -357,7 +360,9 @@ function M.run_current_cell(bufnr)
   s.pending[mid] = { cell_state = cs, bufnr = bufnr, start_ms = vim.loop.now() }
 
   cell.update_status(bufnr, cs, "busy", nil)
-  send(bufnr, { cmd = "execute", code = cell.get_cell_source(bufnr, cs), msg_id = mid })
+  local code = cell.get_cell_source(bufnr, cs)
+  utils.info("Executing cell [" .. mid .. "]: " .. vim.trim(code):sub(1, 40))
+  send(bufnr, { cmd = "execute", code = code, msg_id = mid })
 end
 
 --- Execute every code cell in the notebook.
