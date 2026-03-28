@@ -35,15 +35,22 @@ rendering, full Vim modal editing, live kernel execution, and inline output.
 
 - [3rd/image.nvim](https://github.com/3rd/image.nvim)
 - Kitty, Ghostty, or WezTerm terminal (Kitty graphics protocol), or `ueberzugpp` for others
-- `luarocks` + `magick` luarock + `imagemagick` system library (required by image.nvim)
-- **tmux users:** add `set -g allow-passthrough on` to `~/.tmux.conf` and restart tmux, otherwise image.nvim will error on startup
+- `imagemagick` system library (required by image.nvim)
+- **tmux users:** add these three lines to `~/.tmux.conf` and restart tmux:
+  ```
+  set -gq allow-passthrough on
+  set -g visual-activity off
+  set-option -g focus-events on
+  ```
 
 ```bash
-# macOS — use luajit (lua@5.1 was removed from Homebrew).
-# Neovim uses LuaJIT which is Lua 5.1 compatible.
-# Do NOT pin magick 1.0.0-1: it only supports ImageMagick 6.
-brew install luarocks imagemagick luajit
-luarocks --local --lua-dir=$(brew --prefix luajit) --lua-version=5.1 install magick
+# macOS
+brew install imagemagick
+```
+
+```bash
+# Linux (Debian/Ubuntu)
+sudo apt install imagemagick
 ```
 
 **Optional - richer markdown cells**
@@ -84,14 +91,6 @@ return {
 **With optional dependencies:**
 
 ```lua
--- Add this to your init.lua BEFORE the lazy.nvim setup call.
--- It lets Neovim find the magick luarock installed with luarocks --local.
-package.path = package.path
-  .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/?/init.lua"
-  .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/?.lua"
-```
-
-```lua
 return {
   {
     "ansh-info/ipynb.nvim",
@@ -101,11 +100,10 @@ return {
       "nvim-treesitter/nvim-treesitter",
       {
         "3rd/image.nvim",
-        build = "luarocks --local --lua-dir=$(brew --prefix luajit) --lua-version=5.1 install magick",
+        build = false,
         opts = {
-          backend = "kitty",              -- "kitty" for Kitty/Ghostty/WezTerm
-          -- backend = "ueberzugpp",      -- for iTerm2 / other terminals
-          kitty_method = "normal",
+          backend   = "kitty",       -- "kitty" for Kitty/Ghostty/WezTerm
+          processor = "magick_cli",  -- uses system ImageMagick, no Lua rock needed
           max_height_window_percentage = 50,
         },
       },
@@ -116,10 +114,6 @@ return {
   },
 }
 ```
-
-> **Note:** Without the `package.path` addition, Neovim cannot find the `magick`
-> luarock even after installing it. Plots will show
-> `[png image - install image.nvim for rendering]` until this is in place.
 
 ### packer.nvim
 
