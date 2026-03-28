@@ -249,6 +249,15 @@ function M.render(bufnr, notebook)
   -- Lock filetype for syntax highlighting.
   vim.api.nvim_buf_set_option(bufnr, "filetype", "python")
 
+  -- Apply markdown decorations after all cells are placed.
+  -- Deferred so extmark positions are stable before markdown.render() reads them.
+  vim.schedule(function()
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      local ok, markdown = pcall(require, "jupytervim.markdown")
+      if ok then markdown.render(bufnr) end
+    end
+  end)
+
   utils.info(string.format("Loaded notebook: %d cells", #notebook.cells))
 end
 
