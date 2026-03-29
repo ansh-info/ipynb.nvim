@@ -18,9 +18,9 @@
 ---   }
 
 local config = require("ipynb.config")
-local cell   = require("ipynb.cell")
+local cell = require("ipynb.cell")
 local output = require("ipynb.output")
-local utils  = require("ipynb.utils")
+local utils = require("ipynb.utils")
 
 local M = {}
 
@@ -35,14 +35,14 @@ local _state = {}
 local function get_state(bufnr)
   if not _state[bufnr] then
     _state[bufnr] = {
-      job_id      = nil,
-      status      = "stopped",
+      job_id = nil,
+      status = "stopped",
       kernel_name = "",
-      language    = "",
-      version     = "",
+      language = "",
+      version = "",
       msg_counter = 0,
-      pending     = {},
-      line_buf    = "",
+      pending = {},
+      line_buf = "",
     }
   end
   return _state[bufnr]
@@ -63,17 +63,17 @@ end
 local function bridge_path()
   -- debug.getinfo(1).source == "@/abs/path/lua/ipynb/kernel.lua"
   local this_file = debug.getinfo(1, "S").source:sub(2)
-  local root      = vim.fn.fnamemodify(this_file, ":h:h:h")
+  local root = vim.fn.fnamemodify(this_file, ":h:h:h")
   return root .. "/python/kernel_bridge.py"
 end
 
 --- Prefer the uv venv Python; fall back to config python_path.
 ---@return string
 local function python_exe()
-  local cfg      = config.get()
-  local bp       = bridge_path()
-  local root     = vim.fn.fnamemodify(bp, ":h:h")   -- plugin root
-  local venv_py  = root .. "/python/.venv/bin/python"
+  local cfg = config.get()
+  local bp = bridge_path()
+  local root = vim.fn.fnamemodify(bp, ":h:h") -- plugin root
+  local venv_py = root .. "/python/.venv/bin/python"
   if vim.fn.executable(venv_py) == 1 then
     return venv_py
   end
@@ -98,14 +98,14 @@ end
 ---@param bufnr integer
 ---@param msg table
 local function dispatch(bufnr, msg)
-  local t   = msg.type or ""
-  local s   = get_state(bufnr)
-  local id  = msg.msg_id or ""
+  local t = msg.type or ""
+  local s = get_state(bufnr)
+  local id = msg.msg_id or ""
 
   -- ── status ────────────────────────────────────────────────────────────────
   if t == "status" then
-    local prev   = s.status
-    local state  = msg.state or ""
+    local prev = s.status
+    local state = msg.state or ""
     s.status = (state == "busy") and "busy" or "idle"
     -- First idle after spawning: kernel is ready. Notify the user.
     if prev == "starting" and s.status == "idle" then
@@ -134,8 +134,7 @@ local function dispatch(bufnr, msg)
   -- ── execute_input (kernel echoes code back with execution count) ──────────
   elseif t == "execute_input" then
     local pending = (id ~= "") and s.pending[id] or nil
-    if pending and type(pending) == "table" and not pending._snippet_cb
-        and msg.exec_count then
+    if pending and type(pending) == "table" and not pending._snippet_cb and msg.exec_count then
       cell.update_execution_count(bufnr, pending.cell_state, msg.exec_count)
       local nb = cell.get_notebook(bufnr)
       if nb and pending.cell_state.index then
@@ -144,8 +143,7 @@ local function dispatch(bufnr, msg)
     end
 
   -- ── output chunks (stream / result / error / image / clear_output) ────────
-  elseif t == "stream" or t == "result" or t == "error"
-      or t == "image"  or t == "clear_output" then
+  elseif t == "stream" or t == "result" or t == "error" or t == "image" or t == "clear_output" then
     local pending = (id ~= "") and s.pending[id] or nil
     if pending and type(pending) == "table" then
       if pending._snippet_cb then
@@ -160,14 +158,13 @@ local function dispatch(bufnr, msg)
         end
       end
     else
-      utils.warn("output dropped — no pending cell for msg_id=" .. tostring(id)
-        .. " type=" .. t)
+      utils.warn("output dropped — no pending cell for msg_id=" .. tostring(id) .. " type=" .. t)
     end
 
   -- ── kernel_info ───────────────────────────────────────────────────────────
   elseif t == "kernel_info" then
     s.language = msg.language or ""
-    s.version  = msg.version  or ""
+    s.version = msg.version or ""
     utils.info(string.format("Kernel ready: %s %s", s.language, s.version))
 
   -- ── completions (callback stored in pending) ──────────────────────────────
@@ -214,7 +211,7 @@ local function on_stdout_chunks(bufnr, data)
     else
       -- A newline boundary occurred: s.line_buf is now a complete line.
       local line = vim.trim(s.line_buf)
-      s.line_buf = chunk   -- start accumulating the next line
+      s.line_buf = chunk -- start accumulating the next line
       if line ~= "" then
         local ok, msg = pcall(vim.fn.json_decode, line)
         if ok and type(msg) == "table" then
@@ -248,7 +245,9 @@ local function spawn_bridge(bufnr)
     end,
     on_stderr = function(_, data, _)
       local msg = table.concat(data, ""):gsub("%s+$", "")
-      if msg ~= "" then utils.debug("kernel_bridge stderr: " .. msg) end
+      if msg ~= "" then
+        utils.debug("kernel_bridge stderr: " .. msg)
+      end
     end,
     on_exit = function(_, code, _)
       local st = get_state(bufnr)
@@ -275,7 +274,7 @@ end
 ---@param bufnr integer
 ---@param kernel_name string|nil  overrides config default
 function M.start(bufnr, kernel_name)
-  local s   = get_state(bufnr)
+  local s = get_state(bufnr)
   local cfg = config.get()
 
   if s.job_id then
@@ -283,13 +282,15 @@ function M.start(bufnr, kernel_name)
     return
   end
 
-  local kn     = kernel_name or cfg.kernel.default_kernel
+  local kn = kernel_name or cfg.kernel.default_kernel
   s.kernel_name = kn
-  s.status      = "starting"
-  s.line_buf    = ""
+  s.status = "starting"
+  s.line_buf = ""
 
   local job_id = spawn_bridge(bufnr)
-  if not job_id then return end
+  if not job_id then
+    return
+  end
   s.job_id = job_id
 
   send(bufnr, { cmd = "start", kernel = kn })
@@ -300,10 +301,15 @@ end
 ---@param bufnr integer
 function M.stop(bufnr)
   local s = get_state(bufnr)
-  if not s.job_id then utils.warn("No kernel running.") return end
+  if not s.job_id then
+    utils.warn("No kernel running.")
+    return
+  end
   send(bufnr, { cmd = "shutdown" })
   vim.defer_fn(function()
-    if s.job_id then vim.fn.jobstop(s.job_id) end
+    if s.job_id then
+      vim.fn.jobstop(s.job_id)
+    end
   end, 500)
   utils.info("Kernel stopped.")
 end
@@ -311,7 +317,7 @@ end
 --- Restart the kernel, clearing all cell outputs.
 ---@param bufnr integer
 function M.restart(bufnr)
-  local s  = get_state(bufnr)
+  local s = get_state(bufnr)
   local kn = s.kernel_name
   output.clear_all(bufnr, cell.get_cells(bufnr))
   M.stop(bufnr)
@@ -326,15 +332,22 @@ end
 ---@param connection_file string|nil
 function M.attach(bufnr, connection_file)
   local s = get_state(bufnr)
-  if s.job_id then utils.warn("Stop the current kernel first.") return end
+  if s.job_id then
+    utils.warn("Stop the current kernel first.")
+    return
+  end
 
   s.line_buf = ""
   local job_id = spawn_bridge(bufnr)
-  if not job_id then return end
+  if not job_id then
+    return
+  end
   s.job_id = job_id
 
   local cmd = { cmd = "attach" }
-  if connection_file then cmd.connection_file = connection_file end
+  if connection_file then
+    cmd.connection_file = connection_file
+  end
   send(bufnr, cmd)
 end
 
@@ -350,7 +363,10 @@ end
 function M.run_current_cell(bufnr)
   local cfg = config.get()
   local cs, _ = cell.cell_at_cursor(bufnr)
-  if not cs then utils.warn("Cursor is not inside a cell.") return end
+  if not cs then
+    utils.warn("Cursor is not inside a cell.")
+    return
+  end
   if cs.cell_type ~= "code" then
     utils.info("Not a code cell - skipping execution.")
     return
@@ -363,7 +379,9 @@ function M.run_current_cell(bufnr)
       -- Poll every 500 ms until the kernel signals idle, then run.
       local function _await_and_run()
         local st = get_state(bufnr)
-        if not st.job_id or st.status == "stopped" then return end
+        if not st.job_id or st.status == "stopped" then
+          return
+        end
         if st.status == "idle" then
           M.run_current_cell(bufnr)
         else
@@ -391,9 +409,12 @@ end
 --- Execute every code cell in the notebook.
 ---@param bufnr integer
 function M.run_all(bufnr)
-  local s     = get_state(bufnr)
+  local s = get_state(bufnr)
   local cells = cell.get_cells(bufnr)
-  if not s.job_id then utils.warn("No kernel running.") return end
+  if not s.job_id then
+    utils.warn("No kernel running.")
+    return
+  end
   for _, cs in ipairs(cells) do
     if cs.cell_type == "code" then
       output.clear(bufnr, cs)
@@ -409,9 +430,14 @@ end
 ---@param bufnr integer
 function M.run_all_above(bufnr)
   local _, idx = cell.cell_at_cursor(bufnr)
-  if not idx then return end
+  if not idx then
+    return
+  end
   local s = get_state(bufnr)
-  if not s.job_id then utils.warn("No kernel running.") return end
+  if not s.job_id then
+    utils.warn("No kernel running.")
+    return
+  end
   for _, entry in ipairs(cell.cells_above(bufnr, idx)) do
     local cs = entry.cell_state
     if cs.cell_type == "code" then
@@ -428,10 +454,15 @@ end
 ---@param bufnr integer
 function M.run_all_below(bufnr)
   local _, idx = cell.cell_at_cursor(bufnr)
-  if not idx then return end
-  local s     = get_state(bufnr)
+  if not idx then
+    return
+  end
+  local s = get_state(bufnr)
   local cells = cell.get_cells(bufnr)
-  if not s.job_id then utils.warn("No kernel running.") return end
+  if not s.job_id then
+    utils.warn("No kernel running.")
+    return
+  end
   for i = idx, #cells do
     local cs = cells[i]
     if cs.cell_type == "code" then
@@ -451,7 +482,9 @@ end
 ---@param cb function
 function M.complete(bufnr, code, cursor_pos, cb)
   local s = get_state(bufnr)
-  if not s.job_id then return end
+  if not s.job_id then
+    return
+  end
   local mid = next_msg_id(bufnr)
   s.pending[mid] = cb
   send(bufnr, { cmd = "complete", code = code, cursor_pos = cursor_pos, msg_id = mid })
@@ -464,7 +497,9 @@ end
 ---@param cb function
 function M.inspect(bufnr, code, cursor_pos, cb)
   local s = get_state(bufnr)
-  if not s.job_id then return end
+  if not s.job_id then
+    return
+  end
   local mid = next_msg_id(bufnr)
   s.pending[mid] = cb
   send(bufnr, { cmd = "inspect", code = code, cursor_pos = cursor_pos, msg_id = mid })
@@ -480,8 +515,8 @@ function M.show_info(bufnr)
     "",
     "  Status  : " .. s.status,
     "  Kernel  : " .. (s.kernel_name ~= "" and s.kernel_name or "(none)"),
-    "  Language: " .. (s.language    ~= "" and s.language    or "(unknown)"),
-    "  Version : " .. (s.version     ~= "" and s.version     or "(unknown)"),
+    "  Language: " .. (s.language ~= "" and s.language or "(unknown)"),
+    "  Version : " .. (s.version ~= "" and s.version or "(unknown)"),
     "  Job ID  : " .. tostring(s.job_id or "—"),
     "",
     "  Press q or <Esc> to close.",
@@ -491,17 +526,17 @@ function M.show_info(bufnr)
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
   vim.api.nvim_buf_set_option(buf, "modifiable", false)
 
-  local width  = 38
+  local width = 38
   local height = #lines
   local win = vim.api.nvim_open_win(buf, true, {
-    relative  = "editor",
-    row       = math.floor((vim.o.lines   - height) / 2),
-    col       = math.floor((vim.o.columns - width)  / 2),
-    width     = width,
-    height    = height,
-    style     = "minimal",
-    border    = "rounded",
-    title     = " Jupyter Kernel ",
+    relative = "editor",
+    row = math.floor((vim.o.lines - height) / 2),
+    col = math.floor((vim.o.columns - width) / 2),
+    width = width,
+    height = height,
+    style = "minimal",
+    border = "rounded",
+    title = " Jupyter Kernel ",
     title_pos = "center",
   })
 
@@ -541,7 +576,9 @@ end
 ---@param bufnr integer
 function M.on_buf_delete(bufnr)
   local s = _state[bufnr]
-  if s and s.job_id then vim.fn.jobstop(s.job_id) end
+  if s and s.job_id then
+    vim.fn.jobstop(s.job_id)
+  end
   _state[bufnr] = nil
 end
 
