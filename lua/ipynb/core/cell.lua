@@ -381,7 +381,8 @@ function M.add_cell_below(bufnr, idx)
 
   -- Insert a new empty cell into the notebook model.
   local new_cell = {
-    id = require("ipynb.core.notebook").gen_cell_id and require("ipynb.core.notebook").gen_cell_id()
+    id = require("ipynb.core.notebook").gen_cell_id
+        and require("ipynb.core.notebook").gen_cell_id()
       or utils.uid(),
     cell_type = "code",
     source = "",
