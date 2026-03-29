@@ -9,10 +9,10 @@
 ---   - Auto-save after cell execution (if configured)
 
 local notebook = require("ipynb.notebook")
-local cell     = require("ipynb.cell")
-local keymaps  = require("ipynb.keymaps")
-local config   = require("ipynb.config")
-local utils    = require("ipynb.utils")
+local cell = require("ipynb.cell")
+local keymaps = require("ipynb.keymaps")
+local config = require("ipynb.config")
+local utils = require("ipynb.utils")
 
 local M = {}
 
@@ -25,10 +25,10 @@ local managed = {}
 ---@param bufnr integer
 local function setup_buf_options(bufnr)
   -- Treat as a normal editable buffer.
-  vim.api.nvim_buf_set_option(bufnr, "buftype",    "")
+  vim.api.nvim_buf_set_option(bufnr, "buftype", "")
   vim.api.nvim_buf_set_option(bufnr, "modifiable", true)
-  vim.api.nvim_buf_set_option(bufnr, "readonly",   false)
-  vim.api.nvim_buf_set_option(bufnr, "swapfile",   false)
+  vim.api.nvim_buf_set_option(bufnr, "readonly", false)
+  vim.api.nvim_buf_set_option(bufnr, "swapfile", false)
 
   -- Python filetype for treesitter / LSP.
   vim.api.nvim_buf_set_option(bufnr, "filetype", "python")
@@ -36,13 +36,13 @@ local function setup_buf_options(bufnr)
   -- Disable formatters. The buffer holds raw cell source from multiple cells;
   -- running ruff/black/conform over it would corrupt multi-cell content and
   -- trigger spurious re-renders.
-  vim.b[bufnr].conform_format_on_save         = false
+  vim.b[bufnr].conform_format_on_save = false
   vim.b[bufnr].conform_format_on_insert_leave = false
-  vim.bo[bufnr].formatexpr                    = ""
+  vim.bo[bufnr].formatexpr = ""
 
   -- Conceal decorations look better without full conceallevel in insert mode.
   vim.api.nvim_win_set_option(0, "conceallevel", 0)
-  vim.api.nvim_win_set_option(0, "signcolumn",   "yes")
+  vim.api.nvim_win_set_option(0, "signcolumn", "yes")
 end
 
 --- Set a human-readable buffer name (shows in tabline / statusline).
@@ -74,7 +74,9 @@ end
 ---
 ---@param bufnr integer
 local function attach_lsp(bufnr)
-  if not vim.api.nvim_buf_is_valid(bufnr) then return end
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
 
   -- Strategy 1: re-fire FileType so lspconfig autostart logic runs.
   -- nvim_exec_autocmds does not accept "match"; use "pattern" (the autocmd
@@ -86,7 +88,9 @@ local function attach_lsp(bufnr)
   -- Strategy 2: attach any already-running Python LSP client.
   local get_clients = vim.lsp.get_clients or vim.lsp.get_active_clients
   for _, client in ipairs(get_clients()) do
-    if vim.lsp.buf_is_attached(bufnr, client.id) then goto continue end
+    if vim.lsp.buf_is_attached(bufnr, client.id) then
+      goto continue
+    end
     local fts = (client.config or {}).filetypes or {}
     for _, ft in ipairs(fts) do
       if ft == "python" then
@@ -104,9 +108,11 @@ end
 --- notebook.cells[i].source before saving.
 ---@param bufnr integer
 local function sync_all_cells(bufnr)
-  local nb     = cell.get_notebook(bufnr)
-  local cells  = cell.get_cells(bufnr)
-  if not nb then return end
+  local nb = cell.get_notebook(bufnr)
+  local cells = cell.get_cells(bufnr)
+  if not nb then
+    return
+  end
 
   for _, cs in ipairs(cells) do
     local source = cell.get_cell_source(bufnr, cs)
@@ -151,7 +157,9 @@ function M.open(path, bufnr)
 
   -- Attach kernel completions (omnifunc + optional nvim-cmp source).
   local ok_cmp, completion = pcall(require, "ipynb.completion")
-  if ok_cmp then completion.attach(bufnr) end
+  if ok_cmp then
+    completion.attach(bufnr)
+  end
 
   -- Register inspector keymap.
   vim.keymap.set("n", "<leader>ji", function()
@@ -160,13 +168,15 @@ function M.open(path, bufnr)
 
   -- Auto-clean state on buffer wipe.
   vim.api.nvim_create_autocmd("BufDelete", {
-    buffer  = bufnr,
-    once    = true,
+    buffer = bufnr,
+    once = true,
     callback = function()
       cell.on_buf_delete(bufnr)
       -- Stop kernel bridge if one is running for this buffer.
       local ok, kernel = pcall(require, "ipynb.kernel")
-      if ok then kernel.on_buf_delete(bufnr) end
+      if ok then
+        kernel.on_buf_delete(bufnr)
+      end
       managed[bufnr] = nil
     end,
   })
@@ -176,9 +186,11 @@ function M.open(path, bufnr)
   -- on InsertLeave / TextChanged we recompute and reposition end_mark so the
   -- bottom border always wraps the actual cell content.
   vim.api.nvim_create_autocmd({ "InsertLeave", "TextChanged" }, {
-    buffer   = bufnr,
+    buffer = bufnr,
     callback = function()
-      if not vim.api.nvim_buf_is_valid(bufnr) then return end
+      if not vim.api.nvim_buf_is_valid(bufnr) then
+        return
+      end
       cell.reanchor_end_marks(bufnr)
     end,
   })
@@ -186,10 +198,12 @@ function M.open(path, bufnr)
   -- Re-render borders when the window is resized (border widths depend on
   -- the window width).
   vim.api.nvim_create_autocmd("VimResized", {
-    buffer   = bufnr,
+    buffer = bufnr,
     callback = function()
       local nb2 = cell.get_notebook(bufnr)
-      if nb2 then cell.render(bufnr, nb2) end
+      if nb2 then
+        cell.render(bufnr, nb2)
+      end
     end,
   })
 
@@ -202,24 +216,32 @@ function M.open(path, bufnr)
     local scroll_timer = nil
 
     vim.api.nvim_create_autocmd("WinScrolled", {
-      buffer   = bufnr,
+      buffer = bufnr,
       callback = function()
         if scroll_timer then
           scroll_timer:stop()
         else
           scroll_timer = vim.loop.new_timer()
         end
-        scroll_timer:start(80, 0, vim.schedule_wrap(function()
-          if not vim.api.nvim_buf_is_valid(bufnr) then return end
-          local ok2, image = pcall(require, "ipynb.image")
-          if ok2 then image.rerender_all(bufnr) end
-        end))
+        scroll_timer:start(
+          80,
+          0,
+          vim.schedule_wrap(function()
+            if not vim.api.nvim_buf_is_valid(bufnr) then
+              return
+            end
+            local ok2, image = pcall(require, "ipynb.image")
+            if ok2 then
+              image.rerender_all(bufnr)
+            end
+          end)
+        )
       end,
     })
 
     vim.api.nvim_create_autocmd("BufDelete", {
-      buffer   = bufnr,
-      once     = true,
+      buffer = bufnr,
+      once = true,
       callback = function()
         if scroll_timer then
           scroll_timer:stop()
@@ -236,7 +258,9 @@ function M.open(path, bufnr)
   if config.get().kernel.auto_start then
     vim.schedule(function()
       local ok, kernel = pcall(require, "ipynb.kernel")
-      if ok then kernel.start(bufnr, nil) end
+      if ok then
+        kernel.start(bufnr, nil)
+      end
     end)
   end
 
@@ -254,7 +278,9 @@ function M.open(path, bufnr)
   -- via BufEnter autocmds after this handler returns, so defer until the
   -- next event loop tick to ensure we win.
   vim.schedule(function()
-    if not vim.api.nvim_buf_is_valid(bufnr) then return end
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+      return
+    end
     local win = vim.fn.bufwinid(bufnr)
     if win ~= -1 then
       vim.api.nvim_win_set_cursor(win, { 1, 0 })
