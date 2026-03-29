@@ -27,8 +27,8 @@ end
 -- ── 1. Module loading ─────────────────────────────────────────────────────────
 
 local ok_kernel, kernel = pcall(require, "ipynb.kernel")
-local ok_insp, inspector = pcall(require, "ipynb.inspector")
-local ok_cell, cell = pcall(require, "ipynb.cell")
+local ok_insp, inspector = pcall(require, "ipynb.ui.inspector")
+local ok_cell, cell = pcall(require, "ipynb.core.cell")
 
 check("kernel.lua loads", ok_kernel, tostring(kernel))
 check("inspector.lua loads", ok_insp, tostring(inspector))
@@ -44,7 +44,7 @@ check(
 
 -- ── 3. inspector.lua uses execute_snippet, no old monkey-patch ───────────────
 
-local f = io.open("/home/oneai/jupytervim/lua/ipynb/inspector.lua", "r")
+local f = io.open(vim.fn.getcwd() .. "/lua/ipynb/ui/inspector.lua", "r")
 local insp_src = f:read("*all")
 f:close()
 
@@ -107,7 +107,7 @@ end
 
 -- ── 6. kernel_bridge.py: _setup_ids race condition fix ───────────────────────
 
-local g = io.open("/home/oneai/jupytervim/python/kernel_bridge.py", "r")
+local g = io.open(vim.fn.getcwd() .. "/python/kernel_bridge.py", "r")
 local bridge_src = g:read("*all")
 g:close()
 
@@ -131,7 +131,7 @@ check(
 -- ── 7. highlight_inspector_buf: no hard-coded end_col = 200 ──────────────────
 
 local ok_insp2, insp_src2 = pcall(function()
-  local h = io.open("/home/oneai/jupytervim/lua/ipynb/inspector.lua", "r")
+  local h = io.open(vim.fn.getcwd() .. "/lua/ipynb/ui/inspector.lua", "r")
   local s = h:read("*all")
   h:close()
   return s

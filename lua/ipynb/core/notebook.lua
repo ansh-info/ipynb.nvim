@@ -1,4 +1,4 @@
---- ipynb.notebook
+--- ipynb.core.notebook
 --- Parses .ipynb JSON files into an internal notebook data structure,
 --- renders cells into a Neovim buffer, and serialises changes back to disk.
 ---

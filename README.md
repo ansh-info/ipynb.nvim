@@ -1,5 +1,7 @@
 # ipynb
 
+[![CI](https://github.com/ansh-info/ipynb.nvim/actions/workflows/ci.yml/badge.svg)](https://github.com/ansh-info/ipynb.nvim/actions/workflows/ci.yml)
+
 Neovim plugin for editing Jupyter notebooks (`.ipynb`) natively - Colab-style cell
 rendering, full Vim modal editing, live kernel execution, and inline output.
 
@@ -260,7 +262,8 @@ require("ipynb").setup({
 
 ## Contributing
 
-Issues and pull requests are welcome at https://github.com/ansh-info/ipynb.nvim.
+Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for
+development setup, test instructions, and the contribution workflow.
 
 ## License
 

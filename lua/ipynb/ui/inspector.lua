@@ -1,11 +1,11 @@
---- ipynb.inspector
+--- ipynb.ui.inspector
 --- Variable inspector: executes a Python snippet in the kernel to retrieve
 --- all user-defined variables and displays them in a floating window.
 ---
 --- Invoked via:
 ---   :IpynbInspect          — show variable inspector
 ---   <leader>ji               — keymap (registered by keymaps.lua)
----   require("ipynb.inspector").open(bufnr)
+---   require("ipynb.ui.inspector").open(bufnr)
 ---
 --- The inspector window shows:
 ---   Name       Type        Value (truncated)

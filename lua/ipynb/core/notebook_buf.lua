@@ -1,4 +1,4 @@
---- ipynb.notebook_buf
+--- ipynb.core.notebook_buf
 --- Buffer lifecycle manager: ties together notebook.lua (I/O) and
 --- cell.lua (rendering/extmarks) for a specific buffer.
 ---
@@ -8,9 +8,9 @@
 ---   - Buffer option setup (filetype, conceallevel, etc.)
 ---   - Auto-save after cell execution (if configured)
 
-local notebook = require("ipynb.notebook")
-local cell = require("ipynb.cell")
-local keymaps = require("ipynb.keymaps")
+local notebook = require("ipynb.core.notebook")
+local cell = require("ipynb.core.cell")
+local keymaps = require("ipynb.ui.keymaps")
 local config = require("ipynb.config")
 local utils = require("ipynb.utils")
 
@@ -156,14 +156,14 @@ function M.open(path, bufnr)
   keymaps.attach(bufnr)
 
   -- Attach kernel completions (omnifunc + optional nvim-cmp source).
-  local ok_cmp, completion = pcall(require, "ipynb.completion")
+  local ok_cmp, completion = pcall(require, "ipynb.kernel.completion")
   if ok_cmp then
     completion.attach(bufnr)
   end
 
   -- Register inspector keymap.
   vim.keymap.set("n", "<leader>ji", function()
-    require("ipynb.inspector").open(bufnr)
+    require("ipynb.ui.inspector").open(bufnr)
   end, { buffer = bufnr, silent = true, desc = "Jupyter: variable inspector" })
 
   -- Auto-clean state on buffer wipe.
@@ -211,7 +211,7 @@ function M.open(path, bufnr)
   --   a) images follow the cell as it moves on screen (fixes flicker), and
   --   b) images whose initial render failed because the output was off-screen
   --      get a second chance once the user scrolls them into view.
-  local ok_img = pcall(require, "ipynb.image")
+  local ok_img = pcall(require, "ipynb.ui.image")
   if ok_img then
     local scroll_timer = nil
 
@@ -230,7 +230,7 @@ function M.open(path, bufnr)
             if not vim.api.nvim_buf_is_valid(bufnr) then
               return
             end
-            local ok2, image = pcall(require, "ipynb.image")
+            local ok2, image = pcall(require, "ipynb.ui.image")
             if ok2 then
               image.rerender_all(bufnr)
             end

@@ -11,7 +11,7 @@ describe("ipynb.inspector", function()
   -- Minimal vim stubs needed for the module to load in a headless Neovim.
   before_each(function()
     -- Reset module cache so each test gets a fresh module state.
-    package.loaded["ipynb.inspector"] = nil
+    package.loaded["ipynb.ui.inspector"] = nil
     package.loaded["ipynb.kernel"] = nil
     package.loaded["ipynb.utils"] = nil
 
@@ -19,7 +19,7 @@ describe("ipynb.inspector", function()
     vim.api = vim.api or {}
     vim.api.nvim_set_hl = vim.api.nvim_set_hl or function() end
 
-    inspector = require("ipynb.inspector")
+    inspector = require("ipynb.ui.inspector")
   end)
 
   -- ── Module shape ─────────────────────────────────────────────────────────────
@@ -58,8 +58,8 @@ describe("ipynb.inspector", function()
         log = function() end,
       }
 
-      package.loaded["ipynb.inspector"] = nil
-      local insp = require("ipynb.inspector")
+      package.loaded["ipynb.ui.inspector"] = nil
+      local insp = require("ipynb.ui.inspector")
 
       assert.has_no.errors(function()
         insp.open(1)
@@ -91,8 +91,8 @@ describe("ipynb.inspector", function()
         log = function() end,
       }
 
-      package.loaded["ipynb.inspector"] = nil
-      local insp = require("ipynb.inspector")
+      package.loaded["ipynb.ui.inspector"] = nil
+      local insp = require("ipynb.ui.inspector")
 
       assert.has_no.errors(function()
         insp.open(1)
@@ -127,8 +127,8 @@ describe("ipynb.inspector", function()
         log = function() end,
       }
 
-      package.loaded["ipynb.inspector"] = nil
-      local insp = require("ipynb.inspector")
+      package.loaded["ipynb.ui.inspector"] = nil
+      local insp = require("ipynb.ui.inspector")
 
       assert.has_no.errors(function()
         insp.open(42)
@@ -162,8 +162,8 @@ describe("ipynb.inspector", function()
         log = function() end,
       }
 
-      package.loaded["ipynb.inspector"] = nil
-      local insp = require("ipynb.inspector")
+      package.loaded["ipynb.ui.inspector"] = nil
+      local insp = require("ipynb.ui.inspector")
       insp.open(1)
 
       -- Verify the snippet will produce JSON (contains json.dumps).
@@ -174,7 +174,7 @@ describe("ipynb.inspector", function()
   -- ── INTROSPECT_CODE quality checks ────────────────────────────────────────────
 
   describe("INTROSPECT_CODE snippet", function()
-    local insp_path = "/home/oneai/jupytervim/lua/ipynb/inspector.lua"
+    local insp_path = vim.fn.getcwd() .. "/lua/ipynb/ui/inspector.lua"
 
     it("does not use vim.wait (would cause re-entrancy)", function()
       local f = io.open(insp_path, "r")

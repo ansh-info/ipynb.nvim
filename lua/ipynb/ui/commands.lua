@@ -1,4 +1,4 @@
---- ipynb.commands
+--- ipynb.ui.commands
 --- Registers all :Jupyter* user-facing commands.
 --- Called once from init.lua during setup().
 
@@ -10,7 +10,7 @@ function M.setup()
   vim.api.nvim_create_user_command("IpynbOpen", function(args)
     local path = args.args ~= "" and args.args or vim.fn.expand("%:p")
     local bufnr = vim.api.nvim_get_current_buf()
-    require("ipynb.notebook_buf").open(path, bufnr)
+    require("ipynb.core.notebook_buf").open(path, bufnr)
   end, {
     nargs = "?",
     complete = "file",
@@ -18,7 +18,7 @@ function M.setup()
   })
 
   vim.api.nvim_create_user_command("IpynbSave", function()
-    require("ipynb.notebook_buf").save(vim.api.nvim_get_current_buf())
+    require("ipynb.core.notebook_buf").save(vim.api.nvim_get_current_buf())
   end, { desc = "Save the current notebook to disk" })
 
   -- ── Kernel commands ────────────────────────────────────────────────────
@@ -96,7 +96,7 @@ function M.setup()
   -- ── Cell editing commands ──────────────────────────────────────────────
 
   vim.api.nvim_create_user_command("IpynbCellAdd", function()
-    local cell_mod = require("ipynb.cell")
+    local cell_mod = require("ipynb.core.cell")
     local bufnr = vim.api.nvim_get_current_buf()
     local _, idx = cell_mod.cell_at_cursor(bufnr)
     if idx then
@@ -105,7 +105,7 @@ function M.setup()
   end, { desc = "Add a code cell below the cursor" })
 
   vim.api.nvim_create_user_command("IpynbCellDelete", function()
-    local cell_mod = require("ipynb.cell")
+    local cell_mod = require("ipynb.core.cell")
     local bufnr = vim.api.nvim_get_current_buf()
     local _, idx = cell_mod.cell_at_cursor(bufnr)
     if idx then
@@ -116,13 +116,13 @@ function M.setup()
   -- ── Inspector ──────────────────────────────────────────────────────────
 
   vim.api.nvim_create_user_command("IpynbInspect", function()
-    require("ipynb.inspector").open(vim.api.nvim_get_current_buf())
+    require("ipynb.ui.inspector").open(vim.api.nvim_get_current_buf())
   end, { desc = "Open variable inspector for the current notebook" })
 
   -- ── Misc ───────────────────────────────────────────────────────────────
 
   vim.api.nvim_create_user_command("IpynbHelp", function()
-    require("ipynb.keymaps").show_help()
+    require("ipynb.ui.keymaps").show_help()
   end, { desc = "Show ipynb keymap help" })
 end
 

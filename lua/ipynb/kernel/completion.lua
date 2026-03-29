@@ -1,4 +1,4 @@
---- ipynb.completion
+--- ipynb.kernel.completion
 --- Kernel-backed completions for Jupyter notebook buffers.
 ---
 --- Two integration points:
@@ -114,7 +114,7 @@ end
 --- cmp calls this to know whether the source applies at the current position.
 function CmpSource:is_available()
   local bufnr = vim.api.nvim_get_current_buf()
-  local ok_nb, nb_buf = pcall(require, "ipynb.notebook_buf")
+  local ok_nb, nb_buf = pcall(require, "ipynb.core.notebook_buf")
   if not ok_nb or not nb_buf.is_managed(bufnr) then
     return false
   end
@@ -163,7 +163,7 @@ end
 ---@param bufnr integer
 function M.attach(bufnr)
   -- Set omnifunc so <C-x><C-o> works without any extra plugins.
-  vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.require'ipynb.completion'.omnifunc")
+  vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.require'ipynb.kernel.completion'.omnifunc")
 
   -- Register nvim-cmp source once if cmp is available.
   local ok, cmp = pcall(require, "cmp")

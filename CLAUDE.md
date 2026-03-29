@@ -10,7 +10,7 @@ A Neovim plugin (`ipynb`) that opens `.ipynb` Jupyter notebooks natively in
 Neovim with Google Colab-style cell rendering, full Vim modal editing, Jupyter
 kernel execution via ZMQ, inline text/image output, and a variable inspector.
 
-**All four development phases are complete.** Future work is bug-fixing, testing,
+**All development phases are complete.** Future work is bug-fixing, testing,
 and polish - not new phases.
 
 ---
@@ -20,36 +20,78 @@ and polish - not new phases.
 ```
 ipynb/
 ├── lua/ipynb/
-│   ├── init.lua          # Entry point: setup(), BufReadCmd/BufWriteCmd autocmds
-│   ├── config.lua        # Typed defaults + user deep-merge (IpynbConfig)
-│   ├── utils.lua         # log/warn/err, read_file/write_file, uid, has_plugin
-│   ├── notebook.lua      # .ipynb parse / serialise - nbformat 3 & 4
-│   ├── notebook_buf.lua  # Buffer lifecycle: open, save, sync, cleanup hooks
-│   ├── cell.lua          # Cell rendering (extmarks), navigation, add/delete
-│   ├── keymaps.lua       # Buffer-local keymaps + floating help overlay
-│   ├── commands.lua      # All :Jupyter* user commands
-│   ├── kernel.lua        # Spawns kernel_bridge.py, routes IOPub messages
-│   ├── output.lua        # Output chunk → virt_lines renderer + accumulator
-│   ├── image.lua         # image.nvim integration: PNG/JPEG/SVG rendering
-│   ├── markdown.lua      # Markdown cell extmark decorator (concealing)
-│   ├── completion.lua    # omnifunc + nvim-cmp async source
-│   └── inspector.lua     # Variable inspector floating window
+│   ├── init.lua              # Entry point: setup(), BufReadCmd/BufWriteCmd autocmds
+│   ├── config.lua            # Typed defaults + user deep-merge (IpynbConfig)
+│   ├── utils.lua             # log/warn/err, read_file/write_file, uid, has_plugin
+│   ├── core/
+│   │   ├── notebook.lua      # .ipynb parse / serialise - nbformat 3 & 4
+│   │   ├── notebook_buf.lua  # Buffer lifecycle: open, save, sync, cleanup hooks
+│   │   └── cell.lua          # Cell rendering (extmarks), navigation, add/delete
+│   ├── kernel/
+│   │   ├── init.lua          # Spawns kernel_bridge.py, routes IOPub messages
+│   │   ├── output.lua        # Output chunk -> virt_lines renderer + accumulator
+│   │   └── completion.lua    # omnifunc + nvim-cmp async source
+│   └── ui/
+│       ├── image.lua         # image.nvim integration: PNG/JPEG/SVG rendering
+│       ├── markdown.lua      # Markdown cell extmark decorator (concealing)
+│       ├── inspector.lua     # Variable inspector floating window
+│       ├── keymaps.lua       # Buffer-local keymaps + floating help overlay
+│       └── commands.lua      # All :Jupyter* user commands
 ├── python/
-│   ├── pyproject.toml    # uv project, Python >=3.12 - runtime deps
-│   ├── uv.lock           # Reproducible lockfile - always commit alongside toml
-│   └── kernel_bridge.py  # Full ZMQ ↔ JSON-line stdio daemon
+│   ├── pyproject.toml        # uv project, Python >=3.12 - runtime deps
+│   ├── uv.lock               # Reproducible lockfile - always commit alongside toml
+│   └── kernel_bridge.py      # Full ZMQ <-> JSON-line stdio daemon
 ├── plugin/
-│   └── ipynb.lua    # Auto-setup shim (sets guard flag)
+│   └── ipynb.lua             # Auto-setup shim (sets guard flag)
 ├── ftdetect/
-│   └── ipynb.vim         # Sets filetype=ipynb for *.ipynb files
+│   └── ipynb.vim             # Sets filetype=ipynb for *.ipynb files
+├── test/
+│   ├── minimal_init.lua      # Minimal Neovim init for vusted test runner
+│   ├── headless_test.lua     # Headless integration checks (module loading, statics)
+│   ├── config_spec.lua       # busted spec: ipynb.config
+│   ├── utils_spec.lua        # busted spec: ipynb.utils
+│   ├── notebook_spec.lua     # busted spec: ipynb.core.notebook
+│   ├── cell_spec.lua         # busted spec: ipynb.core.cell
+│   ├── output_spec.lua       # busted spec: ipynb.kernel.output
+│   └── inspector_spec.lua    # busted spec: ipynb.ui.inspector
 ├── .github/
 │   └── workflows/
-│       └── release.yml   # python-semantic-release on push to main
-├── pyproject.toml        # Root: semantic release config + dev deps
-├── uv.lock               # Root lockfile for semantic release
-├── CLAUDE.md             # This file
-└── README.md             # User-facing install and usage docs
+│       ├── ci.yml            # test + lint + format-check on every push/PR
+│       └── release.yml       # python-semantic-release on push to main
+├── .luacheckrc               # luacheck config (globals, max_line_length, ignores)
+├── .stylua.toml              # stylua config (2-space indent, 100 col width)
+├── Makefile                  # make test / lint / format / format-check / ci
+├── pyproject.toml            # Root: semantic release config + dev deps
+├── uv.lock                   # Root lockfile for semantic release
+├── CLAUDE.md                 # This file
+└── README.md                 # User-facing install and usage docs
 ```
+
+---
+
+## Module paths
+
+After the Phase 3 folder restructuring, the Lua module paths are:
+
+| Module | Path |
+|---|---|
+| `require("ipynb")` | `lua/ipynb/init.lua` |
+| `require("ipynb.config")` | `lua/ipynb/config.lua` |
+| `require("ipynb.utils")` | `lua/ipynb/utils.lua` |
+| `require("ipynb.core.notebook")` | `lua/ipynb/core/notebook.lua` |
+| `require("ipynb.core.notebook_buf")` | `lua/ipynb/core/notebook_buf.lua` |
+| `require("ipynb.core.cell")` | `lua/ipynb/core/cell.lua` |
+| `require("ipynb.kernel")` | `lua/ipynb/kernel/init.lua` |
+| `require("ipynb.kernel.output")` | `lua/ipynb/kernel/output.lua` |
+| `require("ipynb.kernel.completion")` | `lua/ipynb/kernel/completion.lua` |
+| `require("ipynb.ui.image")` | `lua/ipynb/ui/image.lua` |
+| `require("ipynb.ui.markdown")` | `lua/ipynb/ui/markdown.lua` |
+| `require("ipynb.ui.inspector")` | `lua/ipynb/ui/inspector.lua` |
+| `require("ipynb.ui.keymaps")` | `lua/ipynb/ui/keymaps.lua` |
+| `require("ipynb.ui.commands")` | `lua/ipynb/ui/commands.lua` |
+
+`kernel/init.lua` is intentional - Lua resolves `require("ipynb.kernel")` to
+`kernel/init.lua` automatically, so all call sites are unchanged.
 
 ---
 
@@ -57,10 +99,51 @@ ipynb/
 
 | Phase | Status | Scope |
 |---|---|---|
-| **1** | ✅ Done | notebook.lua, notebook_buf.lua, cell.lua, keymaps.lua, commands.lua |
-| **2** | ✅ Done | kernel_bridge.py (full ZMQ), kernel.lua, output.lua |
-| **3** | ✅ Done | image.lua (PNG/JPEG/SVG via image.nvim, base64 decode) |
-| **4** | ✅ Done | markdown.lua, completion.lua, inspector.lua |
+| **1** | Done | core/notebook.lua, core/notebook_buf.lua, core/cell.lua, ui/keymaps.lua, ui/commands.lua |
+| **2** | Done | kernel_bridge.py (full ZMQ), kernel/init.lua, kernel/output.lua |
+| **3** | Done | ui/image.lua (PNG/JPEG/SVG via image.nvim, base64 decode) |
+| **4** | Done | ui/markdown.lua, kernel/completion.lua, ui/inspector.lua |
+| **Tooling** | Done | .luacheckrc, .stylua.toml, Makefile, test suite, GitHub Actions CI |
+| **Refactor** | Done | Folder restructure into core/, kernel/, ui/ |
+
+---
+
+## Testing
+
+The test suite uses [busted](https://lunarmodules.github.io/busted/) via
+[vusted](https://github.com/notomo/vusted) (busted inside headless Neovim).
+
+```bash
+# Run full CI gate (lint + format-check + test)
+make ci
+
+# Individual targets
+make test          # run busted spec files via vusted
+make lint          # luacheck lua/ test/
+make format        # stylua lua/ test/ (writes in place)
+make format-check  # stylua --check lua/ test/ (used in CI)
+```
+
+**Install test dependencies (once):**
+```bash
+# macOS
+brew install luarocks stylua
+luarocks install vusted --local
+luarocks install luacheck --local
+export PATH="$HOME/.luarocks/bin:$PATH"
+export VUSTED_USE_LOCAL=1
+```
+
+**CI** runs automatically on every push and PR via `.github/workflows/ci.yml`:
+- `test` job: installs LuaJIT + LuaRocks + Neovim stable + vusted, runs `make test`
+- `lint` job: luacheck via `lunarmodules/luacheck` Docker action
+- `format` job: stylua `--check` via `JohnnyMorganz/stylua-action`
+
+**Adding a new spec file:**
+- Place it in `test/` with a `_spec.lua` suffix
+- Reset `package.loaded` in `before_each` for test isolation
+- Stub heavy deps (kernel, image, markdown) via `package.preload`
+- Use `vim.fn.getcwd()` for any file paths (not hardcoded absolute paths)
 
 ---
 
@@ -133,7 +216,7 @@ git add uv.lock        && git commit -m "..."
 ## Writing style - mandatory rules
 
 ### No em or en dashes
-Never use em dashes (—) or en dashes (–) anywhere - in docs, comments, or commit
+Never use em dashes (--) or en dashes (-) anywhere - in docs, comments, or commit
 messages. Use a regular hyphen (-) instead.
 
 ---
@@ -145,7 +228,7 @@ Every commit must contain **exactly one file**. No exceptions.
 
 ```bash
 # Correct
-git add lua/ipynb/kernel.lua
+git add lua/ipynb/core/cell.lua
 git commit -m "feat(lua): ..."
 
 # Wrong
@@ -174,7 +257,8 @@ Scopes: `lua`, `python`, `plugin`, `docs`, `config`
 ### Commit order when adding a feature
 1. Python file (if any)
 2. Lua file(s) one at a time
-3. README / CLAUDE.md last
+3. Test spec file(s)
+4. README / CLAUDE.md last
 
 ### Branch naming
 ```
@@ -182,13 +266,7 @@ feat/<short-description>     new feature
 fix/<short-description>      bug fix or cleanup
 docs/<short-description>     documentation only
 chore/<short-description>    tooling, config, CI
-```
-
-Examples:
-```
-feat/run-and-advance
-fix/em-dash-cleanup
-chore/upgrade-actions-node24
+refactor/<short-description> code restructuring
 ```
 
 ### Pull request description
@@ -224,20 +302,26 @@ Never insert decorations or output as real buffer lines.
 newline-delimited JSON on stdin/stdout. Do not switch to pynvim remote plugin
 architecture - the stdio model is simpler and avoids registration overhead.
 
-### ZMQ → Lua msg_id translation in the bridge
-`kernel_bridge.py` maintains a `_pending` dict mapping ZMQ msg_ids → Lua msg_ids
+### ZMQ -> Lua msg_id translation in the bridge
+`kernel_bridge.py` maintains a `_pending` dict mapping ZMQ msg_ids -> Lua msg_ids
 internally. All messages emitted to stdout carry the original Lua `msg_id` so
-`kernel.lua` never needs to know about ZMQ ids.
+`kernel/init.lua` never needs to know about ZMQ ids.
 
 ### image.nvim delegation
 All image rendering goes through `image.nvim`. Do not write raw Kitty escape
 sequences in Lua - `image.nvim` handles Kitty / ueberzugpp / sixel backends
 transparently.
 
-### pcall guard on phase-gated modules
-Modules that depend on later phases (kernel, image) are always loaded via
-`pcall(require, "...")`. This ensures the plugin never errors if a phase's code
-is missing or if optional dependencies (image.nvim, nvim-cmp) are absent.
+### pcall guard on optional modules
+Modules that depend on optional features (kernel, image, markdown, nvim-cmp) are
+always loaded via `pcall(require, "...")`. This ensures the plugin never errors if
+optional dependencies are absent.
+
+### Re-entrancy guard in kernel/output.lua
+`image.nvim`'s `magick_cli` processor uses `vim.wait()` which runs the Neovim
+event loop mid-render. The `_active`/`_pending` guard in `kernel/output.lua`
+prevents a second `output.append()` from calling `image.clear()` while the first
+magick process is still reading the temp PNG file.
 
 ---
 
@@ -245,9 +329,9 @@ is missing or if optional dependencies (image.nvim, nvim-cmp) are absent.
 
 | Namespace | Owner | Purpose |
 |---|---|---|
-| `ipynb_cells` | `cell.lua` | Cell border + output extmarks |
-| `ipynb_markdown` | `markdown.lua` | Markdown decoration extmarks |
-| `ipynb_inspector_hl` | `inspector.lua` | Inspector window highlights |
+| `ipynb_cells` | `core/cell.lua` | Cell border + output extmarks |
+| `ipynb_markdown` | `ui/markdown.lua` | Markdown decoration extmarks |
+| `ipynb_inspector_hl` | `ui/inspector.lua` | Inspector window highlights |
 
 ---
 
@@ -269,7 +353,7 @@ vim.fn.jobstart(cmd, { on_stdout, on_stderr, on_exit,
                        stdout_buffered = false })
 vim.fn.chansend(job_id, json_line .. "\n")
 
--- Blocking wait (used in completion.omnifunc)
+-- Blocking wait (used in kernel/completion.lua omnifunc)
 vim.wait(timeout_ms, predicate, interval_ms)
 ```
 
@@ -280,5 +364,6 @@ vim.wait(timeout_ms, predicate, interval_ms)
 1. Read this file.
 2. Run `git log --oneline` and `git status` - should be on `main`, clean.
 3. All phases are complete - focus is on bug reports, tests, or polish.
-4. If adding a new feature: Python first → Lua → docs, one file per commit.
+4. If adding a new feature: Python first -> Lua (core/kernel/ui as appropriate) -> test spec -> docs, one file per commit.
 5. If fixing a bug: read the affected module, understand the design, minimal fix.
+6. After any Lua change: run `make ci` locally or let CI verify on the PR.

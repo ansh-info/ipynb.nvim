@@ -1,4 +1,4 @@
---- ipynb.markdown
+--- ipynb.ui.markdown
 --- Lightweight inline renderer for markdown cells.
 ---
 --- Applies extmark-based decorations (highlight groups + concealing) to
@@ -23,7 +23,7 @@
 ---   markdown.render(bufnr)   -- decorate all markdown cells
 ---   markdown.clear(bufnr)    -- remove all markdown decorations
 
-local cell = require("ipynb.cell")
+local cell = require("ipynb.core.cell")
 
 local M = {}
 local NS = vim.api.nvim_create_namespace("ipynb_markdown")
