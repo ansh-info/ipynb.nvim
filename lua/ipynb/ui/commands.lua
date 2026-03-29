@@ -1,4 +1,4 @@
---- ipynb.commands
+--- ipynb.ui.commands
 --- Registers all :Jupyter* user-facing commands.
 --- Called once from init.lua during setup().
 
