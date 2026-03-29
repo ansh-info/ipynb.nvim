@@ -57,13 +57,15 @@ del __jvim_json, __jvim_skip, __jvim_vars, __jvim_name, __jvim_val, __jvim_type,
 
 local _hl_done = false
 local function define_highlights()
-  if _hl_done then return end
+  if _hl_done then
+    return
+  end
   _hl_done = true
   vim.api.nvim_set_hl(0, "IpynbInspectorHeader", { fg = "#7aa2f7", bold = true })
-  vim.api.nvim_set_hl(0, "IpynbInspectorName",   { fg = "#c0caf5"              })
-  vim.api.nvim_set_hl(0, "IpynbInspectorType",   { fg = "#e0af68", italic = true })
-  vim.api.nvim_set_hl(0, "IpynbInspectorValue",  { fg = "#9ece6a"              })
-  vim.api.nvim_set_hl(0, "IpynbInspectorBorder", { fg = "#3b4261"              })
+  vim.api.nvim_set_hl(0, "IpynbInspectorName", { fg = "#c0caf5" })
+  vim.api.nvim_set_hl(0, "IpynbInspectorType", { fg = "#e0af68", italic = true })
+  vim.api.nvim_set_hl(0, "IpynbInspectorValue", { fg = "#9ece6a" })
+  vim.api.nvim_set_hl(0, "IpynbInspectorBorder", { fg = "#3b4261" })
 end
 
 -- ── Result parsing ────────────────────────────────────────────────────────────
@@ -89,26 +91,26 @@ end
 ---@param vars table  { name → { type, repr, shape?, len? } }
 ---@return string[], table  lines and a map of line_number → variable_name
 local function build_display(vars)
-  local col_name  = 20
-  local col_type  = 16
+  local col_name = 20
+  local col_type = 16
   local col_value = 40
 
   -- LuaJIT string.format does not support C-style dynamic-width specifiers.
   -- Build the format string with literal column widths instead.
   local row_fmt = "  %-" .. col_name .. "s  %-" .. col_type .. "s  %s"
-  local header  = string.format(row_fmt, "Name", "Type", "Value")
+  local header = string.format(row_fmt, "Name", "Type", "Value")
   local rule = "  " .. string.rep("─", col_name + col_type + col_value + 4)
 
-  local lines   = { header, rule }
-  local line_map = {}  -- 1-based line number → var name
+  local lines = { header, rule }
+  local line_map = {} -- 1-based line number → var name
 
   local sorted_names = vim.tbl_keys(vars)
   table.sort(sorted_names)
 
   for _, name in ipairs(sorted_names) do
     local info = vars[name]
-    local type_str  = info.type or "?"
-    local repr_str  = info.repr or ""
+    local type_str = info.type or "?"
+    local repr_str = info.repr or ""
 
     -- Append shape or length annotation.
     if info.shape then
@@ -122,15 +124,11 @@ local function build_display(vars)
       repr_str = repr_str:sub(1, col_value - 1) .. "…"
     end
 
-    local display_line = string.format(
-      row_fmt,
-      name:sub(1, col_name),
-      type_str:sub(1, col_type),
-      repr_str
-    )
+    local display_line =
+      string.format(row_fmt, name:sub(1, col_name), type_str:sub(1, col_type), repr_str)
 
     lines[#lines + 1] = display_line
-    line_map[#lines]  = name
+    line_map[#lines] = name
   end
 
   if #sorted_names == 0 then
@@ -157,9 +155,11 @@ local function highlight_inspector_buf(ibuf, line_map)
 
   local function mark(row, scol, ecol, hl)
     local len = #(all_lines[row + 1] or "")
-    if scol >= len then return end
+    if scol >= len then
+      return
+    end
     vim.api.nvim_buf_set_extmark(ibuf, ins_ns, row, scol, {
-      end_col  = math.min(ecol, len),
+      end_col = math.min(ecol, len),
       hl_group = hl,
       priority = 50,
     })
@@ -172,8 +172,8 @@ local function highlight_inspector_buf(ibuf, line_map)
   for lnum, _ in pairs(line_map) do
     local row = lnum - 1
     local len = #(all_lines[lnum] or "")
-    mark(row, 2,  22,  "IpynbInspectorName")
-    mark(row, 24, 40,  "IpynbInspectorType")
+    mark(row, 2, 22, "IpynbInspectorName")
+    mark(row, 24, 40, "IpynbInspectorType")
     mark(row, 42, len, "IpynbInspectorValue")
   end
 end
@@ -209,27 +209,27 @@ function M.open(bufnr)
     local vars = parse_json_from_output(raw_text or "") or {}
     local lines, line_map = build_display(vars)
 
-    local width  = 82
+    local width = 82
     local height = math.min(#lines, math.floor(vim.o.lines * 0.7))
-    local row    = math.floor((vim.o.lines   - height) / 2)
-    local col    = math.floor((vim.o.columns - width)  / 2)
+    local row = math.floor((vim.o.lines - height) / 2)
+    local col = math.floor((vim.o.columns - width) / 2)
 
     local ibuf = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_lines(ibuf, 0, -1, false, lines)
     vim.api.nvim_buf_set_option(ibuf, "modifiable", false)
-    vim.api.nvim_buf_set_option(ibuf, "buftype",    "nofile")
+    vim.api.nvim_buf_set_option(ibuf, "buftype", "nofile")
 
     highlight_inspector_buf(ibuf, line_map)
 
     local iwin = vim.api.nvim_open_win(ibuf, true, {
-      relative  = "editor",
-      row       = row,
-      col       = col,
-      width     = width,
-      height    = height,
-      style     = "minimal",
-      border    = "rounded",
-      title     = " Variable Inspector ",
+      relative = "editor",
+      row = row,
+      col = col,
+      width = width,
+      height = height,
+      style = "minimal",
+      border = "rounded",
+      title = " Variable Inspector ",
       title_pos = "center",
     })
     vim.api.nvim_set_option_value("cursorline", true, { win = iwin })
@@ -257,7 +257,9 @@ function M.open(bufnr)
     vim.keymap.set("n", "<CR>", function()
       local cur_lnum = vim.api.nvim_win_get_cursor(iwin)[1]
       local var_name = line_map[cur_lnum]
-      if not var_name then return end
+      if not var_name then
+        return
+      end
       close()
       M.inspect_var(bufnr, var_name)
     end, { buffer = ibuf, noremap = true, silent = true })
@@ -269,32 +271,36 @@ end
 ---@param var_name string
 function M.inspect_var(bufnr, var_name)
   local ok, kernel = pcall(require, "ipynb.kernel")
-  if not ok then return end
+  if not ok then
+    return
+  end
 
   kernel.inspect(bufnr, var_name, #var_name, function(msg)
-    local text  = msg.text or "(no documentation)"
+    local text = msg.text or "(no documentation)"
     local lines = vim.split(text, "\n", { plain = true })
 
     -- Trim excess blank lines at the end.
-    while lines[#lines] == "" do table.remove(lines) end
+    while lines[#lines] == "" do
+      table.remove(lines)
+    end
 
-    local width  = math.min(80, vim.o.columns - 4)
+    local width = math.min(80, vim.o.columns - 4)
     local height = math.min(#lines + 2, math.floor(vim.o.lines * 0.6))
 
     local dbuf = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_lines(dbuf, 0, -1, false, lines)
     vim.api.nvim_buf_set_option(dbuf, "modifiable", false)
-    vim.api.nvim_buf_set_option(dbuf, "filetype",   "markdown")
+    vim.api.nvim_buf_set_option(dbuf, "filetype", "markdown")
 
     local dwin = vim.api.nvim_open_win(dbuf, true, {
-      relative  = "editor",
-      row       = math.floor((vim.o.lines   - height) / 2),
-      col       = math.floor((vim.o.columns - width)  / 2),
-      width     = width,
-      height    = height,
-      style     = "minimal",
-      border    = "rounded",
-      title     = " " .. var_name .. " ",
+      relative = "editor",
+      row = math.floor((vim.o.lines - height) / 2),
+      col = math.floor((vim.o.columns - width) / 2),
+      width = width,
+      height = height,
+      style = "minimal",
+      border = "rounded",
+      title = " " .. var_name .. " ",
       title_pos = "center",
     })
 
