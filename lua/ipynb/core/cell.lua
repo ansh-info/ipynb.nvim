@@ -218,7 +218,7 @@ function M.render(bufnr, notebook)
     vim.api.nvim_buf_set_lines(bufnr, current_line, current_line, false, source_lines)
     local end_line = current_line + #source_lines - 1 -- last line of this cell (0-based, inclusive)
 
-    local language = require("ipynb.notebook").cell_language(notebook, cell)
+    local language = require("ipynb.core.notebook").cell_language(notebook, cell)
 
     -- ── Top border extmark ──────────────────────────────────────────────
     local top_vl = top_border(cell.cell_type, language, cell.execution_count, win_width)
@@ -381,7 +381,7 @@ function M.add_cell_below(bufnr, idx)
 
   -- Insert a new empty cell into the notebook model.
   local new_cell = {
-    id = require("ipynb.notebook").gen_cell_id and require("ipynb.notebook").gen_cell_id()
+    id = require("ipynb.core.notebook").gen_cell_id and require("ipynb.core.notebook").gen_cell_id()
       or utils.uid(),
     cell_type = "code",
     source = "",
