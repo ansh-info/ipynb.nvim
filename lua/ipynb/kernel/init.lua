@@ -18,8 +18,8 @@
 ---   }
 
 local config = require("ipynb.config")
-local cell = require("ipynb.cell")
-local output = require("ipynb.output")
+local cell = require("ipynb.core.cell")
+local output = require("ipynb.kernel.output")
 local utils = require("ipynb.utils")
 
 local M = {}
