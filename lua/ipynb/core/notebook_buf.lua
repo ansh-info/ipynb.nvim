@@ -1,4 +1,4 @@
---- ipynb.notebook_buf
+--- ipynb.core.notebook_buf
 --- Buffer lifecycle manager: ties together notebook.lua (I/O) and
 --- cell.lua (rendering/extmarks) for a specific buffer.
 ---
