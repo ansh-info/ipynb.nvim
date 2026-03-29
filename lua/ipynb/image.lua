@@ -39,7 +39,9 @@ end
 ---@return boolean
 function M.is_supported()
   local cfg = require("ipynb.config").get()
-  if not cfg.image.enabled then return false end
+  if not cfg.image.enabled then
+    return false
+  end
   return require("ipynb.utils").has_plugin("image")
 end
 
@@ -56,14 +58,18 @@ local function write_b64_to_tmp(b64, ext)
   -- argument-length limits (large plots can exceed ARG_MAX on some systems).
   local b64_tmp = vim.fn.tempname() .. ".b64"
   local f = io.open(b64_tmp, "w")
-  if not f then return nil end
+  if not f then
+    return nil
+  end
   f:write(b64)
   f:close()
   -- macOS base64 uses -D for decode; Linux uses -d.  Try both.
   local cmd = string.format(
     "base64 -d < %s > %s 2>/dev/null || base64 -D < %s > %s 2>/dev/null",
-    vim.fn.shellescape(b64_tmp), vim.fn.shellescape(tmp),
-    vim.fn.shellescape(b64_tmp), vim.fn.shellescape(tmp)
+    vim.fn.shellescape(b64_tmp),
+    vim.fn.shellescape(tmp),
+    vim.fn.shellescape(b64_tmp),
+    vim.fn.shellescape(tmp)
   )
   vim.fn.system(cmd)
   os.remove(b64_tmp)
@@ -78,8 +84,10 @@ end
 ---@return string|nil path
 local function write_svg_to_tmp(svg_text)
   local tmp = vim.fn.tempname() .. ".svg"
-  local f   = io.open(tmp, "w")
-  if not f then return nil end
+  local f = io.open(tmp, "w")
+  if not f then
+    return nil
+  end
   f:write(svg_text)
   f:close()
   return tmp
@@ -113,12 +121,16 @@ end
 ---@param chunk table   { type="image", mime, data }
 ---@return boolean  true if image was rendered
 function M.render(bufnr, cell_state, chunk)
-  if not M.is_supported() then return false end
+  if not M.is_supported() then
+    return false
+  end
 
   local ok_api, image_api = pcall(require, "image")
-  if not ok_api then return false end
+  if not ok_api then
+    return false
+  end
 
-  local cfg  = require("ipynb.config").get()
+  local cfg = require("ipynb.config").get()
   local cell = require("ipynb.cell")
   local utils = require("ipynb.utils")
 
@@ -130,26 +142,28 @@ function M.render(bufnr, cell_state, chunk)
   end
 
   -- Find the buffer line where the cell ends (the end_mark line).
-  local ns      = cell.namespace()
-  local em_pos  = vim.api.nvim_buf_get_extmark_by_id(bufnr, ns, cell_state.end_mark, {})
+  local ns = cell.namespace()
+  local em_pos = vim.api.nvim_buf_get_extmark_by_id(bufnr, ns, cell_state.end_mark, {})
   local end_row = (em_pos and em_pos[1]) or 0
 
   -- Get the window showing this buffer (prefer current window).
   local winnr = vim.fn.bufwinid(bufnr)
-  if winnr == -1 then winnr = 0 end
+  if winnr == -1 then
+    winnr = 0
+  end
 
   -- Build a unique id for this image instance.
-  local key    = cell_key(bufnr, cell_state)
+  local key = cell_key(bufnr, cell_state)
   local img_id = "ipynb_" .. key:gsub(":", "_") .. "_" .. tostring(os.time())
 
   local img
   ok_api, img = pcall(image_api.from_file, tmp, {
-    id     = img_id,
+    id = img_id,
     buffer = bufnr,
     window = winnr,
-    x      = 2,
-    y      = end_row,
-    width  = cfg.image.max_width,
+    x = 2,
+    y = end_row,
+    width = cfg.image.max_width,
     height = cfg.image.max_height,
     with_virtual_padding = true,
   })
@@ -162,10 +176,14 @@ function M.render(bufnr, cell_state, chunk)
 
   -- Register before rendering so WinScrolled can retry if the initial
   -- render fails because the cell output is off-screen (screenpos = 0,0).
-  if not _registry[key] then _registry[key] = {} end
+  if not _registry[key] then
+    _registry[key] = {}
+  end
   _registry[key][#_registry[key] + 1] = { img = img, tmp = tmp }
 
-  local ok_render, render_err = pcall(function() img:render() end)
+  local ok_render, render_err = pcall(function()
+    img:render()
+  end)
   if not ok_render then
     utils.debug("image.nvim render error (will retry on scroll): " .. tostring(render_err))
   end
@@ -180,12 +198,16 @@ end
 --- any image whose initial render failed (output was off-screen) gets retried.
 ---@param bufnr integer
 function M.rerender_all(bufnr)
-  if not M.is_supported() then return end
+  if not M.is_supported() then
+    return
+  end
   local prefix = tostring(bufnr) .. ":"
   for key, entries in pairs(_registry) do
     if key:sub(1, #prefix) == prefix then
       for _, entry in ipairs(entries) do
-        pcall(function() entry.img:render() end)
+        pcall(function()
+          entry.img:render()
+        end)
       end
     end
   end
@@ -197,12 +219,18 @@ end
 ---@param bufnr integer
 ---@param cell_state table
 function M.clear(bufnr, cell_state)
-  local key     = cell_key(bufnr, cell_state)
+  local key = cell_key(bufnr, cell_state)
   local entries = _registry[key]
-  if not entries then return end
+  if not entries then
+    return
+  end
   for _, entry in ipairs(entries) do
-    pcall(function() entry.img:clear() end)
-    if entry.tmp then pcall(os.remove, entry.tmp) end
+    pcall(function()
+      entry.img:clear()
+    end)
+    if entry.tmp then
+      pcall(os.remove, entry.tmp)
+    end
   end
   _registry[key] = nil
 end
