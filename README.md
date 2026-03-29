@@ -262,29 +262,8 @@ require("ipynb").setup({
 
 ## Contributing
 
-Issues and pull requests are welcome at https://github.com/ansh-info/ipynb.nvim.
-
-The test suite uses [busted](https://lunarmodules.github.io/busted/) via
-[vusted](https://github.com/notomo/vusted). To run it locally:
-
-```bash
-# macOS - install dependencies once
-brew install luarocks stylua
-luarocks install vusted --local
-export PATH="$HOME/.luarocks/bin:$PATH"
-export VUSTED_USE_LOCAL=1
-
-# Run all checks
-make ci
-
-# Individual targets
-make test          # run busted spec files
-make lint          # luacheck
-make format-check  # stylua --check
-make format        # stylua (writes in place)
-```
-
-CI runs automatically on every push and pull request.
+Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for
+development setup, test instructions, and the contribution workflow.
 
 ## License
 
