@@ -2,6 +2,274 @@
 
 <!-- version list -->
 
+## v1.1.15 (2026-03-29)
+
+### Bug Fixes
+
+- **lua**: Remove unused abs_e and split long lines in markdown.lua
+  ([#46](https://github.com/ansh-info/ipynb.nvim/pull/46),
+  [`ead9a72`](https://github.com/ansh-info/ipynb.nvim/commit/ead9a72d003ef9c06ef42bcda50605cf82368675))
+
+- **lua**: Remove unused abs_e and split long lines in markdown.lua
+  ([`bfe90e5`](https://github.com/ansh-info/ipynb.nvim/commit/bfe90e53e28cbd70a4a7eaa6a00d037ba85f2490))
+
+- **lua**: Remove unused ext variable in image.lua
+  ([#46](https://github.com/ansh-info/ipynb.nvim/pull/46),
+  [`ead9a72`](https://github.com/ansh-info/ipynb.nvim/commit/ead9a72d003ef9c06ef42bcda50605cf82368675))
+
+- **lua**: Remove unused ext variable in image.lua
+  ([`c4176ec`](https://github.com/ansh-info/ipynb.nvim/commit/c4176ec7f13615700dee027f4b46dec491a74cf5))
+
+- **lua**: Remove unused s/e variables in inspector.lua
+  ([#46](https://github.com/ansh-info/ipynb.nvim/pull/46),
+  [`ead9a72`](https://github.com/ansh-info/ipynb.nvim/commit/ead9a72d003ef9c06ef42bcda50605cf82368675))
+
+- **lua**: Remove unused s/e variables in inspector.lua
+  ([`4e19a85`](https://github.com/ansh-info/ipynb.nvim/commit/4e19a85033d220ced75c5dbef20c023a053003c1))
+
+### Chores
+
+- Add testing tooling (luacheck, stylua, vusted, Makefile)
+  ([#44](https://github.com/ansh-info/ipynb.nvim/pull/44),
+  [`5b8dd11`](https://github.com/ansh-info/ipynb.nvim/commit/5b8dd1101646ab2a8f8776a8e1a3fefc9c87033d))
+
+- **config**: Add .luacheckrc for static analysis
+  ([#44](https://github.com/ansh-info/ipynb.nvim/pull/44),
+  [`5b8dd11`](https://github.com/ansh-info/ipynb.nvim/commit/5b8dd1101646ab2a8f8776a8e1a3fefc9c87033d))
+
+- **config**: Add .luacheckrc for static analysis
+  ([`3d77d47`](https://github.com/ansh-info/ipynb.nvim/commit/3d77d476e6c963cd3fc36ea7172f0c4f2fcd0986))
+
+- **config**: Add .stylua.toml for Lua formatting
+  ([#44](https://github.com/ansh-info/ipynb.nvim/pull/44),
+  [`5b8dd11`](https://github.com/ansh-info/ipynb.nvim/commit/5b8dd1101646ab2a8f8776a8e1a3fefc9c87033d))
+
+- **config**: Add .stylua.toml for Lua formatting
+  ([`bb03704`](https://github.com/ansh-info/ipynb.nvim/commit/bb0370489cf5cb8201b1f345c5f384204c65abf1))
+
+- **config**: Add Makefile with test/lint/format/ci targets
+  ([#44](https://github.com/ansh-info/ipynb.nvim/pull/44),
+  [`5b8dd11`](https://github.com/ansh-info/ipynb.nvim/commit/5b8dd1101646ab2a8f8776a8e1a3fefc9c87033d))
+
+- **config**: Add Makefile with test/lint/format/ci targets
+  ([`fd3bfe4`](https://github.com/ansh-info/ipynb.nvim/commit/fd3bfe457603d0855612bde48d363c169f7a95bd))
+
+- **config**: Apply stylua formatting to lua/ipynb/cell.lua
+  ([#46](https://github.com/ansh-info/ipynb.nvim/pull/46),
+  [`ead9a72`](https://github.com/ansh-info/ipynb.nvim/commit/ead9a72d003ef9c06ef42bcda50605cf82368675))
+
+- **config**: Apply stylua formatting to lua/ipynb/cell.lua
+  ([`c8e49f4`](https://github.com/ansh-info/ipynb.nvim/commit/c8e49f4ce63db57a615d279fcf01b491dca76dfe))
+
+- **config**: Apply stylua formatting to lua/ipynb/commands.lua
+  ([#46](https://github.com/ansh-info/ipynb.nvim/pull/46),
+  [`ead9a72`](https://github.com/ansh-info/ipynb.nvim/commit/ead9a72d003ef9c06ef42bcda50605cf82368675))
+
+- **config**: Apply stylua formatting to lua/ipynb/commands.lua
+  ([`c1ef08a`](https://github.com/ansh-info/ipynb.nvim/commit/c1ef08af9d1e6210705776a801f706a7600f9b4d))
+
+- **config**: Apply stylua formatting to lua/ipynb/completion.lua
+  ([#46](https://github.com/ansh-info/ipynb.nvim/pull/46),
+  [`ead9a72`](https://github.com/ansh-info/ipynb.nvim/commit/ead9a72d003ef9c06ef42bcda50605cf82368675))
+
+- **config**: Apply stylua formatting to lua/ipynb/completion.lua
+  ([`e686322`](https://github.com/ansh-info/ipynb.nvim/commit/e6863226022f15b000ad50d4edf8a22d8e019ee5))
+
+- **config**: Apply stylua formatting to lua/ipynb/config.lua
+  ([#46](https://github.com/ansh-info/ipynb.nvim/pull/46),
+  [`ead9a72`](https://github.com/ansh-info/ipynb.nvim/commit/ead9a72d003ef9c06ef42bcda50605cf82368675))
+
+- **config**: Apply stylua formatting to lua/ipynb/config.lua
+  ([`006f934`](https://github.com/ansh-info/ipynb.nvim/commit/006f93493bed4727d7a08f392d624c4b96534b40))
+
+- **config**: Apply stylua formatting to lua/ipynb/image.lua
+  ([#46](https://github.com/ansh-info/ipynb.nvim/pull/46),
+  [`ead9a72`](https://github.com/ansh-info/ipynb.nvim/commit/ead9a72d003ef9c06ef42bcda50605cf82368675))
+
+- **config**: Apply stylua formatting to lua/ipynb/image.lua
+  ([`ccdf5d9`](https://github.com/ansh-info/ipynb.nvim/commit/ccdf5d96bb569899dc0616267102d68229429fc6))
+
+- **config**: Apply stylua formatting to lua/ipynb/init.lua
+  ([#46](https://github.com/ansh-info/ipynb.nvim/pull/46),
+  [`ead9a72`](https://github.com/ansh-info/ipynb.nvim/commit/ead9a72d003ef9c06ef42bcda50605cf82368675))
+
+- **config**: Apply stylua formatting to lua/ipynb/init.lua
+  ([`da15e28`](https://github.com/ansh-info/ipynb.nvim/commit/da15e2823e5ce4a06f30055ed558dee3df581f61))
+
+- **config**: Apply stylua formatting to lua/ipynb/inspector.lua
+  ([#46](https://github.com/ansh-info/ipynb.nvim/pull/46),
+  [`ead9a72`](https://github.com/ansh-info/ipynb.nvim/commit/ead9a72d003ef9c06ef42bcda50605cf82368675))
+
+- **config**: Apply stylua formatting to lua/ipynb/inspector.lua
+  ([`8d97c94`](https://github.com/ansh-info/ipynb.nvim/commit/8d97c948beea5b4e46e6a696ab9b045b90339a17))
+
+- **config**: Apply stylua formatting to lua/ipynb/kernel.lua
+  ([#46](https://github.com/ansh-info/ipynb.nvim/pull/46),
+  [`ead9a72`](https://github.com/ansh-info/ipynb.nvim/commit/ead9a72d003ef9c06ef42bcda50605cf82368675))
+
+- **config**: Apply stylua formatting to lua/ipynb/kernel.lua
+  ([`a5fe34c`](https://github.com/ansh-info/ipynb.nvim/commit/a5fe34c84a1754cd0572a69a73759cf7b64a7413))
+
+- **config**: Apply stylua formatting to lua/ipynb/keymaps.lua
+  ([#46](https://github.com/ansh-info/ipynb.nvim/pull/46),
+  [`ead9a72`](https://github.com/ansh-info/ipynb.nvim/commit/ead9a72d003ef9c06ef42bcda50605cf82368675))
+
+- **config**: Apply stylua formatting to lua/ipynb/keymaps.lua
+  ([`bb7ec30`](https://github.com/ansh-info/ipynb.nvim/commit/bb7ec30287fd5d78e7605416720bdb3ba168ec99))
+
+- **config**: Apply stylua formatting to lua/ipynb/markdown.lua
+  ([#46](https://github.com/ansh-info/ipynb.nvim/pull/46),
+  [`ead9a72`](https://github.com/ansh-info/ipynb.nvim/commit/ead9a72d003ef9c06ef42bcda50605cf82368675))
+
+- **config**: Apply stylua formatting to lua/ipynb/markdown.lua
+  ([`78af481`](https://github.com/ansh-info/ipynb.nvim/commit/78af4816e19ed96d3feeefb2ca2de5a10772c622))
+
+- **config**: Apply stylua formatting to lua/ipynb/notebook.lua
+  ([#46](https://github.com/ansh-info/ipynb.nvim/pull/46),
+  [`ead9a72`](https://github.com/ansh-info/ipynb.nvim/commit/ead9a72d003ef9c06ef42bcda50605cf82368675))
+
+- **config**: Apply stylua formatting to lua/ipynb/notebook.lua
+  ([`eef10f3`](https://github.com/ansh-info/ipynb.nvim/commit/eef10f332cca69b3cf02534f4a99a741e8b9299b))
+
+- **config**: Apply stylua formatting to lua/ipynb/notebook_buf.lua
+  ([#46](https://github.com/ansh-info/ipynb.nvim/pull/46),
+  [`ead9a72`](https://github.com/ansh-info/ipynb.nvim/commit/ead9a72d003ef9c06ef42bcda50605cf82368675))
+
+- **config**: Apply stylua formatting to lua/ipynb/notebook_buf.lua
+  ([`5af9f49`](https://github.com/ansh-info/ipynb.nvim/commit/5af9f4909f3c0311aa8b4d99ae24a93bf60fe26f))
+
+- **config**: Apply stylua formatting to lua/ipynb/output.lua
+  ([#46](https://github.com/ansh-info/ipynb.nvim/pull/46),
+  [`ead9a72`](https://github.com/ansh-info/ipynb.nvim/commit/ead9a72d003ef9c06ef42bcda50605cf82368675))
+
+- **config**: Apply stylua formatting to lua/ipynb/output.lua
+  ([`de82d33`](https://github.com/ansh-info/ipynb.nvim/commit/de82d33e68ee40df37c144094af626af2ab62d07))
+
+- **config**: Apply stylua formatting to lua/ipynb/utils.lua
+  ([#46](https://github.com/ansh-info/ipynb.nvim/pull/46),
+  [`ead9a72`](https://github.com/ansh-info/ipynb.nvim/commit/ead9a72d003ef9c06ef42bcda50605cf82368675))
+
+- **config**: Apply stylua formatting to lua/ipynb/utils.lua
+  ([`3399d33`](https://github.com/ansh-info/ipynb.nvim/commit/3399d336cca0705e21369235f6ad0e2e41688de7))
+
+- **config**: Apply stylua formatting to test/cell_spec.lua
+  ([#46](https://github.com/ansh-info/ipynb.nvim/pull/46),
+  [`ead9a72`](https://github.com/ansh-info/ipynb.nvim/commit/ead9a72d003ef9c06ef42bcda50605cf82368675))
+
+- **config**: Apply stylua formatting to test/cell_spec.lua
+  ([`93b8910`](https://github.com/ansh-info/ipynb.nvim/commit/93b8910a366cedc7f255ff8f647760c02b0fdea6))
+
+- **config**: Apply stylua formatting to test/headless_test.lua
+  ([#46](https://github.com/ansh-info/ipynb.nvim/pull/46),
+  [`ead9a72`](https://github.com/ansh-info/ipynb.nvim/commit/ead9a72d003ef9c06ef42bcda50605cf82368675))
+
+- **config**: Apply stylua formatting to test/headless_test.lua
+  ([`6cb2019`](https://github.com/ansh-info/ipynb.nvim/commit/6cb2019df529ed6b3b4abb95fdccd0c0f6c355e4))
+
+- **config**: Apply stylua formatting to test/inspector_spec.lua
+  ([#46](https://github.com/ansh-info/ipynb.nvim/pull/46),
+  [`ead9a72`](https://github.com/ansh-info/ipynb.nvim/commit/ead9a72d003ef9c06ef42bcda50605cf82368675))
+
+- **config**: Apply stylua formatting to test/inspector_spec.lua
+  ([`338b730`](https://github.com/ansh-info/ipynb.nvim/commit/338b7304ecc4c6ec789a16a6856026f699ecec7a))
+
+- **config**: Apply stylua formatting to test/notebook_spec.lua
+  ([#46](https://github.com/ansh-info/ipynb.nvim/pull/46),
+  [`ead9a72`](https://github.com/ansh-info/ipynb.nvim/commit/ead9a72d003ef9c06ef42bcda50605cf82368675))
+
+- **config**: Apply stylua formatting to test/notebook_spec.lua
+  ([`786a6ed`](https://github.com/ansh-info/ipynb.nvim/commit/786a6ed72bbb8747e436ec753ef6aa8c9e246481))
+
+- **config**: Apply stylua formatting to test/output_spec.lua
+  ([#46](https://github.com/ansh-info/ipynb.nvim/pull/46),
+  [`ead9a72`](https://github.com/ansh-info/ipynb.nvim/commit/ead9a72d003ef9c06ef42bcda50605cf82368675))
+
+- **config**: Apply stylua formatting to test/output_spec.lua
+  ([`c607ab8`](https://github.com/ansh-info/ipynb.nvim/commit/c607ab870b2cb87a339908a2a84a00f92826fc8f))
+
+- **config**: Apply stylua formatting to test/utils_spec.lua
+  ([#46](https://github.com/ansh-info/ipynb.nvim/pull/46),
+  [`ead9a72`](https://github.com/ansh-info/ipynb.nvim/commit/ead9a72d003ef9c06ef42bcda50605cf82368675))
+
+- **config**: Apply stylua formatting to test/utils_spec.lua
+  ([`eb0d952`](https://github.com/ansh-info/ipynb.nvim/commit/eb0d952f6d4cf29943dbc36143d0c8ea868796b4))
+
+### Continuous Integration
+
+- Add GitHub Actions CI workflow (test, lint, format)
+  ([#46](https://github.com/ansh-info/ipynb.nvim/pull/46),
+  [`ead9a72`](https://github.com/ansh-info/ipynb.nvim/commit/ead9a72d003ef9c06ef42bcda50605cf82368675))
+
+- Add GitHub Actions workflow for test, lint, and format-check
+  ([#46](https://github.com/ansh-info/ipynb.nvim/pull/46),
+  [`ead9a72`](https://github.com/ansh-info/ipynb.nvim/commit/ead9a72d003ef9c06ef42bcda50605cf82368675))
+
+- Add GitHub Actions workflow for test, lint, and format-check
+  ([`4a5c964`](https://github.com/ansh-info/ipynb.nvim/commit/4a5c964a9b026319ad19575f85dc8f5fc7049804))
+
+### Testing
+
+- Phase 2 - busted spec suite for all core modules
+  ([#45](https://github.com/ansh-info/ipynb.nvim/pull/45),
+  [`2bfd45f`](https://github.com/ansh-info/ipynb.nvim/commit/2bfd45fd9ebcc4fb32c5995cca468b8dcffeb727))
+
+- **config**: Add minimal_init.lua for vusted test runner
+  ([#44](https://github.com/ansh-info/ipynb.nvim/pull/44),
+  [`5b8dd11`](https://github.com/ansh-info/ipynb.nvim/commit/5b8dd1101646ab2a8f8776a8e1a3fefc9c87033d))
+
+- **config**: Add minimal_init.lua for vusted test runner
+  ([`814d117`](https://github.com/ansh-info/ipynb.nvim/commit/814d117f6a0c78c939fa5052bf1460fac95eb63b))
+
+- **lua**: Add busted spec for ipynb.cell module
+  ([#45](https://github.com/ansh-info/ipynb.nvim/pull/45),
+  [`2bfd45f`](https://github.com/ansh-info/ipynb.nvim/commit/2bfd45fd9ebcc4fb32c5995cca468b8dcffeb727))
+
+- **lua**: Add busted spec for ipynb.cell module
+  ([`2fca25c`](https://github.com/ansh-info/ipynb.nvim/commit/2fca25c951aa2807323f53e5eac160449254d927))
+
+- **lua**: Add busted spec for ipynb.config module
+  ([#45](https://github.com/ansh-info/ipynb.nvim/pull/45),
+  [`2bfd45f`](https://github.com/ansh-info/ipynb.nvim/commit/2bfd45fd9ebcc4fb32c5995cca468b8dcffeb727))
+
+- **lua**: Add busted spec for ipynb.config module
+  ([`e61f490`](https://github.com/ansh-info/ipynb.nvim/commit/e61f4903ca0f59cd28ca79e450183b0d5a917522))
+
+- **lua**: Add busted spec for ipynb.inspector module
+  ([#45](https://github.com/ansh-info/ipynb.nvim/pull/45),
+  [`2bfd45f`](https://github.com/ansh-info/ipynb.nvim/commit/2bfd45fd9ebcc4fb32c5995cca468b8dcffeb727))
+
+- **lua**: Add busted spec for ipynb.inspector module
+  ([`d25bd4d`](https://github.com/ansh-info/ipynb.nvim/commit/d25bd4daf356edda8ba5ad4e465c5dcd7d9d3b99))
+
+- **lua**: Add busted spec for ipynb.notebook module
+  ([#45](https://github.com/ansh-info/ipynb.nvim/pull/45),
+  [`2bfd45f`](https://github.com/ansh-info/ipynb.nvim/commit/2bfd45fd9ebcc4fb32c5995cca468b8dcffeb727))
+
+- **lua**: Add busted spec for ipynb.notebook module
+  ([`7680401`](https://github.com/ansh-info/ipynb.nvim/commit/76804015769a7c742f7e4c092ec66bb1280e7c7f))
+
+- **lua**: Add busted spec for ipynb.output module
+  ([#45](https://github.com/ansh-info/ipynb.nvim/pull/45),
+  [`2bfd45f`](https://github.com/ansh-info/ipynb.nvim/commit/2bfd45fd9ebcc4fb32c5995cca468b8dcffeb727))
+
+- **lua**: Add busted spec for ipynb.output module
+  ([`866d1da`](https://github.com/ansh-info/ipynb.nvim/commit/866d1daa81d47c615cf8c1a1777556bcd075b408))
+
+- **lua**: Add busted spec for ipynb.utils module
+  ([#45](https://github.com/ansh-info/ipynb.nvim/pull/45),
+  [`2bfd45f`](https://github.com/ansh-info/ipynb.nvim/commit/2bfd45fd9ebcc4fb32c5995cca468b8dcffeb727))
+
+- **lua**: Add busted spec for ipynb.utils module
+  ([`6994d98`](https://github.com/ansh-info/ipynb.nvim/commit/6994d98189aaa4c404fa7573663b37cebae4aaec))
+
+- **lua**: Fix luacheck and stylua issues in inspector_spec.lua
+  ([#46](https://github.com/ansh-info/ipynb.nvim/pull/46),
+  [`ead9a72`](https://github.com/ansh-info/ipynb.nvim/commit/ead9a72d003ef9c06ef42bcda50605cf82368675))
+
+- **lua**: Fix luacheck and stylua issues in inspector_spec.lua
+  ([`26544a1`](https://github.com/ansh-info/ipynb.nvim/commit/26544a117d60a2b77c4daaaae600d64f46221f61))
+
+
 ## v1.1.14 (2026-03-28)
 
 ### Bug Fixes
