@@ -15,7 +15,7 @@
 ---   output.get_chunks(cell_key)                -- return accumulated chunk list
 
 local config = require("ipynb.config")
-local cell = require("ipynb.cell")
+local cell = require("ipynb.core.cell")
 
 local M = {}
 
