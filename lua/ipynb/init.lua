@@ -35,7 +35,7 @@ function M.setup(opts)
   require("ipynb.config").setup(opts)
 
   -- Register :Jupyter* commands.
-  require("ipynb.commands").setup()
+  require("ipynb.ui.commands").setup()
 
   -- Register the BufReadCmd autocmd that intercepts .ipynb file opens.
   M._register_autocmds()
@@ -53,7 +53,7 @@ function M._register_autocmds()
     callback = function(ev)
       local path = vim.fn.expand(ev.match)
       local bufnr = ev.buf
-      require("ipynb.notebook_buf").open(path, bufnr)
+      require("ipynb.core.notebook_buf").open(path, bufnr)
     end,
     desc = "ipynb: open .ipynb notebook",
   })
@@ -65,8 +65,8 @@ function M._register_autocmds()
     pattern = "*.ipynb",
     callback = function(ev)
       local bufnr = ev.buf
-      if require("ipynb.notebook_buf").is_managed(bufnr) then
-        require("ipynb.notebook_buf").save(bufnr)
+      if require("ipynb.core.notebook_buf").is_managed(bufnr) then
+        require("ipynb.core.notebook_buf").save(bufnr)
       else
         -- Fall through to normal write for unmanaged buffers.
         vim.cmd("noautocmd write")
@@ -81,10 +81,10 @@ function M._register_autocmds()
     group = group,
     callback = function()
       local bufnr = vim.api.nvim_get_current_buf()
-      if require("ipynb.notebook_buf").is_managed(bufnr) then
-        local nb = require("ipynb.cell").get_notebook(bufnr)
+      if require("ipynb.core.notebook_buf").is_managed(bufnr) then
+        local nb = require("ipynb.core.cell").get_notebook(bufnr)
         if nb then
-          require("ipynb.cell").render(bufnr, nb)
+          require("ipynb.core.cell").render(bufnr, nb)
         end
       end
     end,
@@ -98,19 +98,19 @@ end
 ---@param path string
 function M.open(path)
   local bufnr = vim.api.nvim_get_current_buf()
-  require("ipynb.notebook_buf").open(vim.fn.expand(path), bufnr)
+  require("ipynb.core.notebook_buf").open(vim.fn.expand(path), bufnr)
 end
 
 --- Save the notebook in the current buffer.
 function M.save()
-  require("ipynb.notebook_buf").save(vim.api.nvim_get_current_buf())
+  require("ipynb.core.notebook_buf").save(vim.api.nvim_get_current_buf())
 end
 
 --- Return the internal notebook data for the current buffer (useful for
 --- scripting and extension development).
 ---@return table|nil
 function M.get_notebook()
-  return require("ipynb.cell").get_notebook(vim.api.nvim_get_current_buf())
+  return require("ipynb.core.cell").get_notebook(vim.api.nvim_get_current_buf())
 end
 
 return M
