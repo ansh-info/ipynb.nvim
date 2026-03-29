@@ -1,4 +1,4 @@
---- ipynb.completion
+--- ipynb.kernel.completion
 --- Kernel-backed completions for Jupyter notebook buffers.
 ---
 --- Two integration points:
