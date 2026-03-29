@@ -131,7 +131,7 @@ function M.render(bufnr, cell_state, chunk)
   end
 
   local cfg = require("ipynb.config").get()
-  local cell = require("ipynb.cell")
+  local cell = require("ipynb.core.cell")
   local utils = require("ipynb.utils")
 
   -- Write image data to a temp file.
