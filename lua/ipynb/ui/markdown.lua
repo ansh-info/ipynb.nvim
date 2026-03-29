@@ -1,4 +1,4 @@
---- ipynb.markdown
+--- ipynb.ui.markdown
 --- Lightweight inline renderer for markdown cells.
 ---
 --- Applies extmark-based decorations (highlight groups + concealing) to
