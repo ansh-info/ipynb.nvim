@@ -27,20 +27,20 @@ describe("ipynb.output", function()
 
   before_each(function()
     -- Reset all relevant modules.
-    package.loaded["ipynb.output"] = nil
+    package.loaded["ipynb.kernel.output"] = nil
     package.loaded["ipynb.config"] = nil
-    package.loaded["ipynb.cell"] = nil
-    package.loaded["ipynb.image"] = nil
+    package.loaded["ipynb.core.cell"] = nil
+    package.loaded["ipynb.ui.image"] = nil
 
     -- Stub dependencies before requiring output.
     package.preload["ipynb.config"] = function()
       return make_config_stub()
     end
-    package.preload["ipynb.cell"] = function()
+    package.preload["ipynb.core.cell"] = function()
       return make_cell_stub()
     end
     -- image is optional; stub as unavailable so image paths are bypassed.
-    package.preload["ipynb.image"] = function()
+    package.preload["ipynb.ui.image"] = function()
       return {
         is_supported = function()
           return false
@@ -53,7 +53,7 @@ describe("ipynb.output", function()
       }
     end
 
-    output = require("ipynb.output")
+    output = require("ipynb.kernel.output")
   end)
 
   local function fake_cell(mark_id)
