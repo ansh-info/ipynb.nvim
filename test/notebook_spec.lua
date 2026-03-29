@@ -5,9 +5,9 @@ describe("ipynb.notebook", function()
   local nb
 
   before_each(function()
-    package.loaded["ipynb.notebook"] = nil
+    package.loaded["ipynb.core.notebook"] = nil
     package.loaded["ipynb.utils"] = nil
-    nb = require("ipynb.notebook")
+    nb = require("ipynb.core.notebook")
   end)
 
   -- ── Helpers ──────────────────────────────────────────────────────────────────
