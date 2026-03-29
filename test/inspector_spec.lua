@@ -160,33 +160,40 @@ describe("ipynb.inspector", function()
   -- ── INTROSPECT_CODE quality checks ────────────────────────────────────────────
 
   describe("INTROSPECT_CODE snippet", function()
-    -- Load the inspector source text directly for static checks.
-    local src_path = (debug and debug.getinfo(1, "S") or {}).source
     local insp_path = "/home/oneai/jupytervim/lua/ipynb/inspector.lua"
 
     it("does not use vim.wait (would cause re-entrancy)", function()
       local f = io.open(insp_path, "r")
-      if not f then pending("cannot open inspector.lua") end
-      local src = f:read("*a"); f:close()
-      assert.is_nil(src:find("vim%.wait"),
-        "inspector.lua must not call vim.wait - causes event-loop re-entrancy")
+      if not f then
+        pending("cannot open inspector.lua")
+      end
+      local src = f:read("*a")
+      f:close()
+      assert.is_nil(src:find("vim%.wait"), "inspector.lua must not call vim.wait - causes event-loop re-entrancy")
     end)
 
     it("uses computed format strings instead of '%-*s'", function()
       local f = io.open(insp_path, "r")
-      if not f then pending("cannot open inspector.lua") end
-      local src = f:read("*a"); f:close()
+      if not f then
+        pending("cannot open inspector.lua")
+      end
+      local src = f:read("*a")
+      f:close()
       -- %-*s is not supported in LuaJIT's string.format.
-      assert.is_nil(src:find("%%-*s", 1, true),
-        "inspector.lua must not use '%-*s' (unsupported in LuaJIT)")
+      assert.is_nil(
+        src:find("%%-*s", 1, true),
+        "inspector.lua must not use '%-*s' (unsupported in LuaJIT)"
+      )
     end)
 
     it("clamps end_col with math.min (avoids 'end_col out of range' crash)", function()
       local f = io.open(insp_path, "r")
-      if not f then pending("cannot open inspector.lua") end
-      local src = f:read("*a"); f:close()
-      assert.is_truthy(src:find("math%.min"),
-        "highlight_inspector_buf must clamp end_col with math.min")
+      if not f then
+        pending("cannot open inspector.lua")
+      end
+      local src = f:read("*a")
+      f:close()
+      assert.is_truthy(src:find("math%.min"), "highlight_inspector_buf must clamp end_col with math.min")
     end)
   end)
 end)
