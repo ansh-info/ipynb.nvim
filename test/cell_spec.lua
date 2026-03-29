@@ -9,18 +9,18 @@ describe("ipynb.cell", function()
   local cell
 
   before_each(function()
-    package.loaded["ipynb.cell"] = nil
+    package.loaded["ipynb.core.cell"] = nil
     package.loaded["ipynb.config"] = nil
     package.loaded["ipynb.utils"] = nil
-    package.loaded["ipynb.notebook"] = nil
-    package.loaded["ipynb.markdown"] = nil
+    package.loaded["ipynb.core.notebook"] = nil
+    package.loaded["ipynb.ui.markdown"] = nil
 
     -- Stub markdown so render() does not depend on it being installed.
-    package.preload["ipynb.markdown"] = function()
+    package.preload["ipynb.ui.markdown"] = function()
       return { render = function() end }
     end
 
-    cell = require("ipynb.cell")
+    cell = require("ipynb.core.cell")
   end)
 
   -- ── Module shape ──────────────────────────────────────────────────────────────
@@ -92,8 +92,8 @@ describe("ipynb.cell", function()
     it("warns and returns when trying to delete the only cell", function()
       -- Build a minimal buf_state by calling render() on a real scratch buffer.
       -- We need ipynb.notebook to be available.
-      package.loaded["ipynb.notebook"] = nil
-      local nb_mod = require("ipynb.notebook")
+      package.loaded["ipynb.core.notebook"] = nil
+      local nb_mod = require("ipynb.core.notebook")
       local utils = require("ipynb.utils")
 
       local warned = nil
@@ -141,7 +141,7 @@ describe("ipynb.cell", function()
   -- ── Static checks ─────────────────────────────────────────────────────────────
 
   describe("reanchor_end_marks source checks", function()
-    local src_path = "/home/oneai/jupytervim/lua/ipynb/cell.lua"
+    local src_path = vim.fn.getcwd() .. "/lua/ipynb/core/cell.lua"
 
     it("uses next_start - 2 formula for end boundary", function()
       local f = io.open(src_path, "r")
