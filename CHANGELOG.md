@@ -2,6 +2,260 @@
 
 <!-- version list -->
 
+## v1.1.16 (2026-03-29)
+
+### Bug Fixes
+
+- Phase 3 - restructure lua/ipynb/ into core/, kernel/, ui/
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Update lazy ipynb.image requires in kernel/output.lua
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Update lazy ipynb.image requires in kernel/output.lua
+  ([`3288cfb`](https://github.com/ansh-info/ipynb.nvim/commit/3288cfbe18fd8c5c428523c190a4e944b20511c0))
+
+- **lua**: Update lazy ipynb.markdown require in core/cell.lua
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Update lazy ipynb.markdown require in core/cell.lua
+  ([`e104eaf`](https://github.com/ansh-info/ipynb.nvim/commit/e104eaf65ff9569c040619e77bd8463e78ce474f))
+
+- **lua**: Update lazy requires in core/notebook_buf.lua
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Update lazy requires in core/notebook_buf.lua
+  ([`3152bd1`](https://github.com/ansh-info/ipynb.nvim/commit/3152bd1265e6f326e86f9b84c9bbf6c83a0fe8da))
+
+### Chores
+
+- **config**: Apply stylua formatting to lua/ipynb/core/cell.lua
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **config**: Apply stylua formatting to lua/ipynb/core/cell.lua
+  ([`8062556`](https://github.com/ansh-info/ipynb.nvim/commit/8062556598e9f55701119cd13932b96789752c3c))
+
+### Documentation
+
+- **docs**: Add CONTRIBUTING.md with setup, testing, and PR guide
+  ([`4aceba2`](https://github.com/ansh-info/ipynb.nvim/commit/4aceba24c102cc6384b16227f876ca3ddf84be2c))
+
+- **docs**: Slim Contributing section to link CONTRIBUTING.md
+  ([`be5bccf`](https://github.com/ansh-info/ipynb.nvim/commit/be5bccf21816c149e57b47ac2da7d07b94520924))
+
+- **docs**: Update CLAUDE.md for folder restructure and testing
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **docs**: Update CLAUDE.md for folder restructure and testing
+  ([`3ca3977`](https://github.com/ansh-info/ipynb.nvim/commit/3ca3977ed78e17abe4edb39d381f0bf13e3aca34))
+
+- **docs**: Update README with CI badge and contributing test guide
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **docs**: Update README with CI badge and contributing test guide
+  ([`87e9165`](https://github.com/ansh-info/ipynb.nvim/commit/87e91655e109d80a3152360522fa664d7522cf96))
+
+- **lua**: Update module name comment in lua/ipynb/core/cell.lua
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Update module name comment in lua/ipynb/core/cell.lua
+  ([`43d83c3`](https://github.com/ansh-info/ipynb.nvim/commit/43d83c3cb9c14e130e9a350ce764ec9fbd13459b))
+
+- **lua**: Update module name comment in lua/ipynb/core/notebook.lua
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Update module name comment in lua/ipynb/core/notebook.lua
+  ([`cd9861d`](https://github.com/ansh-info/ipynb.nvim/commit/cd9861d4aac67c8468ce2ebf56e9bfd17e9902e7))
+
+- **lua**: Update module name comment in lua/ipynb/core/notebook_buf.lua
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Update module name comment in lua/ipynb/core/notebook_buf.lua
+  ([`885f3d3`](https://github.com/ansh-info/ipynb.nvim/commit/885f3d3306cb7b5fbb308f20fd1e70641cae1042))
+
+- **lua**: Update module name comment in lua/ipynb/kernel/completion.lua
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Update module name comment in lua/ipynb/kernel/completion.lua
+  ([`f3ed6f8`](https://github.com/ansh-info/ipynb.nvim/commit/f3ed6f8a0521732f6651dc41ab1a3f1173a64279))
+
+- **lua**: Update module name comment in lua/ipynb/kernel/output.lua
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Update module name comment in lua/ipynb/kernel/output.lua
+  ([`a670a75`](https://github.com/ansh-info/ipynb.nvim/commit/a670a757291b8224ed816a99ab28b2c3f14f7155))
+
+- **lua**: Update module name comment in lua/ipynb/ui/commands.lua
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Update module name comment in lua/ipynb/ui/commands.lua
+  ([`88008d2`](https://github.com/ansh-info/ipynb.nvim/commit/88008d2ad761ade97407d34d68debf83d01a6581))
+
+- **lua**: Update module name comment in lua/ipynb/ui/image.lua
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Update module name comment in lua/ipynb/ui/image.lua
+  ([`2399442`](https://github.com/ansh-info/ipynb.nvim/commit/23994428e5595426800fa570b73c4d0e7220583e))
+
+- **lua**: Update module name comment in lua/ipynb/ui/inspector.lua
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Update module name comment in lua/ipynb/ui/inspector.lua
+  ([`dfdd978`](https://github.com/ansh-info/ipynb.nvim/commit/dfdd9789dda7176cf59befde0e2fd4f88afa08ce))
+
+- **lua**: Update module name comment in lua/ipynb/ui/keymaps.lua
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Update module name comment in lua/ipynb/ui/keymaps.lua
+  ([`fbe4ed6`](https://github.com/ansh-info/ipynb.nvim/commit/fbe4ed6d34c3d005d469a8e46ae000887712c5e8))
+
+- **lua**: Update module name comment in lua/ipynb/ui/markdown.lua
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Update module name comment in lua/ipynb/ui/markdown.lua
+  ([`ad66028`](https://github.com/ansh-info/ipynb.nvim/commit/ad66028cd8cf679989ceb9e24567eef2d2b46fe4))
+
+### Refactoring
+
+- **lua**: Move cell.lua to core/cell.lua ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Move cell.lua to core/cell.lua
+  ([`039823e`](https://github.com/ansh-info/ipynb.nvim/commit/039823e614380a051dcb7401ff611bfc0e4c3fc5))
+
+- **lua**: Move commands.lua to ui/commands.lua
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Move commands.lua to ui/commands.lua
+  ([`4732608`](https://github.com/ansh-info/ipynb.nvim/commit/47326085f335008a485a4bce872543013fb3ba31))
+
+- **lua**: Move completion.lua to kernel/completion.lua
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Move completion.lua to kernel/completion.lua
+  ([`4c00f38`](https://github.com/ansh-info/ipynb.nvim/commit/4c00f38d8536b239bc8e07d529c3c30c48bed5b8))
+
+- **lua**: Move image.lua to ui/image.lua ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Move image.lua to ui/image.lua
+  ([`4c8690d`](https://github.com/ansh-info/ipynb.nvim/commit/4c8690d4543432b98a019822e0529e94451d6a49))
+
+- **lua**: Move inspector.lua to ui/inspector.lua
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Move inspector.lua to ui/inspector.lua
+  ([`a9b815e`](https://github.com/ansh-info/ipynb.nvim/commit/a9b815e20aa5756a690171dc351ff5f24ec8177a))
+
+- **lua**: Move kernel.lua to kernel/init.lua
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Move kernel.lua to kernel/init.lua
+  ([`0c3cd8d`](https://github.com/ansh-info/ipynb.nvim/commit/0c3cd8d958d075048eab143c28a0763708576d54))
+
+- **lua**: Move keymaps.lua to ui/keymaps.lua
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Move keymaps.lua to ui/keymaps.lua
+  ([`e9d9a37`](https://github.com/ansh-info/ipynb.nvim/commit/e9d9a37031a777dc42407e4a24cc0506db512a2a))
+
+- **lua**: Move markdown.lua to ui/markdown.lua
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Move markdown.lua to ui/markdown.lua
+  ([`df13a5b`](https://github.com/ansh-info/ipynb.nvim/commit/df13a5b38e5962d4f9817f0568357d47ce912ba6))
+
+- **lua**: Move notebook.lua to core/notebook.lua
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Move notebook.lua to core/notebook.lua
+  ([`2d2edb8`](https://github.com/ansh-info/ipynb.nvim/commit/2d2edb8a49de7f418d1202f0fc2c7ee7c33ee8bc))
+
+- **lua**: Move notebook_buf.lua to core/notebook_buf.lua
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Move notebook_buf.lua to core/notebook_buf.lua
+  ([`5db2c54`](https://github.com/ansh-info/ipynb.nvim/commit/5db2c54c16260e7dc9b679b95df1ba150e25901e))
+
+- **lua**: Move output.lua to kernel/output.lua
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Move output.lua to kernel/output.lua
+  ([`5d49304`](https://github.com/ansh-info/ipynb.nvim/commit/5d4930459bea7e9f2600f013f4b094f6639d6f7e))
+
+- **lua**: Update require paths in init.lua ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Update require paths in init.lua
+  ([`d4af9e5`](https://github.com/ansh-info/ipynb.nvim/commit/d4af9e5f1297d1a1916dbbba28f33ee60982541c))
+
+### Testing
+
+- **lua**: Fix hardcoded path and stale module path in output_spec
+  ([`33f4090`](https://github.com/ansh-info/ipynb.nvim/commit/33f4090e3c614d0d5e1b5703a5298221abee8520))
+
+- **lua**: Update cell_spec.lua for core/ restructure
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Update cell_spec.lua for core/ restructure
+  ([`d09f09c`](https://github.com/ansh-info/ipynb.nvim/commit/d09f09c1222403e3ffe8fde568bd2c0d31e006e5))
+
+- **lua**: Update headless_test.lua for restructured paths
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Update headless_test.lua for restructured paths
+  ([`324b74e`](https://github.com/ansh-info/ipynb.nvim/commit/324b74eb301552fb391b3dba3de1065fbd69e9ec))
+
+- **lua**: Update inspector_spec.lua for ui/ restructure
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Update inspector_spec.lua for ui/ restructure
+  ([`ebc81a6`](https://github.com/ansh-info/ipynb.nvim/commit/ebc81a64b9e992256e51739192d49381287ebb53))
+
+- **lua**: Update notebook_spec.lua for core/ restructure
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Update notebook_spec.lua for core/ restructure
+  ([`a077459`](https://github.com/ansh-info/ipynb.nvim/commit/a077459845e363513c38424ffdb313055f240c2f))
+
+- **lua**: Update output_spec.lua for kernel/ and core/ restructure
+  ([#47](https://github.com/ansh-info/ipynb.nvim/pull/47),
+  [`88f2392`](https://github.com/ansh-info/ipynb.nvim/commit/88f2392d509293768825c82e74aaa4a9132ff44b))
+
+- **lua**: Update output_spec.lua for kernel/ and core/ restructure
+  ([`de89c0c`](https://github.com/ansh-info/ipynb.nvim/commit/de89c0cd8fe1c48729b2b90047840024d19285f7))
+
+
 ## v1.1.15 (2026-03-29)
 
 ### Bug Fixes
