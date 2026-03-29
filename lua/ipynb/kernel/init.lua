@@ -61,9 +61,9 @@ end
 --- Works for both local dev trees and lazy.nvim installs.
 ---@return string
 local function bridge_path()
-  -- debug.getinfo(1).source == "@/abs/path/lua/ipynb/kernel.lua"
+  -- source is lua/ipynb/kernel/init.lua; :h:h:h:h walks to plugin root
   local this_file = debug.getinfo(1, "S").source:sub(2)
-  local root = vim.fn.fnamemodify(this_file, ":h:h:h")
+  local root = vim.fn.fnamemodify(this_file, ":h:h:h:h")
   return root .. "/python/kernel_bridge.py"
 end
 
