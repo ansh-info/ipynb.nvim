@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  # ── Unit tests (vusted inside headless Neovim) ──────────────────────────────
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Install LuaJIT 2.1 + LuaRocks configured for it.
+      # Sets LUA_PATH / LUA_CPATH so Neovim's embedded LuaJIT can find rocks.
+      - uses: notomo/action-setup-nvim-lua@v2
+
+      # Install Neovim (exposes executable path via steps.vim.outputs.executable).
+      - uses: rhysd/action-setup-vim@v1
+        id: vim
+        with:
+          neovim: true
+          version: stable
+
+      # Install vusted into the luarocks tree that LuaJIT can see.
+      - name: Install vusted
+        run: luarocks install vusted
+
+      # Run the test suite via Makefile.
+      - name: Run tests
+        run: make test
+        env:
+          VUSTED_NVIM: ${{ steps.vim.outputs.executable }}
+
+  # ── Lint (luacheck) ─────────────────────────────────────────────────────────
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: luacheck
+        uses: lunarmodules/luacheck@v1
+        with:
+          args: lua/ test/
+
+  # ── Format check (stylua) ───────────────────────────────────────────────────
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: stylua check
+        uses: JohnnyMorganz/stylua-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: "0.20.0"
+          args: --check lua/ test/
