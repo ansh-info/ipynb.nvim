@@ -1,4 +1,4 @@
---- ipynb.keymaps
+--- ipynb.ui.keymaps
 --- Default buffer-local keymaps installed when a .ipynb file is opened.
 --- All mappings are buffer-local so they don't leak into other buffers.
 
