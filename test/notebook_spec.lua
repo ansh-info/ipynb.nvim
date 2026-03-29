@@ -57,7 +57,13 @@ describe("ipynb.notebook", function()
 
     it("joins list source into a single string", function()
       local raw = make_raw_nb({
-        { id = "aa", cell_type = "code", source = { "x = 1\n", "print(x)\n" }, outputs = {}, metadata = {} },
+        {
+          id = "aa",
+          cell_type = "code",
+          source = { "x = 1\n", "print(x)\n" },
+          outputs = {},
+          metadata = {},
+        },
       })
       local notebook = nb.parse(raw, "/tmp/t.ipynb")
       assert.are.equal("x = 1\nprint(x)\n", notebook.cells[1].source)
@@ -92,7 +98,11 @@ describe("ipynb.notebook", function()
         nbformat = 3,
         metadata = {},
         worksheets = {
-          { cells = { { cell_type = "code", input = "1+1", source = "1+1", outputs = {}, metadata = {} } } },
+          {
+            cells = {
+              { cell_type = "code", input = "1+1", source = "1+1", outputs = {}, metadata = {} },
+            },
+          },
         },
       }
       local notebook, err = nb.parse(raw, "/tmp/t.ipynb")
@@ -108,9 +118,9 @@ describe("ipynb.notebook", function()
       })
       local notebook = nb.parse(raw, "/tmp/t.ipynb")
       assert.are.equal(3, #notebook.cells)
-      assert.are.equal("code",     notebook.cells[1].cell_type)
+      assert.are.equal("code", notebook.cells[1].cell_type)
       assert.are.equal("markdown", notebook.cells[2].cell_type)
-      assert.are.equal("code",     notebook.cells[3].cell_type)
+      assert.are.equal("code", notebook.cells[3].cell_type)
     end)
 
     it("preserves notebook-level metadata", function()
@@ -181,7 +191,7 @@ describe("ipynb.notebook", function()
       assert.is_nil(err2, "load failed: " .. tostring(err2))
       assert.are.equal(2, #notebook2.cells)
       assert.are.equal("x = 42\nprint(x)", notebook2.cells[1].source)
-      assert.are.equal("# Title",          notebook2.cells[2].source)
+      assert.are.equal("# Title", notebook2.cells[2].source)
 
       os.remove(tmp)
     end)
@@ -193,7 +203,7 @@ describe("ipynb.notebook", function()
       nb.save(notebook)
 
       local notebook2 = nb.load(tmp)
-      assert.are.equal("code",     notebook2.cells[1].cell_type)
+      assert.are.equal("code", notebook2.cells[1].cell_type)
       assert.are.equal("markdown", notebook2.cells[2].cell_type)
       os.remove(tmp)
     end)

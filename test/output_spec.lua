@@ -12,7 +12,7 @@ describe("ipynb.output", function()
   -- Stubs shared by all tests.
   local function make_cell_stub()
     return {
-      clear_output         = function() end,
+      clear_output = function() end,
       set_output_virt_lines = function() end,
     }
   end
@@ -29,19 +29,27 @@ describe("ipynb.output", function()
     -- Reset all relevant modules.
     package.loaded["ipynb.output"] = nil
     package.loaded["ipynb.config"] = nil
-    package.loaded["ipynb.cell"]   = nil
-    package.loaded["ipynb.image"]  = nil
+    package.loaded["ipynb.cell"] = nil
+    package.loaded["ipynb.image"] = nil
 
     -- Stub dependencies before requiring output.
-    package.preload["ipynb.config"] = function() return make_config_stub() end
-    package.preload["ipynb.cell"]   = function() return make_cell_stub() end
+    package.preload["ipynb.config"] = function()
+      return make_config_stub()
+    end
+    package.preload["ipynb.cell"] = function()
+      return make_cell_stub()
+    end
     -- image is optional; stub as unavailable so image paths are bypassed.
-    package.preload["ipynb.image"]  = function()
+    package.preload["ipynb.image"] = function()
       return {
-        is_supported = function() return false end,
-        clear        = function() end,
-        render       = function() end,
-        placeholder  = function(_) return "(image)" end,
+        is_supported = function()
+          return false
+        end,
+        clear = function() end,
+        render = function() end,
+        placeholder = function(_)
+          return "(image)"
+        end,
       }
     end
 
@@ -192,18 +200,28 @@ describe("ipynb.output", function()
 
     it("_active guard is present in source", function()
       local f = io.open(src_path, "r")
-      if not f then pending("cannot open output.lua") end
-      local src = f:read("*a"); f:close()
-      assert.is_truthy(src:find("_active%[key%]"),
-        "re-entrancy guard '_active[key]' not found in output.lua")
+      if not f then
+        pending("cannot open output.lua")
+      end
+      local src = f:read("*a")
+      f:close()
+      assert.is_truthy(
+        src:find("_active%[key%]"),
+        "re-entrancy guard '_active[key]' not found in output.lua"
+      )
     end)
 
     it("_pending guard is present in source", function()
       local f = io.open(src_path, "r")
-      if not f then pending("cannot open output.lua") end
-      local src = f:read("*a"); f:close()
-      assert.is_truthy(src:find("_pending%[key%]"),
-        "re-entrancy guard '_pending[key]' not found in output.lua")
+      if not f then
+        pending("cannot open output.lua")
+      end
+      local src = f:read("*a")
+      f:close()
+      assert.is_truthy(
+        src:find("_pending%[key%]"),
+        "re-entrancy guard '_pending[key]' not found in output.lua"
+      )
     end)
   end)
 end)

@@ -12,8 +12,8 @@ describe("ipynb.inspector", function()
   before_each(function()
     -- Reset module cache so each test gets a fresh module state.
     package.loaded["ipynb.inspector"] = nil
-    package.loaded["ipynb.kernel"]    = nil
-    package.loaded["ipynb.utils"]     = nil
+    package.loaded["ipynb.kernel"] = nil
+    package.loaded["ipynb.utils"] = nil
 
     -- Provide minimal vim.api stubs if missing.
     vim.api = vim.api or {}
@@ -43,15 +43,19 @@ describe("ipynb.inspector", function()
   describe("M.open() when kernel module is unavailable", function()
     it("warns and returns without error when ipynb.kernel cannot be loaded", function()
       -- Inject a stub that fails to load.
-      package.preload["ipynb.kernel"] = function() error("no kernel") end
+      package.preload["ipynb.kernel"] = function()
+        error("no kernel")
+      end
 
       local warned = nil
       package.loaded["ipynb.utils"] = {
-        warn  = function(msg) warned = msg end,
-        info  = function() end,
-        err   = function() end,
+        warn = function(msg)
+          warned = msg
+        end,
+        info = function() end,
+        err = function() end,
         debug = function() end,
-        log   = function() end,
+        log = function() end,
       }
 
       package.loaded["ipynb.inspector"] = nil
@@ -69,18 +73,22 @@ describe("ipynb.inspector", function()
       -- Stub the kernel so it reports a busy status.
       package.preload["ipynb.kernel"] = function()
         return {
-          status         = function(_) return "busy" end,
+          status = function(_)
+            return "busy"
+          end,
           execute_snippet = function() end,
         }
       end
 
       local warned = nil
       package.loaded["ipynb.utils"] = {
-        warn  = function(msg) warned = msg end,
-        info  = function() end,
-        err   = function() end,
+        warn = function(msg)
+          warned = msg
+        end,
+        info = function() end,
+        err = function() end,
         debug = function() end,
-        log   = function() end,
+        log = function() end,
       }
 
       package.loaded["ipynb.inspector"] = nil
@@ -96,25 +104,27 @@ describe("ipynb.inspector", function()
 
   describe("M.open() when kernel is idle", function()
     it("calls execute_snippet and passes a callback", function()
-      local captured_code     = nil
+      local captured_code = nil
       local captured_callback = nil
 
       package.preload["ipynb.kernel"] = function()
         return {
-          status = function(_) return "idle" end,
+          status = function(_)
+            return "idle"
+          end,
           execute_snippet = function(_, code, cb)
-            captured_code     = code
+            captured_code = code
             captured_callback = cb
           end,
         }
       end
 
       package.loaded["ipynb.utils"] = {
-        warn  = function() end,
-        info  = function() end,
-        err   = function() end,
+        warn = function() end,
+        info = function() end,
+        err = function() end,
         debug = function() end,
-        log   = function() end,
+        log = function() end,
       }
 
       package.loaded["ipynb.inspector"] = nil
@@ -135,17 +145,21 @@ describe("ipynb.inspector", function()
 
       package.preload["ipynb.kernel"] = function()
         return {
-          status = function(_) return "idle" end,
-          execute_snippet = function(_, code, _) captured_code = code end,
+          status = function(_)
+            return "idle"
+          end,
+          execute_snippet = function(_, code, _)
+            captured_code = code
+          end,
         }
       end
 
       package.loaded["ipynb.utils"] = {
-        warn  = function() end,
-        info  = function() end,
-        err   = function() end,
+        warn = function() end,
+        info = function() end,
+        err = function() end,
         debug = function() end,
-        log   = function() end,
+        log = function() end,
       }
 
       package.loaded["ipynb.inspector"] = nil
@@ -160,33 +174,46 @@ describe("ipynb.inspector", function()
   -- ── INTROSPECT_CODE quality checks ────────────────────────────────────────────
 
   describe("INTROSPECT_CODE snippet", function()
-    -- Load the inspector source text directly for static checks.
-    local src_path = (debug and debug.getinfo(1, "S") or {}).source
     local insp_path = "/home/oneai/jupytervim/lua/ipynb/inspector.lua"
 
     it("does not use vim.wait (would cause re-entrancy)", function()
       local f = io.open(insp_path, "r")
-      if not f then pending("cannot open inspector.lua") end
-      local src = f:read("*a"); f:close()
-      assert.is_nil(src:find("vim%.wait"),
-        "inspector.lua must not call vim.wait - causes event-loop re-entrancy")
+      if not f then
+        pending("cannot open inspector.lua")
+      end
+      local src = f:read("*a")
+      f:close()
+      assert.is_nil(
+        src:find("vim%.wait"),
+        "inspector.lua must not call vim.wait - causes event-loop re-entrancy"
+      )
     end)
 
     it("uses computed format strings instead of '%-*s'", function()
       local f = io.open(insp_path, "r")
-      if not f then pending("cannot open inspector.lua") end
-      local src = f:read("*a"); f:close()
+      if not f then
+        pending("cannot open inspector.lua")
+      end
+      local src = f:read("*a")
+      f:close()
       -- %-*s is not supported in LuaJIT's string.format.
-      assert.is_nil(src:find("%%-*s", 1, true),
-        "inspector.lua must not use '%-*s' (unsupported in LuaJIT)")
+      assert.is_nil(
+        src:find("%%-*s", 1, true),
+        "inspector.lua must not use '%-*s' (unsupported in LuaJIT)"
+      )
     end)
 
     it("clamps end_col with math.min (avoids 'end_col out of range' crash)", function()
       local f = io.open(insp_path, "r")
-      if not f then pending("cannot open inspector.lua") end
-      local src = f:read("*a"); f:close()
-      assert.is_truthy(src:find("math%.min"),
-        "highlight_inspector_buf must clamp end_col with math.min")
+      if not f then
+        pending("cannot open inspector.lua")
+      end
+      local src = f:read("*a")
+      f:close()
+      assert.is_truthy(
+        src:find("math%.min"),
+        "highlight_inspector_buf must clamp end_col with math.min"
+      )
     end)
   end)
 end)

@@ -15,21 +15,21 @@
 ---   output.get_chunks(cell_key)                -- return accumulated chunk list
 
 local config = require("ipynb.config")
-local cell   = require("ipynb.cell")
+local cell = require("ipynb.cell")
 
 local M = {}
 
 -- ── Highlight groups ──────────────────────────────────────────────────────────
 -- Defined in cell.lua define_highlights(); referenced by name here.
 local HL = {
-  text    = "IpynbOutputText",
-  result  = "IpynbOutputResult",
-  error   = "IpynbOutputError",
-  trace   = "IpynbOutputErrorTrace",
-  stderr  = "DiagnosticWarn",
+  text = "IpynbOutputText",
+  result = "IpynbOutputResult",
+  error = "IpynbOutputError",
+  trace = "IpynbOutputErrorTrace",
+  stderr = "DiagnosticWarn",
   divider = "IpynbCellBorder",
-  meta    = "IpynbOutputMeta",
-  image   = "IpynbOutputMeta",
+  meta = "IpynbOutputMeta",
+  image = "IpynbOutputMeta",
 }
 
 -- ── Per-cell output accumulator ───────────────────────────────────────────────
@@ -49,7 +49,7 @@ local _store = {}
 -- When a callback sees _active, it sets _pending and returns without touching
 -- image.clear().  Once the active render finishes it checks _pending and calls
 -- M._render again so the latest chunks are always shown.
-local _active  = {}
+local _active = {}
 local _pending = {}
 
 local function cell_key(bufnr, cell_state)
@@ -71,7 +71,9 @@ function M.clear(bufnr, cell_state)
   _store[cell_key(bufnr, cell_state)] = nil
   cell.clear_output(bufnr, cell_state)
   local ok, image = pcall(require, "ipynb.image")
-  if ok then image.clear(bufnr, cell_state) end
+  if ok then
+    image.clear(bufnr, cell_state)
+  end
 end
 
 -- ── Text → virt_lines conversion ──────────────────────────────────────────────
@@ -88,7 +90,9 @@ local function text_to_virt_lines(text, hl, max_lines)
   if lines[#lines] == "" then
     table.remove(lines)
   end
-  if #lines == 0 then return {} end
+  if #lines == 0 then
+    return {}
+  end
 
   local truncated = 0
   if max_lines > 0 and #lines > max_lines then
@@ -124,10 +128,8 @@ local function chunk_to_virt_lines(chunk, max_lines)
   if t == "stream" then
     local hl = (chunk.name == "stderr") and HL.stderr or HL.text
     return text_to_virt_lines(chunk.text or "", hl, max_lines)
-
   elseif t == "result" then
     return text_to_virt_lines(chunk.text or "", HL.result, max_lines)
-
   elseif t == "error" then
     local vl = {}
     -- Header line: ErrorType: message
@@ -141,17 +143,15 @@ local function chunk_to_virt_lines(chunk, max_lines)
       end
     end
     return vl
-
   elseif t == "image" then
     -- image.lua handles actual rendering; return empty here so the image
     -- chunks are tracked in the store but don't produce duplicate text lines.
     -- A placeholder is returned only when image.nvim is unavailable.
     local ok, image = pcall(require, "ipynb.image")
     if ok and image.is_supported() then
-      return {}   -- image.lua renders it; no text virt_line needed
+      return {} -- image.lua renders it; no text virt_line needed
     end
     return { { { image.placeholder(chunk), HL.image } } }
-
   end
   return {}
 end
@@ -184,20 +184,20 @@ end
 ---@param bufnr integer
 ---@param cell_state table
 function M._render(bufnr, cell_state)
-  local cfg       = config.get()
+  local cfg = config.get()
   local max_lines = cfg.ui.output_max_lines
-  local chunks    = M.get_chunks(bufnr, cell_state)
-  local key       = cell_key(bufnr, cell_state)
+  local chunks = M.get_chunks(bufnr, cell_state)
+  local key = cell_key(bufnr, cell_state)
   if #chunks == 0 then
     cell.clear_output(bufnr, cell_state)
     return
   end
 
   local ok_img, image = pcall(require, "ipynb.image")
-  local img_supported  = ok_img and image.is_supported()
+  local img_supported = ok_img and image.is_supported()
 
-  local all_vl    = {}     -- text virt_lines
-  local img_queue = {}    -- image chunks to render after text virt_lines are placed
+  local all_vl = {} -- text virt_lines
+  local img_queue = {} -- image chunks to render after text virt_lines are placed
 
   -- Top divider.
   all_vl[#all_vl + 1] = divider()
@@ -218,7 +218,9 @@ function M._render(bufnr, cell_state)
 
   -- Render in the main event loop so extmarks and image positions are stable.
   vim.schedule(function()
-    if not vim.api.nvim_buf_is_valid(bufnr) then return end
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+      return
+    end
 
     -- Guard against re-entrant renders.  image.nvim's magick_cli uses
     -- vim.wait() which runs the event loop while magick converts the PNG.
@@ -259,7 +261,7 @@ end
 ---@param cells table[]
 function M.clear_all(bufnr, cells)
   for _, cs in ipairs(cells or {}) do
-    M.clear(bufnr, cs)   -- M.clear() already handles images per cell
+    M.clear(bufnr, cs) -- M.clear() already handles images per cell
   end
 end
 

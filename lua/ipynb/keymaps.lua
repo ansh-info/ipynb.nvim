@@ -3,7 +3,7 @@
 --- All mappings are buffer-local so they don't leak into other buffers.
 
 local config = require("ipynb.config")
-local utils  = require("ipynb.utils")
+local utils = require("ipynb.utils")
 
 local M = {}
 
@@ -12,7 +12,9 @@ local M = {}
 ---@param bufnr integer
 function M.attach(bufnr)
   local cfg = config.get()
-  if not cfg.keymaps.enabled then return end
+  if not cfg.keymaps.enabled then
+    return
+  end
 
   local km = cfg.keymaps
   local opts = { buffer = bufnr, silent = true, noremap = true }
@@ -43,37 +45,49 @@ function M.attach(bufnr)
 
   map("n", km.run_all_above, function()
     local ok, kernel = pcall(require, "ipynb.kernel")
-    if ok then kernel.run_all_above(bufnr) end
+    if ok then
+      kernel.run_all_above(bufnr)
+    end
   end, "Jupyter: run all cells above")
 
   map("n", km.run_all_below, function()
     local ok, kernel = pcall(require, "ipynb.kernel")
-    if ok then kernel.run_all_below(bufnr) end
+    if ok then
+      kernel.run_all_below(bufnr)
+    end
   end, "Jupyter: run all cells below cursor")
 
   -- ── Kernel control ─────────────────────────────────────────────────────
   map("n", km.interrupt_kernel, function()
     local ok, kernel = pcall(require, "ipynb.kernel")
-    if ok then kernel.interrupt(bufnr) end
+    if ok then
+      kernel.interrupt(bufnr)
+    end
   end, "Jupyter: interrupt kernel")
 
   -- ── Cell editing ───────────────────────────────────────────────────────
   map("n", km.add_cell_below, function()
     local cell_mod = require("ipynb.cell")
     local _, idx = cell_mod.cell_at_cursor(bufnr)
-    if idx then cell_mod.add_cell_below(bufnr, idx) end
+    if idx then
+      cell_mod.add_cell_below(bufnr, idx)
+    end
   end, "Jupyter: add cell below")
 
   map("n", km.add_cell_above, function()
     local cell_mod = require("ipynb.cell")
     local _, idx = cell_mod.cell_at_cursor(bufnr)
-    if idx then cell_mod.add_cell_above(bufnr, idx) end
+    if idx then
+      cell_mod.add_cell_above(bufnr, idx)
+    end
   end, "Jupyter: add cell above")
 
   map("n", km.delete_cell, function()
     local cell_mod = require("ipynb.cell")
     local _, idx = cell_mod.cell_at_cursor(bufnr)
-    if idx then cell_mod.delete_cell(bufnr, idx) end
+    if idx then
+      cell_mod.delete_cell(bufnr, idx)
+    end
   end, "Jupyter: delete current cell")
 
   -- ── Save ───────────────────────────────────────────────────────────────
@@ -96,18 +110,18 @@ end
 --- Show a floating help window listing all keymaps.
 function M.show_help()
   local cfg = config.get()
-  local km  = cfg.keymaps
+  local km = cfg.keymaps
 
   local lines = {
     " ipynb — keymaps ",
     string.rep("─", 40),
     "",
     "  Navigation",
-    "  " .. km.next_cell     .. "   → next cell",
-    "  " .. km.prev_cell     .. "   → previous cell",
+    "  " .. km.next_cell .. "   → next cell",
+    "  " .. km.prev_cell .. "   → previous cell",
     "",
     "  Execution",
-    "  " .. km.run_cell      .. "   → run current cell",
+    "  " .. km.run_cell .. "   → run current cell",
     "  " .. km.run_all_above .. "   → run all cells above",
     "  " .. km.run_all_below .. "   → run all cells below",
     "  " .. km.interrupt_kernel .. " → interrupt kernel",
@@ -115,7 +129,7 @@ function M.show_help()
     "  Editing",
     "  " .. km.add_cell_below .. "  → add cell below",
     "  " .. km.add_cell_above .. "  → add cell above",
-    "  " .. km.delete_cell    .. "  → delete cell",
+    "  " .. km.delete_cell .. "  → delete cell",
     "",
     "  File",
     "  <leader>w → save notebook",
@@ -126,22 +140,22 @@ function M.show_help()
   local buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
   vim.api.nvim_buf_set_option(buf, "modifiable", false)
-  vim.api.nvim_buf_set_option(buf, "buftype",    "nofile")
+  vim.api.nvim_buf_set_option(buf, "buftype", "nofile")
 
-  local width  = 44
+  local width = 44
   local height = #lines
-  local row    = math.floor((vim.o.lines - height) / 2)
-  local col    = math.floor((vim.o.columns - width) / 2)
+  local row = math.floor((vim.o.lines - height) / 2)
+  local col = math.floor((vim.o.columns - width) / 2)
 
   local win = vim.api.nvim_open_win(buf, true, {
     relative = "editor",
-    row      = row,
-    col      = col,
-    width    = width,
-    height   = height,
-    style    = "minimal",
-    border   = "rounded",
-    title    = " Jupyter Keymaps ",
+    row = row,
+    col = col,
+    width = width,
+    height = height,
+    style = "minimal",
+    border = "rounded",
+    title = " Jupyter Keymaps ",
     title_pos = "center",
   })
 

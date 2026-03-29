@@ -10,10 +10,18 @@ function M.log(msg, level)
   vim.notify("[ipynb] " .. msg, level or vim.log.levels.INFO)
 end
 
-function M.warn(msg)  M.log(msg, vim.log.levels.WARN)  end
-function M.err(msg)   M.log(msg, vim.log.levels.ERROR) end
-function M.info(msg)  M.log(msg, vim.log.levels.INFO)  end
-function M.debug(msg) M.log(msg, vim.log.levels.DEBUG) end
+function M.warn(msg)
+  M.log(msg, vim.log.levels.WARN)
+end
+function M.err(msg)
+  M.log(msg, vim.log.levels.ERROR)
+end
+function M.info(msg)
+  M.log(msg, vim.log.levels.INFO)
+end
+function M.debug(msg)
+  M.log(msg, vim.log.levels.DEBUG)
+end
 
 --- Read a file on disk and return its contents as a string.
 --- Returns nil and an error message on failure.
@@ -51,7 +59,9 @@ function M.b64_encode(data)
   -- Use system base64 command for reliability.
   local tmp = os.tmpname()
   local f = io.open(tmp, "wb")
-  if not f then return "" end
+  if not f then
+    return ""
+  end
   f:write(data)
   f:close()
   local result = vim.fn.system("base64 -w0 " .. tmp)
@@ -63,7 +73,7 @@ end
 ---@param b64 string
 ---@return string
 function M.b64_decode(b64)
-  local tmp_in  = os.tmpname()
+  local tmp_in = os.tmpname()
   local tmp_out = os.tmpname()
   M.write_file(tmp_in, b64)
   vim.fn.system("base64 -d " .. tmp_in .. " > " .. tmp_out)
@@ -98,7 +108,9 @@ end
 ---@return string
 function M.rpad(s, width)
   local len = vim.fn.strdisplaywidth(s)
-  if len >= width then return s end
+  if len >= width then
+    return s
+  end
   return s .. string.rep(" ", width - len)
 end
 

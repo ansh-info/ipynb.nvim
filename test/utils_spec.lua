@@ -130,7 +130,9 @@ describe("ipynb.utils", function()
     it("pads a string to the requested width", function()
       -- stub vim.fn.strdisplaywidth so the test works without Neovim
       local orig = vim.fn.strdisplaywidth
-      vim.fn.strdisplaywidth = function(s) return #s end
+      vim.fn.strdisplaywidth = function(s)
+        return #s
+      end
 
       local result = utils.rpad("hi", 5)
       assert.are.equal("hi   ", result)
@@ -140,7 +142,9 @@ describe("ipynb.utils", function()
 
     it("returns the string unchanged when already wide enough", function()
       local orig = vim.fn.strdisplaywidth
-      vim.fn.strdisplaywidth = function(s) return #s end
+      vim.fn.strdisplaywidth = function(s)
+        return #s
+      end
 
       local result = utils.rpad("hello", 3)
       assert.are.equal("hello", result)
@@ -171,7 +175,9 @@ describe("ipynb.utils", function()
     it("M.warn uses WARN level", function()
       local captured_level
       local orig = vim.notify
-      vim.notify = function(_, level) captured_level = level end
+      vim.notify = function(_, level)
+        captured_level = level
+      end
 
       utils.warn("w")
 
@@ -182,7 +188,9 @@ describe("ipynb.utils", function()
     it("M.err uses ERROR level", function()
       local captured_level
       local orig = vim.notify
-      vim.notify = function(_, level) captured_level = level end
+      vim.notify = function(_, level)
+        captured_level = level
+      end
 
       utils.err("e")
 

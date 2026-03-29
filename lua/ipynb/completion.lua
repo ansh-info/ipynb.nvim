@@ -23,7 +23,7 @@ local M = {}
 --- Find the column where the current completion token starts (0-based).
 ---@return integer
 local function find_token_start()
-  local col  = vim.api.nvim_win_get_cursor(0)[2]
+  local col = vim.api.nvim_win_get_cursor(0)[2]
   local line = vim.api.nvim_get_current_line():sub(1, col)
   -- Walk backwards over identifier / attribute characters.
   local start = col
@@ -45,9 +45,9 @@ local function build_items(msg)
   local items = {}
   for _, match in ipairs(msg.matches or {}) do
     items[#items + 1] = {
-      word  = match,
-      menu  = "[jupyter]",
-      kind  = "Function",   -- cmp kind label (overridden per type in cmp source)
+      word = match,
+      menu = "[jupyter]",
+      kind = "Function", -- cmp kind label (overridden per type in cmp source)
     }
   end
   return items
@@ -70,21 +70,29 @@ function M.omnifunc(findstart, base)
 
   -- Completion phase: ask the kernel.
   local ok, kernel = pcall(require, "ipynb.kernel")
-  if not ok then return {} end
-  if kernel.status(bufnr) ~= "idle" then return {} end
+  if not ok then
+    return {}
+  end
+  if kernel.status(bufnr) ~= "idle" then
+    return {}
+  end
 
-  local line       = vim.api.nvim_get_current_line()
+  local line = vim.api.nvim_get_current_line()
   local cursor_pos = vim.api.nvim_win_get_cursor(0)[2]
-  local result     = nil
+  local result = nil
 
   kernel.complete(bufnr, line, cursor_pos, function(msg)
     result = msg
   end)
 
   -- Block until the kernel replies, up to 1.5 s (non-interactive safe).
-  vim.wait(1500, function() return result ~= nil end, 10)
+  vim.wait(1500, function()
+    return result ~= nil
+  end, 10)
 
-  if not result then return {} end
+  if not result then
+    return {}
+  end
   return build_items(result)
 end
 
@@ -107,7 +115,9 @@ end
 function CmpSource:is_available()
   local bufnr = vim.api.nvim_get_current_buf()
   local ok_nb, nb_buf = pcall(require, "ipynb.notebook_buf")
-  if not ok_nb or not nb_buf.is_managed(bufnr) then return false end
+  if not ok_nb or not nb_buf.is_managed(bufnr) then
+    return false
+  end
   local ok_k, kernel = pcall(require, "ipynb.kernel")
   return ok_k and kernel.status(bufnr) == "idle"
 end
@@ -116,23 +126,26 @@ end
 function CmpSource:complete(params, callback)
   local bufnr = vim.api.nvim_get_current_buf()
   local ok, kernel = pcall(require, "ipynb.kernel")
-  if not ok then callback({ items = {}, isIncomplete = false }) return end
+  if not ok then
+    callback({ items = {}, isIncomplete = false })
+    return
+  end
 
-  local line       = params.context.cursor_before_line
+  local line = params.context.cursor_before_line
   local cursor_pos = #line
 
   kernel.complete(bufnr, line, cursor_pos, function(msg)
     local items = {}
     for _, match in ipairs(msg.matches or {}) do
       items[#items + 1] = {
-        label            = match,
-        kind             = require("cmp").lsp.CompletionItemKind.Function,
-        detail           = "[jupyter kernel]",
-        insertTextFormat = 1,  -- plain text
+        label = match,
+        kind = require("cmp").lsp.CompletionItemKind.Function,
+        detail = "[jupyter kernel]",
+        insertTextFormat = 1, -- plain text
       }
     end
     callback({
-      items        = items,
+      items = items,
       isIncomplete = false,
     })
   end)
@@ -150,12 +163,13 @@ end
 ---@param bufnr integer
 function M.attach(bufnr)
   -- Set omnifunc so <C-x><C-o> works without any extra plugins.
-  vim.api.nvim_buf_set_option(bufnr, "omnifunc",
-    "v:lua.require'ipynb.completion'.omnifunc")
+  vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.require'ipynb.completion'.omnifunc")
 
   -- Register nvim-cmp source once if cmp is available.
   local ok, cmp = pcall(require, "cmp")
-  if not ok then return end
+  if not ok then
+    return
+  end
 
   -- Only register once globally.
   if not M._cmp_registered then
