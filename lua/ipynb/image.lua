@@ -123,7 +123,7 @@ function M.render(bufnr, cell_state, chunk)
   local utils = require("ipynb.utils")
 
   -- Write image data to a temp file.
-  local tmp, ext = chunk_to_tmp(chunk)
+  local tmp = chunk_to_tmp(chunk)
   if not tmp then
     utils.debug("image.lua: could not decode image payload (mime=" .. (chunk.mime or "?") .. ")")
     return false
