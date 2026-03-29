@@ -1,4 +1,4 @@
---- ipynb.output
+--- ipynb.kernel.output
 --- Converts raw Jupyter output chunks into Neovim virt_lines and renders
 --- them below the cell that produced them.
 ---
