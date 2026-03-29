@@ -202,7 +202,6 @@ local function decorate_line(bufnr, row, line)
     local abs_s     = col + s - 1
     local abs_url_s = col + url_s - 1
     local abs_url_e = col + url_e - 2
-    local abs_e     = col + e - 2
 
     -- Highlight the link text.
     vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_s + 1, {
@@ -212,8 +211,12 @@ local function decorate_line(bufnr, row, line)
     })
     -- Conceal "[", "]", "(" ... ")" leaving only the link text visible.
     vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_s,    { end_col = abs_s + 1,    conceal = "", priority = 75 })
-    vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_url_s - 2, { end_col = abs_url_s - 1, conceal = "", priority = 75 })
-    vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_url_s - 1, { end_col = abs_url_e + 1, conceal = "", priority = 75 })
+    vim.api.nvim_buf_set_extmark(
+      bufnr, NS, row, abs_url_s - 2, { end_col = abs_url_s - 1, conceal = "", priority = 75 }
+    )
+    vim.api.nvim_buf_set_extmark(
+      bufnr, NS, row, abs_url_s - 1, { end_col = abs_url_e + 1, conceal = "", priority = 75 }
+    )
 
     col    = col + e - 1
     search = search:sub(e)
