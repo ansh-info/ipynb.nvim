@@ -72,8 +72,7 @@ end
 ---@param text string
 ---@return table|nil
 local function parse_json_from_output(text)
-  -- The kernel may print warnings before our JSON line; find the first { ... }
-  local s, e = text:find("{.-}", 1, false)
+  -- The kernel may print warnings before our JSON line.
   -- Try a greedy match for the full JSON object.
   for i = 1, #text do
     if text:sub(i, i) == "{" then
