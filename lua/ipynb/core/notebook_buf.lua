@@ -8,9 +8,9 @@
 ---   - Buffer option setup (filetype, conceallevel, etc.)
 ---   - Auto-save after cell execution (if configured)
 
-local notebook = require("ipynb.notebook")
-local cell = require("ipynb.cell")
-local keymaps = require("ipynb.keymaps")
+local notebook = require("ipynb.core.notebook")
+local cell = require("ipynb.core.cell")
+local keymaps = require("ipynb.ui.keymaps")
 local config = require("ipynb.config")
 local utils = require("ipynb.utils")
 
@@ -163,7 +163,7 @@ function M.open(path, bufnr)
 
   -- Register inspector keymap.
   vim.keymap.set("n", "<leader>ji", function()
-    require("ipynb.inspector").open(bufnr)
+    require("ipynb.ui.inspector").open(bufnr)
   end, { buffer = bufnr, silent = true, desc = "Jupyter: variable inspector" })
 
   -- Auto-clean state on buffer wipe.
