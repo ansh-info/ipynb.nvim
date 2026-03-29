@@ -70,21 +70,21 @@ function M.parse(raw, path)
   local cells = {}
   for _, rc in ipairs(raw_cells) do
     local cell = {
-      id              = rc.id or gen_cell_id(),
-      cell_type       = rc.cell_type or "code",
-      source          = join_source(rc.source or ""),
-      outputs         = rc.outputs or {},
-      metadata        = rc.metadata or {},
+      id = rc.id or gen_cell_id(),
+      cell_type = rc.cell_type or "code",
+      source = join_source(rc.source or ""),
+      outputs = rc.outputs or {},
+      metadata = rc.metadata or {},
       execution_count = rc.execution_count,
     }
     cells[#cells + 1] = cell
   end
 
   local notebook = {
-    path      = path,
-    nbformat  = nbformat,
-    metadata  = raw.metadata or {},
-    cells     = cells,
+    path = path,
+    nbformat = nbformat,
+    metadata = raw.metadata or {},
+    cells = cells,
   }
   return notebook, nil
 end
@@ -125,23 +125,23 @@ function M.save(notebook)
     end
 
     local rc = {
-      id              = cell.id,
-      cell_type       = cell.cell_type,
-      source          = source_lines,
-      metadata        = cell.metadata or {},
+      id = cell.id,
+      cell_type = cell.cell_type,
+      source = source_lines,
+      metadata = cell.metadata or {},
     }
     if cell.cell_type == "code" then
-      rc.outputs         = cell.outputs or {}
+      rc.outputs = cell.outputs or {}
       rc.execution_count = cell.execution_count
     end
     raw_cells[#raw_cells + 1] = rc
   end
 
   local raw = {
-    nbformat       = 4,
+    nbformat = 4,
     nbformat_minor = 5,
-    metadata       = notebook.metadata or {},
-    cells          = raw_cells,
+    metadata = notebook.metadata or {},
+    cells = raw_cells,
   }
 
   local ok_enc, json = pcall(vim.json.encode, raw)
@@ -190,14 +190,22 @@ end
 ---@param cell table
 ---@return string
 function M.cell_language(notebook, cell)
-  if cell.cell_type == "markdown" then return "markdown" end
-  if cell.cell_type == "raw"      then return "raw"      end
+  if cell.cell_type == "markdown" then
+    return "markdown"
+  end
+  if cell.cell_type == "raw" then
+    return "raw"
+  end
 
   local ks = (notebook.metadata or {}).kernelspec
-  if ks and ks.language then return ks.language end
+  if ks and ks.language then
+    return ks.language
+  end
 
   local li = (notebook.metadata or {}).language_info
-  if li and li.name then return li.name end
+  if li and li.name then
+    return li.name
+  end
 
   return "python"
 end
