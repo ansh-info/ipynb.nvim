@@ -2,6 +2,18 @@
 
 <!-- version list -->
 
+## v1.1.17 (2026-03-29)
+
+### Bug Fixes
+
+- **lua**: Fix kernel_bridge.py path after folder restructure
+  ([#59](https://github.com/ansh-info/ipynb.nvim/pull/59),
+  [`8ff98d1`](https://github.com/ansh-info/ipynb.nvim/commit/8ff98d1cd4199a05430c3ec5e72adc985560d205))
+
+- **lua**: Fix kernel_bridge.py path after folder restructure
+  ([`7714532`](https://github.com/ansh-info/ipynb.nvim/commit/7714532c0a2605134fcae610e1c3932d6e8f0c6c))
+
+
 ## v1.1.16 (2026-03-29)
 
 ### Bug Fixes
