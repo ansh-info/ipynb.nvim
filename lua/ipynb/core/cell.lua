@@ -265,7 +265,7 @@ function M.render(bufnr, notebook)
   -- Deferred so extmark positions are stable before markdown.render() reads them.
   vim.schedule(function()
     if vim.api.nvim_buf_is_valid(bufnr) then
-      local ok, markdown = pcall(require, "ipynb.markdown")
+      local ok, markdown = pcall(require, "ipynb.ui.markdown")
       if ok then
         markdown.render(bufnr)
       end
