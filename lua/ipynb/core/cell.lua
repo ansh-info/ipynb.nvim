@@ -1,4 +1,4 @@
---- ipynb.cell
+--- ipynb.core.cell
 --- Cell lifecycle: render cells into a buffer, anchor them with extmarks,
 --- and expose mutation helpers (add, delete, split, merge).
 ---
