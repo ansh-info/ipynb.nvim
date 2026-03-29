@@ -25,11 +25,11 @@ function M.attach(bufnr)
 
   -- ── Cell navigation ────────────────────────────────────────────────────
   map("n", km.next_cell, function()
-    require("ipynb.cell").goto_next_cell(bufnr)
+    require("ipynb.core.cell").goto_next_cell(bufnr)
   end, "Jupyter: next cell")
 
   map("n", km.prev_cell, function()
-    require("ipynb.cell").goto_prev_cell(bufnr)
+    require("ipynb.core.cell").goto_prev_cell(bufnr)
   end, "Jupyter: previous cell")
 
   -- ── Cell execution ─────────────────────────────────────────────────────
@@ -67,7 +67,7 @@ function M.attach(bufnr)
 
   -- ── Cell editing ───────────────────────────────────────────────────────
   map("n", km.add_cell_below, function()
-    local cell_mod = require("ipynb.cell")
+    local cell_mod = require("ipynb.core.cell")
     local _, idx = cell_mod.cell_at_cursor(bufnr)
     if idx then
       cell_mod.add_cell_below(bufnr, idx)
@@ -75,7 +75,7 @@ function M.attach(bufnr)
   end, "Jupyter: add cell below")
 
   map("n", km.add_cell_above, function()
-    local cell_mod = require("ipynb.cell")
+    local cell_mod = require("ipynb.core.cell")
     local _, idx = cell_mod.cell_at_cursor(bufnr)
     if idx then
       cell_mod.add_cell_above(bufnr, idx)
@@ -83,7 +83,7 @@ function M.attach(bufnr)
   end, "Jupyter: add cell above")
 
   map("n", km.delete_cell, function()
-    local cell_mod = require("ipynb.cell")
+    local cell_mod = require("ipynb.core.cell")
     local _, idx = cell_mod.cell_at_cursor(bufnr)
     if idx then
       cell_mod.delete_cell(bufnr, idx)
@@ -93,12 +93,12 @@ function M.attach(bufnr)
   -- ── Save ───────────────────────────────────────────────────────────────
   -- Override :w so it saves back to .ipynb format.
   map("n", "<leader>w", function()
-    require("ipynb.notebook_buf").save(bufnr)
+    require("ipynb.core.notebook_buf").save(bufnr)
   end, "Jupyter: save notebook")
 
   -- Also hook ZZ / :wq equivalents through the same path.
   vim.api.nvim_buf_create_user_command(bufnr, "IpynbSave", function()
-    require("ipynb.notebook_buf").save(bufnr)
+    require("ipynb.core.notebook_buf").save(bufnr)
   end, { desc = "Save Jupyter notebook to disk" })
 
   -- ── Help overlay ───────────────────────────────────────────────────────
