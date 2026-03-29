@@ -9,9 +9,9 @@ describe("ipynb.cell", function()
   local cell
 
   before_each(function()
-    package.loaded["ipynb.cell"]     = nil
-    package.loaded["ipynb.config"]   = nil
-    package.loaded["ipynb.utils"]    = nil
+    package.loaded["ipynb.cell"] = nil
+    package.loaded["ipynb.config"] = nil
+    package.loaded["ipynb.utils"] = nil
     package.loaded["ipynb.notebook"] = nil
     package.loaded["ipynb.markdown"] = nil
 
@@ -94,11 +94,13 @@ describe("ipynb.cell", function()
       -- We need ipynb.notebook to be available.
       package.loaded["ipynb.notebook"] = nil
       local nb_mod = require("ipynb.notebook")
-      local utils  = require("ipynb.utils")
+      local utils = require("ipynb.utils")
 
       local warned = nil
       local orig_warn = utils.warn
-      utils.warn = function(msg) warned = msg end
+      utils.warn = function(msg)
+        warned = msg
+      end
 
       -- Create a real scratch buffer with one line.
       local bufnr = vim.api.nvim_create_buf(false, true)
@@ -108,7 +110,7 @@ describe("ipynb.cell", function()
       local notebook = nb_mod.parse({
         nbformat = 4,
         metadata = {},
-        cells    = { { id = "cc", cell_type = "code", source = "x = 1", outputs = {}, metadata = {} } },
+        cells = { { id = "cc", cell_type = "code", source = "x = 1", outputs = {}, metadata = {} } },
       }, "/tmp/one_cell.ipynb")
 
       -- Render into the scratch buffer (calls vim.api for real).
@@ -143,19 +145,29 @@ describe("ipynb.cell", function()
 
     it("uses next_start - 2 formula for end boundary", function()
       local f = io.open(src_path, "r")
-      if not f then pending("cannot open cell.lua") end
-      local src = f:read("*a"); f:close()
+      if not f then
+        pending("cannot open cell.lua")
+      end
+      local src = f:read("*a")
+      f:close()
       -- The separator formula: end = next_start - 2
-      assert.is_truthy(src:find("next_sm%[1%]%s*%-%s*2"),
-        "reanchor_end_marks must use 'next_sm[1] - 2' formula")
+      assert.is_truthy(
+        src:find("next_sm%[1%]%s*%-%s*2"),
+        "reanchor_end_marks must use 'next_sm[1] - 2' formula"
+      )
     end)
 
     it("guards against an empty cells list", function()
       local f = io.open(src_path, "r")
-      if not f then pending("cannot open cell.lua") end
-      local src = f:read("*a"); f:close()
-      assert.is_truthy(src:find("#state%.cells%s*==%s*0"),
-        "reanchor_end_marks must guard against empty cells list")
+      if not f then
+        pending("cannot open cell.lua")
+      end
+      local src = f:read("*a")
+      f:close()
+      assert.is_truthy(
+        src:find("#state%.cells%s*==%s*0"),
+        "reanchor_end_marks must guard against empty cells list"
+      )
     end)
   end)
 end)
