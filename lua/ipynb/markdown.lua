@@ -25,28 +25,30 @@
 
 local cell = require("ipynb.cell")
 
-local M  = {}
+local M = {}
 local NS = vim.api.nvim_create_namespace("ipynb_markdown")
 
 -- ── Highlights ────────────────────────────────────────────────────────────────
 
 local _hl_done = false
 local function define_highlights()
-  if _hl_done then return end
+  if _hl_done then
+    return
+  end
   _hl_done = true
 
-  vim.api.nvim_set_hl(0, "IpynbMdH1",     { fg = "#ff9e64", bold = true, underline = true })
-  vim.api.nvim_set_hl(0, "IpynbMdH2",     { fg = "#e0af68", bold = true                  })
-  vim.api.nvim_set_hl(0, "IpynbMdH3",     { fg = "#9ece6a", bold = true                  })
-  vim.api.nvim_set_hl(0, "IpynbMdH4",     { fg = "#7dcfff"                               })
-  vim.api.nvim_set_hl(0, "IpynbMdBold",   { bold = true                                  })
-  vim.api.nvim_set_hl(0, "IpynbMdItalic", { italic = true                                })
-  vim.api.nvim_set_hl(0, "IpynbMdCode",   { fg = "#ff9e64", bg = "#252535"               })
-  vim.api.nvim_set_hl(0, "IpynbMdQuote",  { fg = "#565f89", italic = true                })
-  vim.api.nvim_set_hl(0, "IpynbMdBullet", { fg = "#7aa2f7", bold = true                  })
-  vim.api.nvim_set_hl(0, "IpynbMdRule",   { fg = "#3b4261"                               })
-  vim.api.nvim_set_hl(0, "IpynbMdLink",   { fg = "#7aa2f7", underline = true             })
-  vim.api.nvim_set_hl(0, "IpynbMdCellBg", { bg = "#1a1b2e"                               })
+  vim.api.nvim_set_hl(0, "IpynbMdH1", { fg = "#ff9e64", bold = true, underline = true })
+  vim.api.nvim_set_hl(0, "IpynbMdH2", { fg = "#e0af68", bold = true })
+  vim.api.nvim_set_hl(0, "IpynbMdH3", { fg = "#9ece6a", bold = true })
+  vim.api.nvim_set_hl(0, "IpynbMdH4", { fg = "#7dcfff" })
+  vim.api.nvim_set_hl(0, "IpynbMdBold", { bold = true })
+  vim.api.nvim_set_hl(0, "IpynbMdItalic", { italic = true })
+  vim.api.nvim_set_hl(0, "IpynbMdCode", { fg = "#ff9e64", bg = "#252535" })
+  vim.api.nvim_set_hl(0, "IpynbMdQuote", { fg = "#565f89", italic = true })
+  vim.api.nvim_set_hl(0, "IpynbMdBullet", { fg = "#7aa2f7", bold = true })
+  vim.api.nvim_set_hl(0, "IpynbMdRule", { fg = "#3b4261" })
+  vim.api.nvim_set_hl(0, "IpynbMdLink", { fg = "#7aa2f7", underline = true })
+  vim.api.nvim_set_hl(0, "IpynbMdCellBg", { bg = "#1a1b2e" })
 end
 
 -- ── Per-line decorator ────────────────────────────────────────────────────────
@@ -56,33 +58,31 @@ end
 ---@param row integer  0-based line number
 ---@param line string  raw line text
 local function decorate_line(bufnr, row, line)
-
   -- ── Headers ────────────────────────────────────────────────────────────────
   local hashes, _ = line:match("^(#{1,6})%s+(.*)")
   if hashes then
     local level = math.min(#hashes, 4)
     -- Highlight the whole line.
     vim.api.nvim_buf_set_extmark(bufnr, NS, row, 0, {
-      end_col  = #line,
+      end_col = #line,
       hl_group = "IpynbMdH" .. level,
       priority = 60,
     })
     -- Conceal the leading "# " prefix.
     vim.api.nvim_buf_set_extmark(bufnr, NS, row, 0, {
-      end_col  = #hashes + 1,
-      conceal  = "",
+      end_col = #hashes + 1,
+      conceal = "",
       priority = 70,
     })
-    return  -- headers don't also get inline processing
+    return -- headers don't also get inline processing
   end
 
   -- ── Horizontal rule ────────────────────────────────────────────────────────
-  if line:match("^%-%-%-+%s*$") or line:match("^%*%*%*+%s*$")
-      or line:match("^___%s*$") then
+  if line:match("^%-%-%-+%s*$") or line:match("^%*%*%*+%s*$") or line:match("^___%s*$") then
     vim.api.nvim_buf_set_extmark(bufnr, NS, row, 0, {
-      virt_text      = { { string.rep("─", 60), "IpynbMdRule" } },
-      virt_text_pos  = "overlay",
-      priority       = 70,
+      virt_text = { { string.rep("─", 60), "IpynbMdRule" } },
+      virt_text_pos = "overlay",
+      priority = 70,
     })
     return
   end
@@ -90,7 +90,7 @@ local function decorate_line(bufnr, row, line)
   -- ── Blockquote ─────────────────────────────────────────────────────────────
   if line:match("^>") then
     vim.api.nvim_buf_set_extmark(bufnr, NS, row, 0, {
-      end_col  = #line,
+      end_col = #line,
       hl_group = "IpynbMdQuote",
       priority = 60,
     })
@@ -110,9 +110,9 @@ local function decorate_line(bufnr, row, line)
   local indent, bullet_char = line:match("^(%s*)([-*+])%s")
   if indent and bullet_char then
     vim.api.nvim_buf_set_extmark(bufnr, NS, row, #indent, {
-      end_col  = #indent + 1,
+      end_col = #indent + 1,
       hl_group = "IpynbMdBullet",
-      virt_text     = { { "●", "IpynbMdBullet" } },
+      virt_text = { { "●", "IpynbMdBullet" } },
       virt_text_pos = "overlay",
       priority = 70,
     })
@@ -122,7 +122,7 @@ local function decorate_line(bufnr, row, line)
   local num_prefix = line:match("^%s*%d+%.")
   if num_prefix then
     vim.api.nvim_buf_set_extmark(bufnr, NS, row, 0, {
-      end_col  = #num_prefix,
+      end_col = #num_prefix,
       hl_group = "IpynbMdBullet",
       priority = 60,
     })
@@ -134,91 +134,140 @@ local function decorate_line(bufnr, row, line)
   local search = line
   while true do
     local s, e = search:find("`([^`]+)`")
-    if not s then break end
+    if not s then
+      break
+    end
     local abs_s = col + s - 1
     local abs_e = col + e - 1
     vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_s, {
-      end_col  = abs_e + 1,
+      end_col = abs_e + 1,
       hl_group = "IpynbMdCode",
       priority = 65,
     })
     -- Conceal backtick delimiters.
     vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_s, {
-      end_col = abs_s + 1, conceal = "", priority = 75,
+      end_col = abs_s + 1,
+      conceal = "",
+      priority = 75,
     })
     vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_e, {
-      end_col = abs_e + 1, conceal = "", priority = 75,
+      end_col = abs_e + 1,
+      conceal = "",
+      priority = 75,
     })
-    col    = col + e
+    col = col + e
     search = search:sub(e + 1)
   end
 
   -- ── Bold **text** ──────────────────────────────────────────────────────────
-  col    = 0
+  col = 0
   search = line
   while true do
     local s, e = search:find("%*%*([^%*]+)%*%*")
-    if not s then break end
+    if not s then
+      break
+    end
     local abs_s = col + s - 1
     local abs_e = col + e - 1
     vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_s + 2, {
-      end_col  = abs_e - 1,
+      end_col = abs_e - 1,
       hl_group = "IpynbMdBold",
       priority = 65,
     })
     -- Conceal ** delimiters.
-    vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_s,     { end_col = abs_s + 2, conceal = "", priority = 75 })
-    vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_e - 1, { end_col = abs_e + 1, conceal = "", priority = 75 })
-    col    = col + e
+    vim.api.nvim_buf_set_extmark(
+      bufnr,
+      NS,
+      row,
+      abs_s,
+      { end_col = abs_s + 2, conceal = "", priority = 75 }
+    )
+    vim.api.nvim_buf_set_extmark(
+      bufnr,
+      NS,
+      row,
+      abs_e - 1,
+      { end_col = abs_e + 1, conceal = "", priority = 75 }
+    )
+    col = col + e
     search = search:sub(e + 1)
   end
 
   -- ── Italic *text* (single asterisk, not part of **) ───────────────────────
-  col    = 0
+  col = 0
   search = line
   while true do
     local s, e = search:find("%f[%*]%*([^%*]+)%*%f[^%*]")
-    if not s then break end
+    if not s then
+      break
+    end
     local abs_s = col + s - 1
     local abs_e = col + e - 1
     vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_s + 1, {
-      end_col  = abs_e,
+      end_col = abs_e,
       hl_group = "IpynbMdItalic",
       priority = 65,
     })
-    vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_s,   { end_col = abs_s + 1, conceal = "", priority = 75 })
-    vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_e,   { end_col = abs_e + 1, conceal = "", priority = 75 })
-    col    = col + e
+    vim.api.nvim_buf_set_extmark(
+      bufnr,
+      NS,
+      row,
+      abs_s,
+      { end_col = abs_s + 1, conceal = "", priority = 75 }
+    )
+    vim.api.nvim_buf_set_extmark(
+      bufnr,
+      NS,
+      row,
+      abs_e,
+      { end_col = abs_e + 1, conceal = "", priority = 75 }
+    )
+    col = col + e
     search = search:sub(e + 1)
   end
 
   -- ── Markdown links [text](url) ─────────────────────────────────────────────
-  col    = 0
+  col = 0
   search = line
   while true do
-    local s, link_text, url_s, url_e, e =
-        search:find("%[([^%]]+)%]()%(([^%)]+)%)()")
-    if not s then break end
-    local abs_s     = col + s - 1
+    local s, link_text, url_s, url_e, e = search:find("%[([^%]]+)%]()%(([^%)]+)%)()")
+    if not s then
+      break
+    end
+    local abs_s = col + s - 1
     local abs_url_s = col + url_s - 1
     local abs_url_e = col + url_e - 2
 
     -- Highlight the link text.
     vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_s + 1, {
-      end_col  = abs_s + 1 + #link_text,
+      end_col = abs_s + 1 + #link_text,
       hl_group = "IpynbMdLink",
       priority = 65,
     })
     -- Conceal "[", "]", "(" ... ")" leaving only the link text visible.
-    vim.api.nvim_buf_set_extmark(bufnr, NS, row, abs_s,    { end_col = abs_s + 1,    conceal = "", priority = 75 })
     vim.api.nvim_buf_set_extmark(
-      bufnr, NS, row, abs_url_s - 2, { end_col = abs_url_s - 1, conceal = "", priority = 75 }
+      bufnr,
+      NS,
+      row,
+      abs_s,
+      { end_col = abs_s + 1, conceal = "", priority = 75 }
     )
     vim.api.nvim_buf_set_extmark(
-      bufnr, NS, row, abs_url_s - 1, { end_col = abs_url_e + 1, conceal = "", priority = 75 }
+      bufnr,
+      NS,
+      row,
+      abs_url_s - 2,
+      { end_col = abs_url_s - 1, conceal = "", priority = 75 }
+    )
+    vim.api.nvim_buf_set_extmark(
+      bufnr,
+      NS,
+      row,
+      abs_url_s - 1,
+      { end_col = abs_url_e + 1, conceal = "", priority = 75 }
     )
 
-    col    = col + e - 1
+    col = col + e - 1
     search = search:sub(e)
   end
 end
@@ -242,24 +291,24 @@ function M.render(bufnr)
     end
   end
 
-  local ns     = cell.namespace()
-  local cells  = cell.get_cells(bufnr)
+  local ns = cell.namespace()
+  local cells = cell.get_cells(bufnr)
 
   for _, cs in ipairs(cells) do
     if cs.cell_type == "markdown" then
       -- Get line range from extmarks.
       local sm = vim.api.nvim_buf_get_extmark_by_id(bufnr, ns, cs.start_mark, {})
-      local em = vim.api.nvim_buf_get_extmark_by_id(bufnr, ns, cs.end_mark,   {})
+      local em = vim.api.nvim_buf_get_extmark_by_id(bufnr, ns, cs.end_mark, {})
       local start_row = sm[1] or 0
-      local end_row   = em[1] or start_row
+      local end_row = em[1] or start_row
 
       -- Subtle background tint for the whole cell.
       vim.api.nvim_buf_set_extmark(bufnr, NS, start_row, 0, {
-        end_row      = end_row + 1,
-        end_col      = 0,
-        hl_group     = "IpynbMdCellBg",
-        hl_eol       = true,
-        priority     = 50,
+        end_row = end_row + 1,
+        end_col = 0,
+        hl_group = "IpynbMdCellBg",
+        hl_eol = true,
+        priority = 50,
       })
 
       -- Decorate each line.
