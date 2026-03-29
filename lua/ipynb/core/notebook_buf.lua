@@ -156,7 +156,7 @@ function M.open(path, bufnr)
   keymaps.attach(bufnr)
 
   -- Attach kernel completions (omnifunc + optional nvim-cmp source).
-  local ok_cmp, completion = pcall(require, "ipynb.completion")
+  local ok_cmp, completion = pcall(require, "ipynb.kernel.completion")
   if ok_cmp then
     completion.attach(bufnr)
   end
@@ -211,7 +211,7 @@ function M.open(path, bufnr)
   --   a) images follow the cell as it moves on screen (fixes flicker), and
   --   b) images whose initial render failed because the output was off-screen
   --      get a second chance once the user scrolls them into view.
-  local ok_img = pcall(require, "ipynb.image")
+  local ok_img = pcall(require, "ipynb.ui.image")
   if ok_img then
     local scroll_timer = nil
 
@@ -230,7 +230,7 @@ function M.open(path, bufnr)
             if not vim.api.nvim_buf_is_valid(bufnr) then
               return
             end
-            local ok2, image = pcall(require, "ipynb.image")
+            local ok2, image = pcall(require, "ipynb.ui.image")
             if ok2 then
               image.rerender_all(bufnr)
             end
