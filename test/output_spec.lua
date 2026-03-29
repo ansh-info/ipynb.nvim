@@ -196,7 +196,7 @@ describe("ipynb.output", function()
   -- ── Re-entrancy guard (static check) ─────────────────────────────────────────
 
   describe("re-entrancy guard", function()
-    local src_path = "/home/oneai/jupytervim/lua/ipynb/output.lua"
+    local src_path = vim.fn.getcwd() .. "/lua/ipynb/kernel/output.lua"
 
     it("_active guard is present in source", function()
       local f = io.open(src_path, "r")
