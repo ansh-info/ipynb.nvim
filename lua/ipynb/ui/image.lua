@@ -1,4 +1,4 @@
---- ipynb.image
+--- ipynb.ui.image
 --- Image rendering for cell output using image.nvim.
 ---
 --- image.nvim (github.com/3rd/image.nvim) is an optional dependency.
