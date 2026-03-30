@@ -2,6 +2,29 @@
 
 <!-- version list -->
 
+## v1.4.1 (2026-03-30)
+
+### Bug Fixes
+
+- **config**: Change run_cell default from <leader>r to <leader>rr
+  ([#79](https://github.com/ansh-info/ipynb.nvim/pull/79),
+  [`e771267`](https://github.com/ansh-info/ipynb.nvim/commit/e77126748eaf52c398d9c6735ca194a25b77b8d8))
+
+- **lua**: Keep off-screen images in registry for scroll retry
+  ([#78](https://github.com/ansh-info/ipynb.nvim/pull/78),
+  [`c3f4353`](https://github.com/ansh-info/ipynb.nvim/commit/c3f435307ecc88e5d8baabc2325f62be29d6ddda))
+
+- **lua**: Persist cell outputs to notebook model on execution
+  ([#80](https://github.com/ansh-info/ipynb.nvim/pull/80),
+  [`feab789`](https://github.com/ansh-info/ipynb.nvim/commit/feab78927ded22917f8c6c81924ce0bb38ec2349))
+
+### Documentation
+
+- **docs**: Update <leader>r to <leader>rr in README keymaps
+  ([#79](https://github.com/ansh-info/ipynb.nvim/pull/79),
+  [`1672157`](https://github.com/ansh-info/ipynb.nvim/commit/1672157429aa70d646c5f8e14ba8658e1b9bc1d6))
+
+
 ## v1.4.0 (2026-03-30)
 
 ### Chores
