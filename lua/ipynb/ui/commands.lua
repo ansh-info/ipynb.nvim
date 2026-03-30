@@ -77,6 +77,14 @@ function M.setup()
     end
   end, { desc = "Execute the cell under the cursor" })
 
+  vim.api.nvim_create_user_command("IpynbRunAdvance", function()
+    local bufnr = vim.api.nvim_get_current_buf()
+    local ok, kernel = pcall(require, "ipynb.kernel")
+    if ok then
+      kernel.run_cell_and_advance(bufnr)
+    end
+  end, { desc = "Execute current cell and advance to next (Shift+Enter)" })
+
   vim.api.nvim_create_user_command("IpynbRunAll", function()
     local bufnr = vim.api.nvim_get_current_buf()
     local ok, kernel = pcall(require, "ipynb.kernel")

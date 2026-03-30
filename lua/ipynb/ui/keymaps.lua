@@ -34,7 +34,6 @@ function M.attach(bufnr)
 
   -- ── Cell execution ─────────────────────────────────────────────────────
   map({ "n", "i" }, km.run_cell, function()
-    -- Defer to kernel module (loaded in Phase 2).
     local ok, kernel = pcall(require, "ipynb.kernel")
     if ok then
       kernel.run_current_cell(bufnr)
@@ -42,6 +41,15 @@ function M.attach(bufnr)
       utils.warn("Kernel module not yet available.")
     end
   end, "Jupyter: run current cell")
+
+  map({ "n", "i" }, km.run_cell_and_advance, function()
+    local ok, kernel = pcall(require, "ipynb.kernel")
+    if ok then
+      kernel.run_cell_and_advance(bufnr)
+    else
+      utils.warn("Kernel module not yet available.")
+    end
+  end, "Jupyter: run cell and advance")
 
   map("n", km.run_all_above, function()
     local ok, kernel = pcall(require, "ipynb.kernel")
@@ -122,6 +130,7 @@ function M.show_help()
     "",
     "  Execution",
     "  " .. km.run_cell .. "   → run current cell",
+    "  " .. km.run_cell_and_advance .. "  → run cell and advance",
     "  " .. km.run_all_above .. "   → run all cells above",
     "  " .. km.run_all_below .. "   → run all cells below",
     "  " .. km.interrupt_kernel .. " → interrupt kernel",

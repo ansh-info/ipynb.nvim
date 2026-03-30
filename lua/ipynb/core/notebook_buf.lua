@@ -181,7 +181,7 @@ function M.open(path, bufnr)
     end,
   })
 
-  -- Re-anchor cell end marks after text edits.
+  -- Re-anchor cell end marks after text edits and after undo/redo.
   -- Pressing 'o' on the last line of a cell inserts content below end_mark;
   -- on InsertLeave / TextChanged we recompute and reposition end_mark so the
   -- bottom border always wraps the actual cell content.
@@ -192,6 +192,24 @@ function M.open(path, bufnr)
         return
       end
       cell.reanchor_end_marks(bufnr)
+    end,
+  })
+
+  -- Snap cursor back into the nearest cell if it escapes all cell regions.
+  -- This prevents typing in the gap between cells from corrupting the buffer.
+  vim.api.nvim_create_autocmd("CursorMoved", {
+    buffer = bufnr,
+    callback = function()
+      if not vim.api.nvim_buf_is_valid(bufnr) then
+        return
+      end
+      local cs, _ = cell.cell_at_cursor(bufnr)
+      if cs then
+        return
+      end
+      -- Cursor is outside all cells - snap to nearest cell boundary.
+      local cur_row = vim.api.nvim_win_get_cursor(0)[1] - 1
+      cell.snap_cursor_to_nearest(bufnr, cur_row)
     end,
   })
 
