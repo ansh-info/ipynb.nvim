@@ -150,7 +150,7 @@ The kernel starts automatically when you run your first cell. No manual
 `:IpynbKernelStart` needed unless `auto_start` is disabled.
 
 ```
-<leader>r      run the cell under the cursor
+<leader>rr     run the cell under the cursor
 ]c / [c        jump to next / previous cell
 <leader>ji     open variable inspector
 ```
@@ -186,7 +186,7 @@ Press `<leader>jh` to show the help overlay at any time.
 
 | Key | Action |
 |---|---|
-| `<leader>r` | Run current cell |
+| `<leader>rr` | Run current cell |
 | `<leader>rn` | Run cell and advance to next (Shift+Enter) |
 | `<leader>ra` | Run all cells above cursor |
 | `<leader>rb` | Run all cells from cursor downwards |
@@ -254,7 +254,7 @@ require("ipynb").setup({
   },
   keymaps = {
     enabled          = true,
-    run_cell              = "<leader>r",
+    run_cell              = "<leader>rr",
     run_cell_and_advance  = "<leader>rn",
     run_all_above         = "<leader>ra",
     run_all_below    = "<leader>rb",
