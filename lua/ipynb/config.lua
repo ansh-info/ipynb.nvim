@@ -43,6 +43,8 @@ local M = {}
 ---@field add_cell_above string
 ---@field delete_cell string
 ---@field interrupt_kernel string
+---@field clear_output string
+---@field clear_all_output string
 
 ---@class ImageConfig
 ---@field enabled boolean          Enable image rendering (requires image.nvim)
@@ -104,6 +106,8 @@ M.defaults = {
     add_cell_above = "<leader>cO",
     delete_cell = "<leader>cd",
     interrupt_kernel = "<leader>ri",
+    clear_output = "<leader>cx",
+    clear_all_output = "<leader>cX",
   },
 
   image = {
