@@ -2,6 +2,56 @@
 
 <!-- version list -->
 
+## v1.2.2 (2026-03-30)
+
+### Bug Fixes
+
+- Structural undo recovery - blank buffer and border sync
+  ([#73](https://github.com/ansh-info/ipynb.nvim/pull/73),
+  [`dd49cca`](https://github.com/ansh-info/ipynb.nvim/commit/dd49cca14332e25eb6b863e96193f821e19ef328))
+
+- **lua**: Add structural undo recovery to cell.lua
+  ([#73](https://github.com/ansh-info/ipynb.nvim/pull/73),
+  [`dd49cca`](https://github.com/ansh-info/ipynb.nvim/commit/dd49cca14332e25eb6b863e96193f821e19ef328))
+
+- **lua**: Add structural undo recovery to cell.lua
+  ([`b0e21af`](https://github.com/ansh-info/ipynb.nvim/commit/b0e21af663af50982b873c746240f0c550ab2853))
+
+- **lua**: Call sync_sources and check_structural_integrity on TextChanged
+  ([#73](https://github.com/ansh-info/ipynb.nvim/pull/73),
+  [`dd49cca`](https://github.com/ansh-info/ipynb.nvim/commit/dd49cca14332e25eb6b863e96193f821e19ef328))
+
+- **lua**: Call sync_sources and check_structural_integrity on TextChanged
+  ([`8e42875`](https://github.com/ansh-info/ipynb.nvim/commit/8e4287589adf9d7a1ab11f8d5bcfbe14cc0d5521))
+
+### Documentation
+
+- Update README and CLAUDE.md for v1.2 changes
+  ([#71](https://github.com/ansh-info/ipynb.nvim/pull/71),
+  [`b4fe0f7`](https://github.com/ansh-info/ipynb.nvim/commit/b4fe0f7540c9219638e447b30f35ea5612344dd9))
+
+- **docs**: Add run_cell_and_advance keymap, command, and config entry
+  ([#71](https://github.com/ansh-info/ipynb.nvim/pull/71),
+  [`b4fe0f7`](https://github.com/ansh-info/ipynb.nvim/commit/b4fe0f7540c9219638e447b30f35ea5612344dd9))
+
+- **docs**: Add run_cell_and_advance keymap, command, and config entry
+  ([`ae53495`](https://github.com/ansh-info/ipynb.nvim/commit/ae534950a010c10728923630fec7644e87437081))
+
+- **docs**: Trim CLAUDE.md - remove implementation details and phase history
+  ([#72](https://github.com/ansh-info/ipynb.nvim/pull/72),
+  [`ab0674b`](https://github.com/ansh-info/ipynb.nvim/commit/ab0674bb9b7e94cdf10bdb13d09c4e26907649a0))
+
+- **docs**: Trim CLAUDE.md - remove implementation details and phase history
+  ([`65b83b8`](https://github.com/ansh-info/ipynb.nvim/commit/65b83b89c0c36bb6bf5fc658d2d90c107f691be3))
+
+- **docs**: Update CLAUDE.md for v1.2 stability changes
+  ([#71](https://github.com/ansh-info/ipynb.nvim/pull/71),
+  [`b4fe0f7`](https://github.com/ansh-info/ipynb.nvim/commit/b4fe0f7540c9219638e447b30f35ea5612344dd9))
+
+- **docs**: Update CLAUDE.md for v1.2 stability changes
+  ([`a95210b`](https://github.com/ansh-info/ipynb.nvim/commit/a95210b14f053e3b9515bc2261639421702162ba))
+
+
 ## v1.2.1 (2026-03-30)
 
 ### Bug Fixes
