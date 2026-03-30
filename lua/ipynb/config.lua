@@ -45,6 +45,8 @@ local M = {}
 ---@field interrupt_kernel string
 ---@field clear_output string
 ---@field clear_all_output string
+---@field add_markdown_below string
+---@field add_markdown_above string
 
 ---@class ImageConfig
 ---@field enabled boolean          Enable image rendering (requires image.nvim)
@@ -108,6 +110,8 @@ M.defaults = {
     interrupt_kernel = "<leader>ri",
     clear_output = "<leader>cx",
     clear_all_output = "<leader>cX",
+    add_markdown_below = "<leader>mo",
+    add_markdown_above = "<leader>mO",
   },
 
   image = {
