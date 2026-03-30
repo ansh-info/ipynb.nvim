@@ -106,6 +106,22 @@ function M.attach(bufnr)
     vim.cmd("IpynbClearAllOutput")
   end, "Jupyter: clear all cell outputs")
 
+  map("n", km.add_markdown_below, function()
+    local cell_mod = require("ipynb.core.cell")
+    local _, idx = cell_mod.cell_at_cursor(bufnr)
+    if idx then
+      cell_mod.add_cell_below(bufnr, idx, "markdown")
+    end
+  end, "Jupyter: add markdown cell below")
+
+  map("n", km.add_markdown_above, function()
+    local cell_mod = require("ipynb.core.cell")
+    local _, idx = cell_mod.cell_at_cursor(bufnr)
+    if idx then
+      cell_mod.add_cell_above(bufnr, idx, "markdown")
+    end
+  end, "Jupyter: add markdown cell above")
+
   -- ── Save ───────────────────────────────────────────────────────────────
   -- Override :w so it saves back to .ipynb format.
   map("n", "<leader>w", function()
@@ -147,6 +163,8 @@ function M.show_help()
     "  " .. km.add_cell_below .. "  → add cell below",
     "  " .. km.add_cell_above .. "  → add cell above",
     "  " .. km.delete_cell .. "  → delete cell",
+    "  " .. km.add_markdown_below .. "  → add markdown cell below",
+    "  " .. km.add_markdown_above .. "  → add markdown cell above",
     "  " .. km.clear_output .. "  → clear cell output",
     "  " .. km.clear_all_output .. "  → clear all outputs",
     "",
