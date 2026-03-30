@@ -34,6 +34,7 @@ local M = {}
 ---@class KeymapConfig
 ---@field enabled boolean          Install default keymaps
 ---@field run_cell string
+---@field run_cell_and_advance string
 ---@field run_all_above string
 ---@field run_all_below string
 ---@field next_cell string
@@ -94,6 +95,7 @@ M.defaults = {
   keymaps = {
     enabled = true,
     run_cell = "<leader>r",
+    run_cell_and_advance = "<leader>rn",
     run_all_above = "<leader>ra",
     run_all_below = "<leader>rb",
     next_cell = "]c",
