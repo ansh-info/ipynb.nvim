@@ -197,15 +197,25 @@ function M._render(bufnr, cell_state)
   local ok_img, image = pcall(require, "ipynb.ui.image")
   local img_supported = ok_img and image.is_supported()
 
-  local all_vl = {} -- text virt_lines
-  local img_queue = {} -- image chunks to render after text virt_lines are placed
+  local all_vl = {} -- text virt_lines (+ spacers reserved for image floats)
+  local img_queue = {} -- { chunk, text_offset } pairs
 
   -- Top divider.
   all_vl[#all_vl + 1] = divider()
 
   for i, chunk in ipairs(chunks) do
     if chunk.type == "image" and img_supported then
-      img_queue[#img_queue + 1] = chunk
+      -- Record the text offset at which this image should appear, then add
+      -- blank spacer virt_lines to reserve screen rows for the float window.
+      -- This prevents the next cell's content from showing through the float.
+      local text_offset = #all_vl
+      img_queue[#img_queue + 1] = { chunk = chunk, text_offset = text_offset }
+      local spacers = cfg.ui.output_max_lines > 0
+          and math.min(cfg.image.max_height, cfg.ui.output_max_lines)
+        or cfg.image.max_height
+      for _ = 1, spacers do
+        all_vl[#all_vl + 1] = { { "", "Normal" } }
+      end
     else
       local vl = chunk_to_virt_lines(chunk, max_lines)
       for _, line in ipairs(vl) do
@@ -235,18 +245,28 @@ function M._render(bufnr, cell_state)
     end
     _active[key] = true
 
-    -- 1. Place text virt_lines.
+    -- 1. Place text virt_lines (includes spacers for image floats).
     cell.set_output_virt_lines(bufnr, cell_state, all_vl)
 
-    -- 2. Clear old images then render new ones below the text block.
+    -- 2. Clear old image floats.
     if ok_img then
       image.clear(bufnr, cell_state)
-      for _, chunk in ipairs(img_queue) do
-        image.render(bufnr, cell_state, chunk)
-      end
     end
 
     _active[key] = nil
+
+    -- 3. Render image floats after virt_lines are committed so that
+    --    screenpos() inside image.render() sees the final layout.
+    if ok_img and #img_queue > 0 then
+      vim.schedule(function()
+        if not vim.api.nvim_buf_is_valid(bufnr) then
+          return
+        end
+        for _, entry in ipairs(img_queue) do
+          image.render(bufnr, cell_state, entry.chunk, entry.text_offset)
+        end
+      end)
+    end
 
     -- If more output arrived while we were rendering, re-render now so the
     -- latest chunks (e.g. a second matplotlib figure) are always displayed.
