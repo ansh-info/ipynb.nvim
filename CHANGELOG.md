@@ -2,6 +2,23 @@
 
 <!-- version list -->
 
+## v1.4.4 (2026-03-30)
+
+### Bug Fixes
+
+- **lua**: Add nested vim.schedule for image rendering to fix invisible-until-scroll bug
+  ([`0ed6bb4`](https://github.com/ansh-info/ipynb.nvim/commit/0ed6bb4432da0a8ef76aab924b2568ca5cea7c48))
+
+- **lua**: Suppress text/plain result when image present in nb_output_to_chunks
+  ([`c9de0bd`](https://github.com/ansh-info/ipynb.nvim/commit/c9de0bd18dc5130b3d433fcebf41c6708386867d))
+
+- **lua**: Use nvim_buf_call to ensure correct buffer context for LSP attach
+  ([`133519f`](https://github.com/ansh-info/ipynb.nvim/commit/133519f0874cbbc93cf5c820a1a9054b87b5dc37))
+
+- **python**: Suppress text/plain when image MIME is present in same output
+  ([`be77d0e`](https://github.com/ansh-info/ipynb.nvim/commit/be77d0e85691e672b2475d272cccefff6dc746cd))
+
+
 ## v1.4.3 (2026-03-30)
 
 ### Bug Fixes
