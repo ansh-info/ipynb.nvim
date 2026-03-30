@@ -195,6 +195,8 @@ Press `<leader>jh` to show the help overlay at any time.
 | `[c` | Previous cell |
 | `<leader>co` | Add code cell below |
 | `<leader>cO` | Add code cell above |
+| `<leader>mo` | Add markdown cell below |
+| `<leader>mO` | Add markdown cell above |
 | `<leader>cd` | Delete current cell |
 | `<leader>cx` | Clear current cell output |
 | `<leader>cX` | Clear all cell outputs |
@@ -220,6 +222,8 @@ Press `<leader>jh` to show the help overlay at any time.
 | `:IpynbRunAbove` | Run all cells above cursor |
 | `:IpynbCellAdd` | Add code cell below |
 | `:IpynbCellDelete` | Delete current cell |
+| `:IpynbCellAddMarkdown` | Add markdown cell below |
+| `:IpynbCellAddMarkdownAbove` | Add markdown cell above |
 | `:IpynbClearOutput` | Clear output for cell under cursor |
 | `:IpynbClearAllOutput` | Clear output for every cell |
 | `:IpynbInspect` | Open variable inspector |
@@ -260,8 +264,10 @@ require("ipynb").setup({
     add_cell_above   = "<leader>cO",
     delete_cell      = "<leader>cd",
     interrupt_kernel = "<leader>ri",
-    clear_output     = "<leader>cx",
-    clear_all_output = "<leader>cX",
+    clear_output        = "<leader>cx",
+    clear_all_output    = "<leader>cX",
+    add_markdown_below  = "<leader>mo",
+    add_markdown_above  = "<leader>mO",
   },
   notebook = {
     auto_save = false,
