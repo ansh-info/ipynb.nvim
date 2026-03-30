@@ -156,15 +156,17 @@ function M.render(bufnr, cell_state, chunk)
     winnr = 0
   end
 
-  -- Guard against rendering below the visible window area, which causes the
-  -- image to bleed into adjacent tmux panes. Skip rendering if end_row is
-  -- below the last visible line of the window.
+  -- Determine whether the cell is currently visible.  Images rendered below
+  -- the viewport bleed into adjacent tmux panes, so the img:render() call is
+  -- skipped when the cell is off-screen.  The image object is still created
+  -- and registered so that WinScrolled / rerender_all() can render it once
+  -- the user scrolls the cell into view.
+  local visible = true
   local win_info = vim.fn.getwininfo(winnr == 0 and vim.api.nvim_get_current_win() or winnr)
   if win_info and win_info[1] then
     local bot_line = win_info[1].botline -- last visible buffer line (1-based)
     if end_row + 1 > bot_line then
-      os.remove(tmp)
-      return
+      visible = false
     end
   end
 
@@ -197,11 +199,13 @@ function M.render(bufnr, cell_state, chunk)
   end
   _registry[key][#_registry[key] + 1] = { img = img, tmp = tmp }
 
-  local ok_render, render_err = pcall(function()
-    img:render()
-  end)
-  if not ok_render then
-    utils.debug("image.nvim render error (will retry on scroll): " .. tostring(render_err))
+  if visible then
+    local ok_render, render_err = pcall(function()
+      img:render()
+    end)
+    if not ok_render then
+      utils.debug("image.nvim render error (will retry on scroll): " .. tostring(render_err))
+    end
   end
 
   return true
