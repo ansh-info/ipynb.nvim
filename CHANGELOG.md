@@ -2,6 +2,45 @@
 
 <!-- version list -->
 
+## v1.3.0 (2026-03-30)
+
+### Documentation
+
+- **docs**: Add clear output commands, keymaps, and config to README
+  ([#76](https://github.com/ansh-info/ipynb.nvim/pull/76),
+  [`e982b99`](https://github.com/ansh-info/ipynb.nvim/commit/e982b998ae0d2803bfb61096072403ee8caa5120))
+
+- **docs**: Add clear output commands, keymaps, and config to README
+  ([`599efe0`](https://github.com/ansh-info/ipynb.nvim/commit/599efe0c938b1c9fd79827abd41ac14da2615ec9))
+
+### Features
+
+- Add IpynbClearOutput and IpynbClearAllOutput commands
+  ([#76](https://github.com/ansh-info/ipynb.nvim/pull/76),
+  [`e982b99`](https://github.com/ansh-info/ipynb.nvim/commit/e982b998ae0d2803bfb61096072403ee8caa5120))
+
+- **config**: Add clear_output and clear_all_output keymap defaults
+  ([#76](https://github.com/ansh-info/ipynb.nvim/pull/76),
+  [`e982b99`](https://github.com/ansh-info/ipynb.nvim/commit/e982b998ae0d2803bfb61096072403ee8caa5120))
+
+- **config**: Add clear_output and clear_all_output keymap defaults
+  ([`c6a34a2`](https://github.com/ansh-info/ipynb.nvim/commit/c6a34a25de9dade37b2794659ad44fe57101bac8))
+
+- **lua**: Add clear_output and clear_all_output keymaps
+  ([#76](https://github.com/ansh-info/ipynb.nvim/pull/76),
+  [`e982b99`](https://github.com/ansh-info/ipynb.nvim/commit/e982b998ae0d2803bfb61096072403ee8caa5120))
+
+- **lua**: Add clear_output and clear_all_output keymaps
+  ([`8589646`](https://github.com/ansh-info/ipynb.nvim/commit/85896465f8780d06dd1fdc161d074c17d3b477f9))
+
+- **lua**: Add IpynbClearOutput and IpynbClearAllOutput commands
+  ([#76](https://github.com/ansh-info/ipynb.nvim/pull/76),
+  [`e982b99`](https://github.com/ansh-info/ipynb.nvim/commit/e982b998ae0d2803bfb61096072403ee8caa5120))
+
+- **lua**: Add IpynbClearOutput and IpynbClearAllOutput commands
+  ([`52b38d4`](https://github.com/ansh-info/ipynb.nvim/commit/52b38d4c6f29d202b7515a41ff36b89d3edab3f1))
+
+
 ## v1.2.2 (2026-03-30)
 
 ### Bug Fixes
