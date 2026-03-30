@@ -92,6 +92,56 @@ local function send(bufnr, msg)
   vim.fn.chansend(s.job_id, vim.fn.json_encode(msg) .. "\n")
 end
 
+-- ── Notebook model helpers ────────────────────────────────────────────────────
+
+--- Convert an internal output chunk to an nbformat output object for saving.
+--- Mirrors the reverse of nb_output_to_chunks() in kernel/output.lua.
+---@param chunk table   internal chunk (stream/result/error/image)
+---@param exec_count integer|nil
+---@return table|nil  nbformat output object, or nil if not convertible
+local function chunk_to_nb_output(chunk, exec_count)
+  local t = chunk.type
+  if t == "stream" then
+    return { output_type = "stream", name = chunk.name or "stdout", text = chunk.text or "" }
+  elseif t == "result" then
+    local data = { ["text/plain"] = chunk.text or "" }
+    if chunk.html and chunk.html ~= "" then
+      data["text/html"] = chunk.html
+    end
+    return {
+      output_type = "execute_result",
+      data = data,
+      metadata = {},
+      execution_count = exec_count,
+    }
+  elseif t == "error" then
+    return {
+      output_type = "error",
+      ename = chunk.ename or "Error",
+      evalue = chunk.evalue or "",
+      traceback = chunk.traceback or {},
+    }
+  elseif t == "image" then
+    return {
+      output_type = "display_data",
+      data = { [chunk.mime or "image/png"] = chunk.data or "" },
+      metadata = {},
+    }
+  end
+  return nil
+end
+
+--- Clear cell output from both the render store and the notebook model.
+---@param bufnr integer
+---@param cs table  cell_state
+local function clear_cell_output(bufnr, cs)
+  output.clear(bufnr, cs)
+  local nb = cell.get_notebook(bufnr)
+  if nb and cs.index and nb.cells[cs.index] then
+    nb.cells[cs.index].outputs = {}
+  end
+end
+
 -- ── Message dispatch ──────────────────────────────────────────────────────────
 
 --- Route one parsed JSON message from the bridge to the appropriate handler.
@@ -162,6 +212,22 @@ local function dispatch(bufnr, msg)
         end
       else
         output.append(bufnr, pending.cell_state, msg)
+        -- Persist to notebook model so save() writes the correct outputs.
+        local nb = cell.get_notebook(bufnr)
+        local ci = pending.cell_state.index
+        if nb and ci and nb.cells[ci] then
+          if t == "clear_output" then
+            nb.cells[ci].outputs = {}
+          else
+            local nb_out = chunk_to_nb_output(msg, nb.cells[ci].execution_count)
+            if nb_out then
+              if not nb.cells[ci].outputs then
+                nb.cells[ci].outputs = {}
+              end
+              nb.cells[ci].outputs[#nb.cells[ci].outputs + 1] = nb_out
+            end
+          end
+        end
         if t == "error" then
           cell.update_status(bufnr, pending.cell_state, "error", nil)
         end
@@ -431,7 +497,7 @@ function M.run_current_cell(bufnr)
     return
   end
 
-  output.clear(bufnr, cs)
+  clear_cell_output(bufnr, cs)
 
   local mid = next_msg_id(bufnr)
   s.pending[mid] = { cell_state = cs, bufnr = bufnr, start_ms = vim.loop.now() }
@@ -480,7 +546,7 @@ function M.run_all(bufnr)
   end
   for _, cs in ipairs(cells) do
     if cs.cell_type == "code" then
-      output.clear(bufnr, cs)
+      clear_cell_output(bufnr, cs)
       local mid = next_msg_id(bufnr)
       s.pending[mid] = { cell_state = cs, bufnr = bufnr, start_ms = vim.loop.now() }
       cell.update_status(bufnr, cs, "busy", nil)
@@ -504,7 +570,7 @@ function M.run_all_above(bufnr)
   for _, entry in ipairs(cell.cells_above(bufnr, idx)) do
     local cs = entry.cell_state
     if cs.cell_type == "code" then
-      output.clear(bufnr, cs)
+      clear_cell_output(bufnr, cs)
       local mid = next_msg_id(bufnr)
       s.pending[mid] = { cell_state = cs, bufnr = bufnr, start_ms = vim.loop.now() }
       cell.update_status(bufnr, cs, "busy", nil)
@@ -529,7 +595,7 @@ function M.run_all_below(bufnr)
   for i = idx, #cells do
     local cs = cells[i]
     if cs.cell_type == "code" then
-      output.clear(bufnr, cs)
+      clear_cell_output(bufnr, cs)
       local mid = next_msg_id(bufnr)
       s.pending[mid] = { cell_state = cs, bufnr = bufnr, start_ms = vim.loop.now() }
       cell.update_status(bufnr, cs, "busy", nil)
