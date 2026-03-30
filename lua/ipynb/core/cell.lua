@@ -250,6 +250,20 @@ function M.render(bufnr, notebook)
       elapsed_ms = nil,
     }
 
+    -- Restore saved outputs from the notebook file (deferred so extmarks
+    -- are fully placed before image positioning is attempted).
+    if cell.outputs and #cell.outputs > 0 then
+      local cs = state.cells[i]
+      vim.schedule(function()
+        if vim.api.nvim_buf_is_valid(bufnr) then
+          local ok, output = pcall(require, "ipynb.kernel.output")
+          if ok then
+            output.restore(bufnr, cs, cell.outputs)
+          end
+        end
+      end)
+    end
+
     -- Advance: add a blank separator line between cells (not after the last).
     current_line = end_line + 1
     if i < #notebook.cells then
@@ -311,6 +325,30 @@ function M.cell_at_cursor(bufnr)
     end
   end
   return nil, nil
+end
+
+--- Snap the cursor to the first line of the nearest cell.
+--- Called when CursorMoved detects the cursor is outside all cell regions.
+---@param bufnr integer
+---@param cur_row integer  current 0-based row
+function M.snap_cursor_to_nearest(bufnr, cur_row)
+  local state = get_state(bufnr)
+  if not state or #state.cells == 0 then
+    return
+  end
+  local best_row = nil
+  local best_dist = math.huge
+  for _, cs in ipairs(state.cells) do
+    local s, _ = cell_line_range(bufnr, cs)
+    local dist = math.abs(s - cur_row)
+    if dist < best_dist then
+      best_dist = dist
+      best_row = s
+    end
+  end
+  if best_row then
+    vim.api.nvim_win_set_cursor(0, { best_row + 1, 0 })
+  end
 end
 
 --- Move cursor to the next cell.
