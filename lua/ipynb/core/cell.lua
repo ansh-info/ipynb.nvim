@@ -336,18 +336,27 @@ function M.snap_cursor_to_nearest(bufnr, cur_row)
   if not state or #state.cells == 0 then
     return
   end
+  local line_count = vim.api.nvim_buf_line_count(bufnr)
+  if line_count == 0 then
+    return
+  end
   local best_row = nil
   local best_dist = math.huge
   for _, cs in ipairs(state.cells) do
     local s, _ = cell_line_range(bufnr, cs)
-    local dist = math.abs(s - cur_row)
-    if dist < best_dist then
-      best_dist = dist
-      best_row = s
+    -- Skip extmarks that undo has moved beyond the current buffer length.
+    if s < line_count then
+      local dist = math.abs(s - cur_row)
+      if dist < best_dist then
+        best_dist = dist
+        best_row = s
+      end
     end
   end
   if best_row then
-    vim.api.nvim_win_set_cursor(0, { best_row + 1, 0 })
+    -- Clamp to buffer bounds in case of any remaining drift.
+    local safe = math.min(best_row, line_count - 1)
+    vim.api.nvim_win_set_cursor(0, { safe + 1, 0 })
   end
 end
 
@@ -612,6 +621,13 @@ function M.reanchor_end_marks(bufnr)
     end
     local start_row = sm[1]
 
+    -- If undo shrank the buffer so that start_mark is now beyond the last
+    -- line, skip this cell entirely - moving its extmarks would cluster all
+    -- borders at row 0 and make the buffer look blank.
+    if start_row >= line_count then
+      goto continue
+    end
+
     -- Compute the correct last line for this cell.
     local new_end
     if i < #state.cells then
@@ -629,6 +645,9 @@ function M.reanchor_end_marks(bufnr)
     if not new_end then
       goto continue
     end
+
+    -- Always clamp to valid buffer range.
+    new_end = math.min(new_end, line_count - 1)
 
     local cur_em = vim.api.nvim_buf_get_extmark_by_id(bufnr, NS, cs.end_mark, {})
     if cur_em and #cur_em > 0 and cur_em[1] == new_end then

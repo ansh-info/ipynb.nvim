@@ -156,6 +156,18 @@ function M.render(bufnr, cell_state, chunk)
     winnr = 0
   end
 
+  -- Guard against rendering below the visible window area, which causes the
+  -- image to bleed into adjacent tmux panes. Skip rendering if end_row is
+  -- below the last visible line of the window.
+  local win_info = vim.fn.getwininfo(winnr == 0 and vim.api.nvim_get_current_win() or winnr)
+  if win_info and win_info[1] then
+    local bot_line = win_info[1].botline -- last visible buffer line (1-based)
+    if end_row + 1 > bot_line then
+      os.remove(tmp)
+      return
+    end
+  end
+
   -- Build a unique id for this image instance.
   local key = cell_key(bufnr, cell_state)
   local img_id = "ipynb_" .. key:gsub(":", "_") .. "_" .. tostring(os.time())
