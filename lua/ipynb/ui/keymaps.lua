@@ -98,6 +98,14 @@ function M.attach(bufnr)
     end
   end, "Jupyter: delete current cell")
 
+  map("n", km.clear_output, function()
+    vim.cmd("IpynbClearOutput")
+  end, "Jupyter: clear current cell output")
+
+  map("n", km.clear_all_output, function()
+    vim.cmd("IpynbClearAllOutput")
+  end, "Jupyter: clear all cell outputs")
+
   -- ── Save ───────────────────────────────────────────────────────────────
   -- Override :w so it saves back to .ipynb format.
   map("n", "<leader>w", function()
@@ -139,6 +147,8 @@ function M.show_help()
     "  " .. km.add_cell_below .. "  → add cell below",
     "  " .. km.add_cell_above .. "  → add cell above",
     "  " .. km.delete_cell .. "  → delete cell",
+    "  " .. km.clear_output .. "  → clear cell output",
+    "  " .. km.clear_all_output .. "  → clear all outputs",
     "",
     "  File",
     "  <leader>w → save notebook",
