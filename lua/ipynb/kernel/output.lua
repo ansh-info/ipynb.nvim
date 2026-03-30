@@ -10,9 +10,10 @@
 ---   { type = "clear_output" }
 ---
 --- Public API:
----   output.append(bufnr, cell_state, chunk)   -- add one chunk, re-render
----   output.clear(bufnr, cell_state)            -- wipe all output for a cell
----   output.get_chunks(cell_key)                -- return accumulated chunk list
+---   output.append(bufnr, cell_state, chunk)          -- add one chunk, re-render
+---   output.restore(bufnr, cell_state, nb_outputs)    -- restore saved .ipynb outputs on open
+---   output.clear(bufnr, cell_state)                  -- wipe all output for a cell
+---   output.get_chunks(cell_key)                      -- return accumulated chunk list
 
 local config = require("ipynb.config")
 local cell = require("ipynb.core.cell")
@@ -263,6 +264,88 @@ function M.clear_all(bufnr, cells)
   for _, cs in ipairs(cells or {}) do
     M.clear(bufnr, cs) -- M.clear() already handles images per cell
   end
+end
+
+-- ── Saved-output restore ──────────────────────────────────────────────────────
+
+--- Convert one raw nbformat output object to internal chunk(s).
+--- Mirrors the logic in kernel_bridge.py so saved outputs render identically
+--- to live-executed outputs.
+---@param out table  raw nbformat output object
+---@return table[]   list of chunks (one nbformat output can yield multiple)
+local function nb_output_to_chunks(out)
+  local ot = out.output_type
+  local chunks = {}
+
+  if ot == "stream" then
+    local text = out.text
+    if type(text) == "table" then
+      text = table.concat(text)
+    end
+    chunks[#chunks + 1] = {
+      type = "stream",
+      name = out.name or "stdout",
+      text = text or "",
+    }
+  elseif ot == "execute_result" or ot == "display_data" then
+    local data = out.data or {}
+    if data["image/png"] then
+      chunks[#chunks + 1] = { type = "image", mime = "image/png", data = data["image/png"] }
+    end
+    if data["image/jpeg"] then
+      chunks[#chunks + 1] = { type = "image", mime = "image/jpeg", data = data["image/jpeg"] }
+    end
+    if data["image/svg+xml"] then
+      local svg = data["image/svg+xml"]
+      if type(svg) == "table" then
+        svg = table.concat(svg)
+      end
+      chunks[#chunks + 1] = { type = "image", mime = "image/svg+xml", data = svg }
+    end
+    if data["text/plain"] then
+      local text = data["text/plain"]
+      if type(text) == "table" then
+        text = table.concat(text)
+      end
+      chunks[#chunks + 1] = {
+        type = "result",
+        text = text,
+        html = data["text/html"] or "",
+      }
+    end
+  elseif ot == "error" then
+    chunks[#chunks + 1] = {
+      type = "error",
+      ename = out.ename or "Error",
+      evalue = out.evalue or "",
+      traceback = out.traceback or {},
+    }
+  end
+
+  return chunks
+end
+
+--- Restore saved outputs from a notebook cell into the output store and render.
+--- Called from core/cell.lua M.render() for each cell that has stored outputs.
+---@param bufnr integer
+---@param cell_state table
+---@param nb_outputs table[]  raw nbformat output objects from notebook.cells[i].outputs
+function M.restore(bufnr, cell_state, nb_outputs)
+  if not nb_outputs or #nb_outputs == 0 then
+    return
+  end
+
+  local key = cell_key(bufnr, cell_state)
+  _store[key] = {}
+
+  for _, out in ipairs(nb_outputs) do
+    local chunks = nb_output_to_chunks(out)
+    for _, chunk in ipairs(chunks) do
+      _store[key][#_store[key] + 1] = chunk
+    end
+  end
+
+  M._render(bufnr, cell_state)
 end
 
 return M
