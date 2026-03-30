@@ -121,6 +121,38 @@ function M.setup()
     end
   end, { desc = "Delete the cell under the cursor" })
 
+  -- ── Output commands ───────────────────────────────────────────────────
+
+  vim.api.nvim_create_user_command("IpynbClearOutput", function()
+    local bufnr = vim.api.nvim_get_current_buf()
+    local cell_mod = require("ipynb.core.cell")
+    local cs, _ = cell_mod.cell_at_cursor(bufnr)
+    if not cs then
+      vim.notify("Cursor is not inside a cell.", vim.log.levels.WARN)
+      return
+    end
+    require("ipynb.kernel.output").clear(bufnr, cs)
+    local nb = cell_mod.get_notebook(bufnr)
+    if nb and nb.cells[cs.index] then
+      nb.cells[cs.index].outputs = {}
+    end
+  end, { desc = "Clear output for the cell under the cursor" })
+
+  vim.api.nvim_create_user_command("IpynbClearAllOutput", function()
+    local bufnr = vim.api.nvim_get_current_buf()
+    local cell_mod = require("ipynb.core.cell")
+    local output = require("ipynb.kernel.output")
+    local cells = cell_mod.get_cells(bufnr)
+    local nb = cell_mod.get_notebook(bufnr)
+    for _, cs in ipairs(cells) do
+      output.clear(bufnr, cs)
+      if nb and nb.cells[cs.index] then
+        nb.cells[cs.index].outputs = {}
+      end
+    end
+    vim.notify("All cell outputs cleared.", vim.log.levels.INFO)
+  end, { desc = "Clear output for every cell in the notebook" })
+
   -- ── Inspector ──────────────────────────────────────────────────────────
 
   vim.api.nvim_create_user_command("IpynbInspect", function()

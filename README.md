@@ -196,6 +196,8 @@ Press `<leader>jh` to show the help overlay at any time.
 | `<leader>co` | Add code cell below |
 | `<leader>cO` | Add code cell above |
 | `<leader>cd` | Delete current cell |
+| `<leader>cx` | Clear current cell output |
+| `<leader>cX` | Clear all cell outputs |
 | `<leader>w` | Save notebook |
 | `<leader>ji` | Variable inspector |
 | `<leader>jh` | Keymap help overlay |
@@ -218,6 +220,8 @@ Press `<leader>jh` to show the help overlay at any time.
 | `:IpynbRunAbove` | Run all cells above cursor |
 | `:IpynbCellAdd` | Add code cell below |
 | `:IpynbCellDelete` | Delete current cell |
+| `:IpynbClearOutput` | Clear output for cell under cursor |
+| `:IpynbClearAllOutput` | Clear output for every cell |
 | `:IpynbInspect` | Open variable inspector |
 | `:IpynbHelp` | Show keymap reference |
 
@@ -256,6 +260,8 @@ require("ipynb").setup({
     add_cell_above   = "<leader>cO",
     delete_cell      = "<leader>cd",
     interrupt_kernel = "<leader>ri",
+    clear_output     = "<leader>cx",
+    clear_all_output = "<leader>cX",
   },
   notebook = {
     auto_save = false,
