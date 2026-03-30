@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v1.4.2 (2026-03-30)
+
+### Bug Fixes
+
+- **lua**: Pass text virt_line offset to image.render and add spacer lines
+  ([#84](https://github.com/ansh-info/ipynb.nvim/pull/84),
+  [`7850e4b`](https://github.com/ansh-info/ipynb.nvim/commit/7850e4ba9d8310b5587d8f649af0eb651b31ec19))
+
+- **lua**: Render images in float windows for correct position and no tmux bleed
+  ([#84](https://github.com/ansh-info/ipynb.nvim/pull/84),
+  [`b6e3876`](https://github.com/ansh-info/ipynb.nvim/commit/b6e38764869c99378c98c3504101e15c982a3171))
+
+
 ## v1.4.1 (2026-03-30)
 
 ### Bug Fixes
