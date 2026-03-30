@@ -210,7 +210,14 @@ def _process_iopub(msg: dict) -> None:
 
     elif msg_type in ("execute_result", "display_data"):
         data = content.get("data", {})
-        # Images take priority over plain text in the same message.
+        # Images take priority: if any image MIME is present, suppress the
+        # text/plain fallback (e.g. "<Figure size 600x300 with 1 Axes>") so it
+        # does not appear as a redundant text line above the rendered image.
+        has_image = (
+            "image/png" in data
+            or "image/jpeg" in data
+            or "image/svg+xml" in data
+        )
         if "image/png" in data:
             send({"type": "image", "mime": "image/png",
                   "data": data["image/png"], "msg_id": lid})
@@ -220,7 +227,7 @@ def _process_iopub(msg: dict) -> None:
         if "image/svg+xml" in data:
             send({"type": "image", "mime": "image/svg+xml",
                   "data": data["image/svg+xml"], "msg_id": lid})
-        if "text/plain" in data:
+        if "text/plain" in data and not has_image:
             send({
                 "type": "result",
                 "text": _strip_ansi(data.get("text/plain", "")),
