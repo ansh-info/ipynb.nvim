@@ -71,8 +71,6 @@ ipynb/
 
 ## Module paths
 
-After the Phase 3 folder restructuring, the Lua module paths are:
-
 | Module | Path |
 |---|---|
 | `require("ipynb")` | `lua/ipynb/init.lua` |
@@ -91,21 +89,7 @@ After the Phase 3 folder restructuring, the Lua module paths are:
 | `require("ipynb.ui.commands")` | `lua/ipynb/ui/commands.lua` |
 
 `kernel/init.lua` is intentional - Lua resolves `require("ipynb.kernel")` to
-`kernel/init.lua` automatically, so all call sites are unchanged.
-
----
-
-## Development phases - all complete
-
-| Phase | Status | Scope |
-|---|---|---|
-| **1** | Done | core/notebook.lua, core/notebook_buf.lua, core/cell.lua, ui/keymaps.lua, ui/commands.lua |
-| **2** | Done | kernel_bridge.py (full ZMQ), kernel/init.lua, kernel/output.lua |
-| **3** | Done | ui/image.lua (PNG/JPEG/SVG via image.nvim, base64 decode) |
-| **4** | Done | ui/markdown.lua, kernel/completion.lua, ui/inspector.lua |
-| **Tooling** | Done | .luacheckrc, .stylua.toml, Makefile, test suite, GitHub Actions CI |
-| **Refactor** | Done | Folder restructure into core/, kernel/, ui/ |
-| **Stability** | Done | Saved output restore, undo guards, cursor snap, run-and-advance, image tmux fix |
+`kernel/init.lua` automatically.
 
 ---
 
@@ -135,11 +119,6 @@ export PATH="$HOME/.luarocks/bin:$PATH"
 export VUSTED_USE_LOCAL=1
 ```
 
-**CI** runs automatically on every push and PR via `.github/workflows/ci.yml`:
-- `test` job: installs LuaJIT + LuaRocks + Neovim stable + vusted, runs `make test`
-- `lint` job: luacheck via `lunarmodules/luacheck` Docker action
-- `format` job: stylua `--check` via `JohnnyMorganz/stylua-action`
-
 **Adding a new spec file:**
 - Place it in `test/` with a `_spec.lua` suffix
 - Reset `package.loaded` in `before_each` for test isolation
@@ -150,67 +129,28 @@ export VUSTED_USE_LOCAL=1
 
 ## Python tooling - uv (for development)
 
-Always use uv for development. The end-user build hook falls back to
-`python3 -m venv` when uv is absent - but never use that fallback yourself.
-
-There are **two separate uv projects** in this repo:
+Always use uv for development. There are **two separate uv projects** in this repo:
 
 ### `python/` - kernel bridge runtime deps
 
-`python/pyproject.toml` declares the runtime deps (`ipykernel`, `jupyter-client`,
-`nbformat`). The venv lives at `python/.venv/` (gitignored).
-
 ```bash
-# Install / sync after python/pyproject.toml or python/uv.lock changes
-uv sync --project python/
-
-# Regenerate python/uv.lock after editing python/pyproject.toml
-uv lock --project python/
-
-# Add a new runtime dependency
-uv add --project python/ <package>
-
-# Run a script inside the venv without activating it
-uv run --project python/ python python/kernel_bridge.py
+uv sync --project python/         # install / sync
+uv lock --project python/         # regenerate lockfile after toml changes
+uv add --project python/ <pkg>    # add a runtime dependency
 ```
 
 ### Root project - dev tooling (python-semantic-release)
 
-Root `pyproject.toml` uses `[dependency-groups]` with a `dev` group for
-`python-semantic-release`. The `dev` group is included by default on every
-`uv sync` - there is **no `--dev` flag** in uv (unlike Poetry/pip).
-
 ```bash
-# Install / sync after pyproject.toml or uv.lock changes
-# dev group is always included by default
-uv sync
-
-# Regenerate root uv.lock after editing root pyproject.toml
-uv lock
-
-# Add a package to the dev group
-uv add --dev <package>
-
-# Sync without dev group (for validation only - not for normal dev)
-uv sync --no-dev
+uv sync          # install / sync (dev group always included)
+uv lock          # regenerate lockfile after toml changes
+uv add --dev <pkg>
 ```
 
 ### Rule: when pyproject.toml is modified
 
 Always run the matching lock command first, then commit **both files separately**
-(toml first, lockfile second):
-
-```bash
-# python/pyproject.toml changed
-uv lock --project python/
-git add python/pyproject.toml && git commit -m "..."
-git add python/uv.lock       && git commit -m "..."
-
-# root pyproject.toml changed
-uv lock
-git add pyproject.toml && git commit -m "..."
-git add uv.lock        && git commit -m "..."
-```
+(toml first, lockfile second).
 
 ---
 
@@ -227,16 +167,6 @@ messages. Use a regular hyphen (-) instead.
 ### One file per commit
 Every commit must contain **exactly one file**. No exceptions.
 
-```bash
-# Correct
-git add lua/ipynb/core/cell.lua
-git commit -m "feat(lua): ..."
-
-# Wrong
-git add lua/ python/
-git commit -m "..."
-```
-
 ### Co-author
 Always add these trailers to every commit, in this order:
 ```
@@ -248,8 +178,6 @@ Do **not** add any Claude Code or AI attribution.
 ### Conventional commits
 ```
 <type>(<scope>): <description>
-
-<optional body>
 ```
 
 Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `perf`
@@ -301,49 +229,21 @@ Never insert decorations or output as real buffer lines.
 ### JSON-line stdio daemon (not pynvim)
 `kernel_bridge.py` is spawned by `vim.fn.jobstart()` and communicates via
 newline-delimited JSON on stdin/stdout. Do not switch to pynvim remote plugin
-architecture - the stdio model is simpler and avoids registration overhead.
-
-### ZMQ -> Lua msg_id translation in the bridge
-`kernel_bridge.py` maintains a `_pending` dict mapping ZMQ msg_ids -> Lua msg_ids
-internally. All messages emitted to stdout carry the original Lua `msg_id` so
-`kernel/init.lua` never needs to know about ZMQ ids.
+architecture.
 
 ### image.nvim delegation
 All image rendering goes through `image.nvim`. Do not write raw Kitty escape
-sequences in Lua - `image.nvim` handles Kitty / ueberzugpp / sixel backends
-transparently.
+sequences in Lua.
 
 ### pcall guard on optional modules
 Modules that depend on optional features (kernel, image, markdown, nvim-cmp) are
-always loaded via `pcall(require, "...")`. This ensures the plugin never errors if
-optional dependencies are absent.
+always loaded via `pcall(require, "...")`.
 
-### Re-entrancy guard in kernel/output.lua
-`image.nvim`'s `magick_cli` processor uses `vim.wait()` which runs the Neovim
-event loop mid-render. The `_active`/`_pending` guard in `kernel/output.lua`
-prevents a second `output.append()` from calling `image.clear()` while the first
-magick process is still reading the temp PNG file.
-
-### Saved output restore on open
-`kernel/output.lua` `M.restore(bufnr, cell_state, nb_outputs)` converts raw
-nbformat output objects from the `.ipynb` file into internal chunks and renders
-them via `_render()`. Called from `core/cell.lua` `M.render()` with a
-`vim.schedule` defer so extmarks are fully placed before image positioning runs.
-
-### Undo stability guards
-Neovim undo operates on raw buffer lines and has no concept of cells. Two guards
-prevent crashes and visual corruption after undo:
-- `reanchor_end_marks` skips any cell whose `start_mark` row is `>= line_count`
-  (stale after undo removed lines) and always clamps `new_end` to `line_count-1`
-- `snap_cursor_to_nearest` skips extmarks beyond buffer length and clamps the
-  target row before calling `nvim_win_set_cursor`
-Structural undo (undoing add/delete cell) still leaves borders out of sync -
-a deeper fix tracking undo at the notebook level is planned (see open issues).
-
-### Image viewport guard
-`ui/image.lua` checks `botline` via `vim.fn.getwininfo()` before rendering and
-skips if `end_row` is below the visible window area. This prevents the image from
-bleeding into adjacent tmux panes via the Kitty graphics protocol.
+### Undo stability
+Neovim undo operates on raw buffer lines and has no concept of cells. Guards in
+`cell.lua` (`reanchor_end_marks`, `snap_cursor_to_nearest`) prevent crashes by
+skipping stale extmarks beyond buffer length. Structural undo (undoing add/delete
+cell) still leaves borders out of sync - a deeper fix is tracked in open issues.
 
 ---
 
@@ -357,36 +257,12 @@ bleeding into adjacent tmux panes via the Kitty graphics protocol.
 
 ---
 
-## Key Neovim APIs
-
-```lua
--- Extmarks
-vim.api.nvim_create_namespace("ipynb_cells")
-vim.api.nvim_buf_set_extmark(bufnr, ns, line, col, { virt_lines = {...} })
-vim.api.nvim_buf_get_extmark_by_id(bufnr, ns, mark_id, {})
-vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
-
--- Buffer interception
-vim.api.nvim_create_autocmd("BufReadCmd",  { pattern = "*.ipynb" })
-vim.api.nvim_create_autocmd("BufWriteCmd", { pattern = "*.ipynb" })
-
--- Async job
-vim.fn.jobstart(cmd, { on_stdout, on_stderr, on_exit,
-                       stdout_buffered = false })
-vim.fn.chansend(job_id, json_line .. "\n")
-
--- Blocking wait (used in kernel/completion.lua omnifunc)
-vim.wait(timeout_ms, predicate, interval_ms)
-```
-
----
-
 ## What to do at the start of each session
 
 1. Read this file.
 2. Run `git log --oneline` and `git status` - should be on `main`, clean.
 3. All phases are complete - focus is on bug reports, tests, or polish.
-4. If adding a new feature: Python first -> Lua (core/kernel/ui as appropriate) -> test spec -> docs, one file per commit.
+4. If adding a new feature: Python first -> Lua (core/kernel/ui) -> test spec -> docs, one file per commit.
 5. If fixing a bug: read the affected module, understand the design, minimal fix.
 6. After any Lua change: run `make ci` locally or let CI verify on the PR.
 7. Known open architectural issue: structural undo (undoing add/delete cell) leaves
