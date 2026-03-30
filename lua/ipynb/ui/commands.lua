@@ -121,6 +121,24 @@ function M.setup()
     end
   end, { desc = "Delete the cell under the cursor" })
 
+  vim.api.nvim_create_user_command("IpynbCellAddMarkdown", function()
+    local cell_mod = require("ipynb.core.cell")
+    local bufnr = vim.api.nvim_get_current_buf()
+    local _, idx = cell_mod.cell_at_cursor(bufnr)
+    if idx then
+      cell_mod.add_cell_below(bufnr, idx, "markdown")
+    end
+  end, { desc = "Add a markdown cell below the cursor" })
+
+  vim.api.nvim_create_user_command("IpynbCellAddMarkdownAbove", function()
+    local cell_mod = require("ipynb.core.cell")
+    local bufnr = vim.api.nvim_get_current_buf()
+    local _, idx = cell_mod.cell_at_cursor(bufnr)
+    if idx then
+      cell_mod.add_cell_above(bufnr, idx, "markdown")
+    end
+  end, { desc = "Add a markdown cell above the cursor" })
+
   -- ── Output commands ───────────────────────────────────────────────────
 
   vim.api.nvim_create_user_command("IpynbClearOutput", function()
