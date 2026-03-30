@@ -79,11 +79,13 @@ local function attach_lsp(bufnr)
   end
 
   -- Strategy 1: re-fire FileType so lspconfig autostart logic runs.
-  -- nvim_exec_autocmds does not accept "match"; use "pattern" (the autocmd
-  -- pattern to match against).  "buffer" and "pattern" are mutually exclusive
-  -- in this API, so omit "buffer" - lspconfig reads the current buffer when
-  -- the FileType event fires, which is the notebook buffer at this point.
-  vim.api.nvim_exec_autocmds("FileType", { pattern = "python" })
+  -- Use nvim_buf_call so the autocmd fires with bufnr as the current buffer.
+  -- Without this, if another vim.schedule callback (e.g. kernel.start) ran
+  -- first and changed the active buffer, lspconfig would see the wrong buffer
+  -- in args.buf / <abuf> and attach to the wrong file.
+  vim.api.nvim_buf_call(bufnr, function()
+    vim.api.nvim_exec_autocmds("FileType", { pattern = "python" })
+  end)
 
   -- Strategy 2: attach any already-running Python LSP client.
   local get_clients = vim.lsp.get_clients or vim.lsp.get_active_clients

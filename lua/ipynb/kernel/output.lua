@@ -244,16 +244,23 @@ function M._render(bufnr, cell_state)
       image.clear(bufnr, cell_state)
     end
 
-    -- 3. Render image chunks. The separator line (end_row + 1) used by
-    --    image.lua is a real buffer line that sits after all virt_lines in
-    --    screen space, so screenpos() returns the correct row automatically.
-    if ok_img and #img_chunks > 0 then
-      for _, img_chunk in ipairs(img_chunks) do
-        image.render(bufnr, cell_state, img_chunk)
-      end
-    end
-
     _active[key] = nil
+
+    -- 3. Render image chunks in a nested vim.schedule so that Neovim has one
+    --    event loop tick to repaint the virt_lines before image.nvim writes
+    --    Kitty escape sequences to the terminal.  Without the extra tick,
+    --    Neovim's TUI repaint can overwrite the image pixels, causing the image
+    --    to be invisible until the next key press or scroll event.
+    if ok_img and #img_chunks > 0 then
+      vim.schedule(function()
+        if not vim.api.nvim_buf_is_valid(bufnr) then
+          return
+        end
+        for _, img_chunk in ipairs(img_chunks) do
+          image.render(bufnr, cell_state, img_chunk)
+        end
+      end)
+    end
 
     -- If more output arrived while we were rendering, re-render now so the
     -- latest chunks (e.g. a second matplotlib figure) are always displayed.
@@ -296,6 +303,9 @@ local function nb_output_to_chunks(out)
     }
   elseif ot == "execute_result" or ot == "display_data" then
     local data = out.data or {}
+    -- If any image MIME is present, suppress text/plain to avoid showing
+    -- the redundant object repr (e.g. "<Figure size 600x300>") above the image.
+    local has_image = data["image/png"] or data["image/jpeg"] or data["image/svg+xml"]
     if data["image/png"] then
       chunks[#chunks + 1] = { type = "image", mime = "image/png", data = data["image/png"] }
     end
@@ -309,7 +319,7 @@ local function nb_output_to_chunks(out)
       end
       chunks[#chunks + 1] = { type = "image", mime = "image/svg+xml", data = svg }
     end
-    if data["text/plain"] then
+    if data["text/plain"] and not has_image then
       local text = data["text/plain"]
       if type(text) == "table" then
         text = table.concat(text)
