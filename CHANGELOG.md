@@ -2,6 +2,36 @@
 
 <!-- version list -->
 
+## v1.4.0 (2026-03-30)
+
+### Chores
+
+- **config**: Set ignore_merge_commits = true for semantic release
+  ([`cf5b1ff`](https://github.com/ansh-info/ipynb.nvim/commit/cf5b1ffe83d6ead3c3d95a8019b3d2d718151db8))
+
+- **config**: Update root uv.lock after pyproject.toml change
+  ([`a91583a`](https://github.com/ansh-info/ipynb.nvim/commit/a91583a5d7d8ef42ea749a422485ae66bf610443))
+
+### Documentation
+
+- **docs**: Add markdown cell commands and keymaps to README
+  ([`8d2ef0f`](https://github.com/ansh-info/ipynb.nvim/commit/8d2ef0f6dc4dccd30f425acb9799b1d0d1ee94d5))
+
+### Features
+
+- **config**: Add add_markdown_below and add_markdown_above keymap defaults
+  ([`4706755`](https://github.com/ansh-info/ipynb.nvim/commit/470675501e29f1aaa65fa99124d6357cfc23fcae))
+
+- **lua**: Add IpynbCellAddMarkdown and IpynbCellAddMarkdownAbove commands
+  ([`32738c0`](https://github.com/ansh-info/ipynb.nvim/commit/32738c0a808ddb2677c239508b7e53d8bf44ac83))
+
+- **lua**: Add markdown cell keymaps and help overlay entries
+  ([`95603d7`](https://github.com/ansh-info/ipynb.nvim/commit/95603d7b63193c5a2ecc71d0f83d312a524540fa))
+
+- **lua**: Add optional cell_type param to add_cell_below/above
+  ([`8c731ad`](https://github.com/ansh-info/ipynb.nvim/commit/8c731adc6d9a829134df8e2c05213fe44f89d8de))
+
+
 ## v1.3.1 (2026-03-30)
 
 ### Bug Fixes
