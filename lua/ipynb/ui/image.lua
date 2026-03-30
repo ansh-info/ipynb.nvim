@@ -4,29 +4,33 @@
 --- image.nvim (github.com/3rd/image.nvim) is an optional dependency.
 --- If it is not installed the module falls back to a text placeholder.
 ---
---- Supported backends (configured via image.nvim):
----   kitty     — Kitty graphics protocol (Kitty, Ghostty, WezTerm ≥ 0.5)
----   ueberzug  — ueberzugpp overlay (any X11/Wayland terminal)
----   sixel     — Sixel protocol (xterm, foot, WezTerm)
----
---- Flow:
----   output.lua calls image.render() for each image chunk after all text
----   virt_lines have been placed.  image.lua writes the payload to a temp
----   file, creates an image.nvim image object positioned below the cell,
----   and renders it with with_virtual_padding = true so the terminal
----   reserves the right amount of vertical space.
+--- Each image is rendered into a dedicated floating window that is
+--- positioned precisely below the cell's text output virt_lines. This:
+---   - Clips images to the Neovim editor window (no tmux pane bleed)
+---   - Positions images below all text virt_lines (no overlap with border)
+---   - Repositions floats on scroll via nvim_win_set_config without a
+---     clear+redraw cycle (less flicker)
 ---
 --- Public API:
----   image.render(bufnr, cell_state, chunk, text_line_offset) → boolean
+---   image.render(bufnr, cell_state, chunk, text_line_offset) -> boolean
 ---   image.clear(bufnr, cell_state)
 ---   image.clear_all(bufnr, cells)
----   image.is_supported() → boolean
+---   image.rerender_all(bufnr)
+---   image.is_supported() -> boolean
 
 local M = {}
 
 -- ── Per-cell image registry ───────────────────────────────────────────────────
 -- Key:   bufnr .. ":" .. cell_state.start_mark
--- Value: list of { img = <image.nvim object>, tmp = "/tmp/..." }
+-- Value: list of {
+--   img        : image.nvim object
+--   tmp        : string   temp file path (kept alive for scroll re-render)
+--   float_win  : integer|nil  floating window handle (nil = not yet shown)
+--   float_buf  : integer|nil  scratch buffer for the float
+--   end_row    : integer   0-based buffer row of the cell end_mark
+--   text_offset: integer   text virt_lines (incl. dividers) above the image
+--   source_win : integer   main buffer window
+-- }
 local _registry = {}
 
 local function cell_key(bufnr, cs)
@@ -35,7 +39,6 @@ end
 
 -- ── Support detection ─────────────────────────────────────────────────────────
 
---- Return true if image rendering is available and enabled.
 ---@return boolean
 function M.is_supported()
   local cfg = require("ipynb.config").get()
@@ -47,15 +50,8 @@ end
 
 -- ── Temp file helpers ─────────────────────────────────────────────────────────
 
---- Write base64-encoded binary data to a temporary file.
---- Returns the file path, or nil on failure.
----@param b64 string  base64 payload (no newlines required)
----@param ext string  file extension, e.g. "png"
----@return string|nil path
 local function write_b64_to_tmp(b64, ext)
   local tmp = vim.fn.tempname() .. "." .. ext
-  -- Write the base64 payload to an intermediate file so we avoid shell
-  -- argument-length limits (large plots can exceed ARG_MAX on some systems).
   local b64_tmp = vim.fn.tempname() .. ".b64"
   local f = io.open(b64_tmp, "w")
   if not f then
@@ -63,7 +59,6 @@ local function write_b64_to_tmp(b64, ext)
   end
   f:write(b64)
   f:close()
-  -- macOS base64 uses -D for decode; Linux uses -d.  Try both.
   local cmd = string.format(
     "base64 -d < %s > %s 2>/dev/null || base64 -D < %s > %s 2>/dev/null",
     vim.fn.shellescape(b64_tmp),
@@ -79,9 +74,6 @@ local function write_b64_to_tmp(b64, ext)
   return nil
 end
 
---- Write raw SVG text to a temporary file.
----@param svg_text string
----@return string|nil path
 local function write_svg_to_tmp(svg_text)
   local tmp = vim.fn.tempname() .. ".svg"
   local f = io.open(tmp, "w")
@@ -93,34 +85,107 @@ local function write_svg_to_tmp(svg_text)
   return tmp
 end
 
---- Decode a chunk's image payload to a temp file.
---- Returns (tmp_path, ext) or (nil, nil) on failure.
----@param chunk table  { mime, data }
----@return string|nil, string|nil
 local function chunk_to_tmp(chunk)
   local mime = chunk.mime or "image/png"
   local data = chunk.data or ""
-
   if mime == "image/png" then
     return write_b64_to_tmp(data, "png"), "png"
   elseif mime == "image/jpeg" then
     return write_b64_to_tmp(data, "jpg"), "jpg"
   elseif mime == "image/svg+xml" then
-    -- SVG arrives as raw text, not base64.
-    return write_svg_to_tmp(data), "svg"
+    local svg = data
+    if type(svg) == "table" then
+      svg = table.concat(svg)
+    end
+    return write_svg_to_tmp(svg), "svg"
   end
   return nil, nil
 end
 
+-- ── Float window helpers ──────────────────────────────────────────────────────
+
+--- Compute the 0-based row for a float window relative to source_win.
+--- Uses topline arithmetic so it is safe to call before Neovim redraws
+--- (avoids the screenpos() timing issue inside vim.schedule callbacks).
+--- Returns nil when the cell is off-screen.
+---@param source_win integer
+---@param end_row integer    0-based buffer row of the cell end_mark
+---@param text_offset integer text virt_lines above the image (incl. dividers)
+---@return integer|nil
+local function float_row_approx(source_win, end_row, text_offset)
+  local info = vim.fn.getwininfo(source_win)
+  if not info or not info[1] then
+    return nil
+  end
+  local topline = info[1].topline -- 1-based
+  local botline = info[1].botline -- 1-based
+  if end_row + 1 < topline or end_row + 1 > botline then
+    return nil
+  end
+  -- 0-based row within the window content area.
+  -- NOTE: does not account for virt_lines from cells above; rerender_all()
+  -- corrects this with screenpos() after the redraw has settled.
+  return (end_row + 1 - topline) + 1 + text_offset
+end
+
+--- Compute the precise 0-based row for a float using screenpos().
+--- Only valid when called after Neovim has redrawn (e.g. from WinScrolled).
+--- Returns nil when the cell is off-screen or screenpos returns 0.
+---@param source_win integer
+---@param end_row integer
+---@param text_offset integer
+---@return integer|nil
+local function float_row_exact(source_win, end_row, text_offset)
+  local info = vim.fn.getwininfo(source_win)
+  if not info or not info[1] then
+    return nil
+  end
+  local botline = info[1].botline
+  if end_row + 1 > botline then
+    return nil
+  end
+  local sp = vim.fn.screenpos(source_win, end_row + 1, 1)
+  if sp.row == 0 then
+    return nil
+  end
+  -- sp.row is a 1-based absolute terminal row.
+  -- info[1].winrow is the 1-based terminal row of the window's top content line.
+  return (sp.row - info[1].winrow) + 1 + text_offset
+end
+
+--- Open a scratch floating window for image rendering.
+---@param source_win integer
+---@param frow integer  0-based row relative to source_win
+---@param cfg table
+---@return integer float_win, integer float_buf
+local function open_float(source_win, frow, cfg)
+  local float_buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_option(float_buf, "bufhidden", "wipe")
+  local win_width = vim.api.nvim_win_get_width(source_win)
+  local width = math.max(1, math.min(cfg.image.max_width, win_width - 4))
+  local float_win = vim.api.nvim_open_win(float_buf, false, {
+    relative = "win",
+    win = source_win,
+    row = frow,
+    col = 2,
+    width = width,
+    height = cfg.image.max_height,
+    style = "minimal",
+    focusable = false,
+    zindex = 10,
+  })
+  return float_win, float_buf
+end
+
 -- ── Rendering ─────────────────────────────────────────────────────────────────
 
---- Render one image chunk below a cell.
----
+--- Render one image chunk below a cell's text output.
 ---@param bufnr integer
 ---@param cell_state table
 ---@param chunk table   { type="image", mime, data }
----@return boolean  true if image was rendered
-function M.render(bufnr, cell_state, chunk)
+---@param text_line_offset integer  text virt_lines (incl. dividers) above image
+---@return boolean  true if image object was created
+function M.render(bufnr, cell_state, chunk, text_line_offset)
   if not M.is_supported() then
     return false
   end
@@ -131,81 +196,106 @@ function M.render(bufnr, cell_state, chunk)
   end
 
   local cfg = require("ipynb.config").get()
-  local cell = require("ipynb.core.cell")
+  local cell_mod = require("ipynb.core.cell")
   local utils = require("ipynb.utils")
 
-  -- Write image data to a temp file.
+  text_line_offset = text_line_offset or 0
+
   local tmp = chunk_to_tmp(chunk)
   if not tmp then
     utils.debug("image.lua: could not decode image payload (mime=" .. (chunk.mime or "?") .. ")")
     return false
   end
 
-  -- Find the buffer line where the cell ends (the end_mark line).
-  -- Clamp to the current buffer length so a stale extmark after undo never
-  -- causes E966 "Invalid line number" in image.nvim's screenpos() call.
-  local ns = cell.namespace()
+  -- Locate the cell's end_mark buffer row.
+  local ns = cell_mod.namespace()
   local em_pos = vim.api.nvim_buf_get_extmark_by_id(bufnr, ns, cell_state.end_mark, {})
   local end_row = (em_pos and em_pos[1]) or 0
   local max_row = math.max(0, vim.api.nvim_buf_line_count(bufnr) - 1)
   end_row = math.min(end_row, max_row)
 
-  -- Get the window showing this buffer (prefer current window).
-  local winnr = vim.fn.bufwinid(bufnr)
-  if winnr == -1 then
-    winnr = 0
+  local source_win = vim.fn.bufwinid(bufnr)
+  if source_win == -1 then
+    source_win = vim.api.nvim_get_current_win()
   end
 
-  -- Determine whether the cell is currently visible.  Images rendered below
-  -- the viewport bleed into adjacent tmux panes, so the img:render() call is
-  -- skipped when the cell is off-screen.  The image object is still created
-  -- and registered so that WinScrolled / rerender_all() can render it once
-  -- the user scrolls the cell into view.
-  local visible = true
-  local win_info = vim.fn.getwininfo(winnr == 0 and vim.api.nvim_get_current_win() or winnr)
-  if win_info and win_info[1] then
-    local bot_line = win_info[1].botline -- last visible buffer line (1-based)
-    if end_row + 1 > bot_line then
-      visible = false
-    end
-  end
-
-  -- Build a unique id for this image instance.
   local key = cell_key(bufnr, cell_state)
   local img_id = "ipynb_" .. key:gsub(":", "_") .. "_" .. tostring(os.time())
+  if not _registry[key] then
+    _registry[key] = {}
+  end
+
+  local frow = float_row_approx(source_win, end_row, text_line_offset)
+
+  if frow == nil then
+    -- Off-screen: create image object without a float so rerender_all() can
+    -- render it when the cell scrolls into view.
+    local img
+    ok_api, img = pcall(image_api.from_file, tmp, {
+      id = img_id,
+      buffer = bufnr,
+      window = source_win,
+      x = 2,
+      y = end_row,
+      width = cfg.image.max_width,
+      height = cfg.image.max_height,
+      with_virtual_padding = false,
+    })
+    if not ok_api then
+      utils.debug("image.nvim from_file error (off-screen): " .. tostring(img))
+      os.remove(tmp)
+      return false
+    end
+    _registry[key][#_registry[key] + 1] = {
+      img = img,
+      tmp = tmp,
+      float_win = nil,
+      float_buf = nil,
+      end_row = end_row,
+      text_offset = text_line_offset,
+      source_win = source_win,
+    }
+    return true
+  end
+
+  -- Visible: open a float and render the image inside it.
+  local float_win, float_buf = open_float(source_win, frow, cfg)
+  local win_width = vim.api.nvim_win_get_width(source_win)
+  local float_width = math.max(1, math.min(cfg.image.max_width, win_width - 4))
 
   local img
   ok_api, img = pcall(image_api.from_file, tmp, {
     id = img_id,
-    buffer = bufnr,
-    window = winnr,
-    x = 2,
-    y = end_row,
-    width = cfg.image.max_width,
+    buffer = float_buf,
+    window = float_win,
+    x = 0,
+    y = 0,
+    width = float_width,
     height = cfg.image.max_height,
-    with_virtual_padding = true,
+    with_virtual_padding = false,
   })
-
   if not ok_api then
     utils.debug("image.nvim from_file error: " .. tostring(img))
+    pcall(vim.api.nvim_win_close, float_win, true)
     os.remove(tmp)
     return false
   end
 
-  -- Register before rendering so WinScrolled can retry if the initial
-  -- render fails because the cell output is off-screen (screenpos = 0,0).
-  if not _registry[key] then
-    _registry[key] = {}
-  end
-  _registry[key][#_registry[key] + 1] = { img = img, tmp = tmp }
+  _registry[key][#_registry[key] + 1] = {
+    img = img,
+    tmp = tmp,
+    float_win = float_win,
+    float_buf = float_buf,
+    end_row = end_row,
+    text_offset = text_line_offset,
+    source_win = source_win,
+  }
 
-  if visible then
-    local ok_render, render_err = pcall(function()
-      img:render()
-    end)
-    if not ok_render then
-      utils.debug("image.nvim render error (will retry on scroll): " .. tostring(render_err))
-    end
+  local ok_render, render_err = pcall(function()
+    img:render()
+  end)
+  if not ok_render then
+    utils.debug("image.nvim render error (will retry on scroll): " .. tostring(render_err))
   end
 
   return true
@@ -213,23 +303,94 @@ end
 
 -- ── Scroll re-render ─────────────────────────────────────────────────────────
 
---- Re-render all registered images for a buffer.
---- Called from the WinScrolled autocmd so images follow the viewport and
---- any image whose initial render failed (output was off-screen) gets retried.
+--- Re-render / reposition all registered images for a buffer.
+--- Called from the WinScrolled debounce. Uses screenpos() for precise
+--- placement and applies the viewport guard to prevent tmux pane bleed.
 ---@param bufnr integer
 function M.rerender_all(bufnr)
   if not M.is_supported() then
     return
   end
+  local cfg = require("ipynb.config").get()
+  local ok_api, image_api = pcall(require, "image")
+  if not ok_api then
+    return
+  end
+
   local prefix = tostring(bufnr) .. ":"
   for key, entries in pairs(_registry) do
-    if key:sub(1, #prefix) == prefix then
-      for _, entry in ipairs(entries) do
+    if key:sub(1, #prefix) ~= prefix then
+      goto next_key
+    end
+
+    for _, entry in ipairs(entries) do
+      local source_win = entry.source_win
+      if not source_win or not vim.api.nvim_win_is_valid(source_win) then
+        goto next_entry
+      end
+
+      local frow = float_row_exact(source_win, entry.end_row, entry.text_offset)
+
+      if frow == nil then
+        -- Off-screen: close float to prevent tmux bleed.
+        if entry.float_win and vim.api.nvim_win_is_valid(entry.float_win) then
+          pcall(vim.api.nvim_win_close, entry.float_win, true)
+          entry.float_win = nil
+          entry.float_buf = nil
+        end
+        goto next_entry
+      end
+
+      local win_width = vim.api.nvim_win_get_width(source_win)
+      local float_width = math.max(1, math.min(cfg.image.max_width, win_width - 4))
+
+      if entry.float_win and vim.api.nvim_win_is_valid(entry.float_win) then
+        -- Reposition existing float - no clear+redraw, just move the window.
+        pcall(vim.api.nvim_win_set_config, entry.float_win, {
+          relative = "win",
+          win = source_win,
+          row = frow,
+          col = 2,
+          width = float_width,
+          height = cfg.image.max_height,
+        })
         pcall(function()
           entry.img:render()
         end)
+      else
+        -- Cell was off-screen; now visible. Create float and render.
+        if not entry.tmp or vim.fn.filereadable(entry.tmp) == 0 then
+          goto next_entry
+        end
+        local float_win, float_buf = open_float(source_win, frow, cfg)
+        local ok_from, img2 = pcall(image_api.from_file, entry.tmp, {
+          id = "ipynb_retry_" .. key:gsub(":", "_") .. "_" .. tostring(os.time()),
+          buffer = float_buf,
+          window = float_win,
+          x = 0,
+          y = 0,
+          width = float_width,
+          height = cfg.image.max_height,
+          with_virtual_padding = false,
+        })
+        if ok_from then
+          pcall(function()
+            entry.img:clear()
+          end)
+          entry.img = img2
+          entry.float_win = float_win
+          entry.float_buf = float_buf
+          pcall(function()
+            img2:render()
+          end)
+        else
+          pcall(vim.api.nvim_win_close, float_win, true)
+        end
       end
+
+      ::next_entry::
     end
+    ::next_key::
   end
 end
 
@@ -248,6 +409,9 @@ function M.clear(bufnr, cell_state)
     pcall(function()
       entry.img:clear()
     end)
+    if entry.float_win and vim.api.nvim_win_is_valid(entry.float_win) then
+      pcall(vim.api.nvim_win_close, entry.float_win, true)
+    end
     if entry.tmp then
       pcall(os.remove, entry.tmp)
     end
@@ -265,7 +429,6 @@ function M.clear_all(bufnr, cells)
 end
 
 --- Return a human-readable placeholder string for unsupported environments.
---- Used by output.lua when image.nvim is not available.
 ---@param chunk table
 ---@return string
 function M.placeholder(chunk)
