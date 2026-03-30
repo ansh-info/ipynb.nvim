@@ -98,7 +98,7 @@ M.defaults = {
 
   keymaps = {
     enabled = true,
-    run_cell = "<leader>r",
+    run_cell = "<leader>rr",
     run_cell_and_advance = "<leader>rn",
     run_all_above = "<leader>ra",
     run_all_below = "<leader>rb",
