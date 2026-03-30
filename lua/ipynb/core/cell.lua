@@ -163,6 +163,10 @@ end
 -- Map: bufnr → { cells = CellState[], notebook = Notebook }
 local buf_state = {}
 
+-- Guard: prevents check_structural_integrity from triggering on the
+-- TextChanged event that render() itself fires during recovery.
+local _integrity_guard = {}
+
 --- Return or create the state table for a buffer.
 ---@param bufnr integer
 ---@return table
@@ -682,6 +686,125 @@ function M.reanchor_end_marks(bufnr)
 
     ::continue::
   end
+end
+
+--- Sync each valid cell's source from the current buffer into the notebook
+--- model. Called before structural integrity checks so rebuilt cells carry
+--- the latest edits.
+---@param bufnr integer
+function M.sync_sources_from_buf(bufnr)
+  local state = get_state(bufnr)
+  local nb = state.notebook
+  if not state or not nb or #state.cells == 0 then
+    return
+  end
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+  local line_count = vim.api.nvim_buf_line_count(bufnr)
+  for _, cs in ipairs(state.cells) do
+    local sm = vim.api.nvim_buf_get_extmark_by_id(bufnr, NS, cs.start_mark, {})
+    if sm and #sm > 0 and sm[1] < line_count and nb.cells[cs.index] then
+      local s = sm[1]
+      local em = vim.api.nvim_buf_get_extmark_by_id(bufnr, NS, cs.end_mark, {})
+      local e = (em and #em > 0) and em[1] or s
+      e = math.min(e, line_count - 1)
+      local lines = vim.api.nvim_buf_get_lines(bufnr, s, e + 1, false)
+      nb.cells[cs.index].source = table.concat(lines, "\n")
+    end
+  end
+end
+
+--- Detect and recover from structural undo (undoing add_cell / delete_cell).
+---
+--- When undo reverts the buffer lines written by render(), state.cells and
+--- notebook.cells still reflect the post-operation count. This function counts
+--- cells whose start_mark is within the current buffer length. If that count
+--- is less than #state.cells, structural divergence has occurred: notebook.cells
+--- is rebuilt from the valid cells (with sources read from the buffer) and a
+--- full re-render is scheduled.
+---
+--- A blank-buffer edge case (line_count == 0) is handled separately: the
+--- current notebook model is re-rendered without rebuilding cells.
+---@param bufnr integer
+function M.check_structural_integrity(bufnr)
+  if _integrity_guard[bufnr] then
+    return
+  end
+  local state = get_state(bufnr)
+  if not state or #state.cells == 0 then
+    return
+  end
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+  local nb = state.notebook
+  if not nb then
+    return
+  end
+
+  local line_count = vim.api.nvim_buf_line_count(bufnr)
+
+  -- Blank buffer: all of render()'s set_lines were undone. Re-render to restore.
+  if line_count == 0 then
+    _integrity_guard[bufnr] = true
+    vim.schedule(function()
+      _integrity_guard[bufnr] = nil
+      if vim.api.nvim_buf_is_valid(bufnr) then
+        M.render(bufnr, nb)
+      end
+    end)
+    return
+  end
+
+  -- Count cells whose start_mark is still within the buffer.
+  local valid_count = 0
+  for _, cs in ipairs(state.cells) do
+    local sm = vim.api.nvim_buf_get_extmark_by_id(bufnr, NS, cs.start_mark, {})
+    if sm and #sm > 0 and sm[1] < line_count then
+      valid_count = valid_count + 1
+    end
+  end
+
+  if valid_count == #state.cells then
+    return -- no structural divergence
+  end
+
+  -- Structural divergence: rebuild notebook.cells from only the valid cells,
+  -- reading their current source from the buffer.
+  local new_cells = {}
+  for _, cs in ipairs(state.cells) do
+    local sm = vim.api.nvim_buf_get_extmark_by_id(bufnr, NS, cs.start_mark, {})
+    if sm and #sm > 0 and sm[1] < line_count then
+      local s = sm[1]
+      local em = vim.api.nvim_buf_get_extmark_by_id(bufnr, NS, cs.end_mark, {})
+      local e = (em and #em > 0) and em[1] or s
+      e = math.min(e, line_count - 1)
+      local lines = vim.api.nvim_buf_get_lines(bufnr, s, e + 1, false)
+      local orig = nb.cells[cs.index]
+      if orig then
+        local rebuilt = {}
+        for k, v in pairs(orig) do
+          rebuilt[k] = v
+        end
+        rebuilt.source = table.concat(lines, "\n")
+        new_cells[#new_cells + 1] = rebuilt
+      end
+    end
+  end
+
+  if #new_cells == 0 then
+    return
+  end
+
+  nb.cells = new_cells
+  _integrity_guard[bufnr] = true
+  vim.schedule(function()
+    _integrity_guard[bufnr] = nil
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      M.render(bufnr, nb)
+    end
+  end)
 end
 
 --- Return the namespace id (used by other modules that add extmarks).

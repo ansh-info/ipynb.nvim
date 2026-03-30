@@ -185,13 +185,19 @@ function M.open(path, bufnr)
   -- Pressing 'o' on the last line of a cell inserts content below end_mark;
   -- on InsertLeave / TextChanged we recompute and reposition end_mark so the
   -- bottom border always wraps the actual cell content.
+  -- sync_sources_from_buf keeps the notebook model current so that structural
+  -- integrity checks and save use up-to-date sources.
+  -- check_structural_integrity detects and recovers from structural undo
+  -- (undoing add_cell / delete_cell leaving borders out of sync).
   vim.api.nvim_create_autocmd({ "InsertLeave", "TextChanged" }, {
     buffer = bufnr,
     callback = function()
       if not vim.api.nvim_buf_is_valid(bufnr) then
         return
       end
+      cell.sync_sources_from_buf(bufnr)
       cell.reanchor_end_marks(bufnr)
+      cell.check_structural_integrity(bufnr)
     end,
   })
 
