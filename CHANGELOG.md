@@ -2,6 +2,29 @@
 
 <!-- version list -->
 
+## v1.2.1 (2026-03-30)
+
+### Bug Fixes
+
+- Undo stability, cursor snap crash, and image tmux bleed
+  ([#70](https://github.com/ansh-info/ipynb.nvim/pull/70),
+  [`77218ac`](https://github.com/ansh-info/ipynb.nvim/commit/77218ac212b17c5379529d983f93b50be2f1c91a))
+
+- **lua**: Guard snap_cursor_to_nearest and reanchor_end_marks against stale extmarks
+  ([#70](https://github.com/ansh-info/ipynb.nvim/pull/70),
+  [`77218ac`](https://github.com/ansh-info/ipynb.nvim/commit/77218ac212b17c5379529d983f93b50be2f1c91a))
+
+- **lua**: Guard snap_cursor_to_nearest and reanchor_end_marks against stale extmarks
+  ([`14289e9`](https://github.com/ansh-info/ipynb.nvim/commit/14289e9d07518ebfd2bc6cae1b33287bb071fd15))
+
+- **lua**: Skip image render when end_row is below visible window area
+  ([#70](https://github.com/ansh-info/ipynb.nvim/pull/70),
+  [`77218ac`](https://github.com/ansh-info/ipynb.nvim/commit/77218ac212b17c5379529d983f93b50be2f1c91a))
+
+- **lua**: Skip image render when end_row is below visible window area
+  ([`b0bb686`](https://github.com/ansh-info/ipynb.nvim/commit/b0bb6867eef789e429b46775d72fc0fbe7d28c7b))
+
+
 ## v1.2.0 (2026-03-30)
 
 ### Bug Fixes
