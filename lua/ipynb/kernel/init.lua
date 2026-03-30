@@ -278,13 +278,16 @@ local function spawn_bridge(bufnr)
         st.pending = {}
 
         if was_starting then
-          utils.err(string.format(
-            "Kernel failed to start (exit %d). Check :messages for details.", code
-          ))
+          utils.err(
+            string.format("Kernel failed to start (exit %d). Check :messages for details.", code)
+          )
         else
-          utils.err(string.format(
-            "Kernel stopped unexpectedly (exit %d). Run :IpynbKernelRestart to recover.", code
-          ))
+          utils.err(
+            string.format(
+              "Kernel stopped unexpectedly (exit %d). Run :IpynbKernelRestart to recover.",
+              code
+            )
+          )
         end
       end
     end,
