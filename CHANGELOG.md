@@ -2,6 +2,17 @@
 
 <!-- version list -->
 
+## v1.4.3 (2026-03-30)
+
+### Bug Fixes
+
+- **lua**: Remove spacer virt_lines and nested schedule from output renderer
+  ([`23c90a6`](https://github.com/ansh-info/ipynb.nvim/commit/23c90a64820c6d099dac4c1adfcf5ef5becc0e9b))
+
+- **lua**: Replace float windows with separator-line positioning for images
+  ([`2286311`](https://github.com/ansh-info/ipynb.nvim/commit/22863115e715a0097e600bc36774f9df097af0ef))
+
+
 ## v1.4.2 (2026-03-30)
 
 ### Bug Fixes
