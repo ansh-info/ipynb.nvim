@@ -142,9 +142,13 @@ function M.render(bufnr, cell_state, chunk)
   end
 
   -- Find the buffer line where the cell ends (the end_mark line).
+  -- Clamp to the current buffer length so a stale extmark after undo never
+  -- causes E966 "Invalid line number" in image.nvim's screenpos() call.
   local ns = cell.namespace()
   local em_pos = vim.api.nvim_buf_get_extmark_by_id(bufnr, ns, cell_state.end_mark, {})
   local end_row = (em_pos and em_pos[1]) or 0
+  local max_row = math.max(0, vim.api.nvim_buf_line_count(bufnr) - 1)
+  end_row = math.min(end_row, max_row)
 
   -- Get the window showing this buffer (prefer current window).
   local winnr = vim.fn.bufwinid(bufnr)
