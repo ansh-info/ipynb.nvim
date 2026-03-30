@@ -2,6 +2,72 @@
 
 <!-- version list -->
 
+## v1.2.0 (2026-03-30)
+
+### Bug Fixes
+
+- Critical bugs - saved outputs, undo crash, cursor escape, run and advance
+  ([#69](https://github.com/ansh-info/ipynb.nvim/pull/69),
+  [`dba8919`](https://github.com/ansh-info/ipynb.nvim/commit/dba89194d153a252505d7795c67b8c081c232dd8))
+
+- **lua**: Add CursorMoved guard to prevent typing outside cell regions
+  ([#69](https://github.com/ansh-info/ipynb.nvim/pull/69),
+  [`dba8919`](https://github.com/ansh-info/ipynb.nvim/commit/dba89194d153a252505d7795c67b8c081c232dd8))
+
+- **lua**: Add CursorMoved guard to prevent typing outside cell regions
+  ([`0917c88`](https://github.com/ansh-info/ipynb.nvim/commit/0917c880eb7bc79869bd1e2bf8ba71599ed9ca21))
+
+- **lua**: Call output.restore() on render and add snap_cursor_to_nearest
+  ([#69](https://github.com/ansh-info/ipynb.nvim/pull/69),
+  [`dba8919`](https://github.com/ansh-info/ipynb.nvim/commit/dba89194d153a252505d7795c67b8c081c232dd8))
+
+- **lua**: Call output.restore() on render and add snap_cursor_to_nearest
+  ([`e26d46c`](https://github.com/ansh-info/ipynb.nvim/commit/e26d46ce728dd2a22a934a98ef01ee2ef2628e20))
+
+- **lua**: Clamp end_row to buffer length before passing to image.nvim
+  ([#69](https://github.com/ansh-info/ipynb.nvim/pull/69),
+  [`dba8919`](https://github.com/ansh-info/ipynb.nvim/commit/dba89194d153a252505d7795c67b8c081c232dd8))
+
+- **lua**: Clamp end_row to buffer length before passing to image.nvim
+  ([`b3ae6e6`](https://github.com/ansh-info/ipynb.nvim/commit/b3ae6e64db4aaff956c125b9db9d1e760f9a4f14))
+
+- **lua**: Restore saved cell outputs when opening a notebook
+  ([#69](https://github.com/ansh-info/ipynb.nvim/pull/69),
+  [`dba8919`](https://github.com/ansh-info/ipynb.nvim/commit/dba89194d153a252505d7795c67b8c081c232dd8))
+
+- **lua**: Restore saved cell outputs when opening a notebook
+  ([`f8724f5`](https://github.com/ansh-info/ipynb.nvim/commit/f8724f58c568debc4164ca1e2fcf7446eb11b727))
+
+### Features
+
+- **config**: Add run_cell_and_advance keymap default
+  ([#69](https://github.com/ansh-info/ipynb.nvim/pull/69),
+  [`dba8919`](https://github.com/ansh-info/ipynb.nvim/commit/dba89194d153a252505d7795c67b8c081c232dd8))
+
+- **config**: Add run_cell_and_advance keymap default
+  ([`ac4112a`](https://github.com/ansh-info/ipynb.nvim/commit/ac4112ac622c3054a6ea06daad09ca1e3fa0ba82))
+
+- **lua**: Add :IpynbRunAdvance command ([#69](https://github.com/ansh-info/ipynb.nvim/pull/69),
+  [`dba8919`](https://github.com/ansh-info/ipynb.nvim/commit/dba89194d153a252505d7795c67b8c081c232dd8))
+
+- **lua**: Add :IpynbRunAdvance command
+  ([`5000a9a`](https://github.com/ansh-info/ipynb.nvim/commit/5000a9a4f926a1723e03dcf5cb948554ca671e9a))
+
+- **lua**: Add run_cell_and_advance (Shift+Enter equivalent)
+  ([#69](https://github.com/ansh-info/ipynb.nvim/pull/69),
+  [`dba8919`](https://github.com/ansh-info/ipynb.nvim/commit/dba89194d153a252505d7795c67b8c081c232dd8))
+
+- **lua**: Add run_cell_and_advance (Shift+Enter equivalent)
+  ([`8d2c9e5`](https://github.com/ansh-info/ipynb.nvim/commit/8d2c9e59646ad899580d7e84706a694088eda345))
+
+- **lua**: Wire <leader>rn keymap for run_cell_and_advance
+  ([#69](https://github.com/ansh-info/ipynb.nvim/pull/69),
+  [`dba8919`](https://github.com/ansh-info/ipynb.nvim/commit/dba89194d153a252505d7795c67b8c081c232dd8))
+
+- **lua**: Wire <leader>rn keymap for run_cell_and_advance
+  ([`a3c4c93`](https://github.com/ansh-info/ipynb.nvim/commit/a3c4c934a23857f3c993646bfe8deea55042bd89))
+
+
 ## v1.1.17 (2026-03-29)
 
 ### Bug Fixes
