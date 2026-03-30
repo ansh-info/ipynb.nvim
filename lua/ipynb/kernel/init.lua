@@ -127,6 +127,15 @@ local function dispatch(bufnr, msg)
           local elapsed_ms = vim.loop.now() - pending.start_ms
           cell.update_status(bufnr, pending.cell_state, "idle", elapsed_ms)
           s.pending[id] = nil
+          -- Auto-save after execution if configured.
+          if config.get().notebook.auto_save then
+            vim.schedule(function()
+              local ok, nb_buf = pcall(require, "ipynb.core.notebook_buf")
+              if ok and nb_buf.is_managed(bufnr) then
+                nb_buf.save(bufnr)
+              end
+            end)
+          end
         end
       end
     end
@@ -251,10 +260,32 @@ local function spawn_bridge(bufnr)
     end,
     on_exit = function(_, code, _)
       local st = get_state(bufnr)
+      -- was_unexpected: status != "stopped" means the user did not request this exit
+      local was_unexpected = st.status ~= "stopped"
+      local was_starting = st.status == "starting"
       st.job_id = nil
       st.status = "stopped"
-      if code ~= 0 then
-        utils.warn(string.format("Kernel bridge exited (code %d).", code))
+
+      if was_unexpected then
+        -- Mark any cells that were running as errored so they don't stay busy.
+        for _, pending in pairs(st.pending) do
+          if type(pending) == "table" and pending.cell_state and not pending._snippet_cb then
+            pcall(cell.update_status, bufnr, pending.cell_state, "error", nil)
+          elseif type(pending) == "table" and pending._snippet_cb then
+            pending._snippet_cb(nil, "Kernel stopped.")
+          end
+        end
+        st.pending = {}
+
+        if was_starting then
+          utils.err(string.format(
+            "Kernel failed to start (exit %d). Check :messages for details.", code
+          ))
+        else
+          utils.err(string.format(
+            "Kernel stopped unexpectedly (exit %d). Run :IpynbKernelRestart to recover.", code
+          ))
+        end
       end
     end,
     stdout_buffered = false,
@@ -305,6 +336,8 @@ function M.stop(bufnr)
     utils.warn("No kernel running.")
     return
   end
+  -- Mark stopped before the exit fires so on_exit knows this was intentional.
+  s.status = "stopped"
   send(bufnr, { cmd = "shutdown" })
   vim.defer_fn(function()
     if s.job_id then
