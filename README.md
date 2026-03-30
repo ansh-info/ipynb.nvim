@@ -187,6 +187,7 @@ Press `<leader>jh` to show the help overlay at any time.
 | Key | Action |
 |---|---|
 | `<leader>r` | Run current cell |
+| `<leader>rn` | Run cell and advance to next (Shift+Enter) |
 | `<leader>ra` | Run all cells above cursor |
 | `<leader>rb` | Run all cells from cursor downwards |
 | `<leader>ri` | Interrupt kernel |
@@ -212,6 +213,7 @@ Press `<leader>jh` to show the help overlay at any time.
 | `:IpynbKernelInterrupt` | Send interrupt (Ctrl-C) |
 | `:IpynbKernelInfo` | Show kernel status window |
 | `:IpynbRun` | Run current cell |
+| `:IpynbRunAdvance` | Run cell and advance to next |
 | `:IpynbRunAll` | Run all cells |
 | `:IpynbRunAbove` | Run all cells above cursor |
 | `:IpynbCellAdd` | Add code cell below |
@@ -244,8 +246,9 @@ require("ipynb").setup({
   },
   keymaps = {
     enabled          = true,
-    run_cell         = "<leader>r",
-    run_all_above    = "<leader>ra",
+    run_cell              = "<leader>r",
+    run_cell_and_advance  = "<leader>rn",
+    run_all_above         = "<leader>ra",
     run_all_below    = "<leader>rb",
     next_cell        = "]c",
     prev_cell        = "[c",
