@@ -420,26 +420,28 @@ end
 
 -- ── Cell mutation ─────────────────────────────────────────────────────────────
 
---- Add a new empty code cell below the cell at `idx`.
+--- Add a new empty cell below the cell at `idx`.
 ---@param bufnr integer
 ---@param idx integer  1-based index of the reference cell
-function M.add_cell_below(bufnr, idx)
+---@param cell_type string|nil  "code" (default) or "markdown"
+function M.add_cell_below(bufnr, idx, cell_type)
   local state = get_state(bufnr)
   local notebook = state.notebook
   if not notebook then
     return
   end
 
+  cell_type = cell_type or "code"
   -- Insert a new empty cell into the notebook model.
   local new_cell = {
     id = require("ipynb.core.notebook").gen_cell_id
         and require("ipynb.core.notebook").gen_cell_id()
       or utils.uid(),
-    cell_type = "code",
+    cell_type = cell_type,
     source = "",
-    outputs = {},
+    outputs = cell_type == "code" and {} or nil,
     metadata = {},
-    execution_count = nil,
+    execution_count = cell_type == "code" and nil or nil,
   }
   table.insert(notebook.cells, idx + 1, new_cell)
 
@@ -455,21 +457,23 @@ function M.add_cell_below(bufnr, idx)
   end
 end
 
---- Add a new empty code cell above the cell at `idx`.
+--- Add a new empty cell above the cell at `idx`.
 ---@param bufnr integer
 ---@param idx integer
-function M.add_cell_above(bufnr, idx)
+---@param cell_type string|nil  "code" (default) or "markdown"
+function M.add_cell_above(bufnr, idx, cell_type)
   local state = get_state(bufnr)
   local notebook = state.notebook
   if not notebook then
     return
   end
 
+  cell_type = cell_type or "code"
   local new_cell = {
     id = utils.uid(),
-    cell_type = "code",
+    cell_type = cell_type,
     source = "",
-    outputs = {},
+    outputs = cell_type == "code" and {} or nil,
     metadata = {},
     execution_count = nil,
   }
