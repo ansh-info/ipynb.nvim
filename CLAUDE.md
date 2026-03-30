@@ -105,6 +105,7 @@ After the Phase 3 folder restructuring, the Lua module paths are:
 | **4** | Done | ui/markdown.lua, kernel/completion.lua, ui/inspector.lua |
 | **Tooling** | Done | .luacheckrc, .stylua.toml, Makefile, test suite, GitHub Actions CI |
 | **Refactor** | Done | Folder restructure into core/, kernel/, ui/ |
+| **Stability** | Done | Saved output restore, undo guards, cursor snap, run-and-advance, image tmux fix |
 
 ---
 
@@ -323,6 +324,27 @@ event loop mid-render. The `_active`/`_pending` guard in `kernel/output.lua`
 prevents a second `output.append()` from calling `image.clear()` while the first
 magick process is still reading the temp PNG file.
 
+### Saved output restore on open
+`kernel/output.lua` `M.restore(bufnr, cell_state, nb_outputs)` converts raw
+nbformat output objects from the `.ipynb` file into internal chunks and renders
+them via `_render()`. Called from `core/cell.lua` `M.render()` with a
+`vim.schedule` defer so extmarks are fully placed before image positioning runs.
+
+### Undo stability guards
+Neovim undo operates on raw buffer lines and has no concept of cells. Two guards
+prevent crashes and visual corruption after undo:
+- `reanchor_end_marks` skips any cell whose `start_mark` row is `>= line_count`
+  (stale after undo removed lines) and always clamps `new_end` to `line_count-1`
+- `snap_cursor_to_nearest` skips extmarks beyond buffer length and clamps the
+  target row before calling `nvim_win_set_cursor`
+Structural undo (undoing add/delete cell) still leaves borders out of sync -
+a deeper fix tracking undo at the notebook level is planned (see open issues).
+
+### Image viewport guard
+`ui/image.lua` checks `botline` via `vim.fn.getwininfo()` before rendering and
+skips if `end_row` is below the visible window area. This prevents the image from
+bleeding into adjacent tmux panes via the Kitty graphics protocol.
+
 ---
 
 ## Namespaces in use
@@ -367,3 +389,6 @@ vim.wait(timeout_ms, predicate, interval_ms)
 4. If adding a new feature: Python first -> Lua (core/kernel/ui as appropriate) -> test spec -> docs, one file per commit.
 5. If fixing a bug: read the affected module, understand the design, minimal fix.
 6. After any Lua change: run `make ci` locally or let CI verify on the PR.
+7. Known open architectural issue: structural undo (undoing add/delete cell) leaves
+   cell borders out of sync. Guards prevent crashes but a full fix requires tracking
+   undo at the notebook level. Check open issues before working in this area.
