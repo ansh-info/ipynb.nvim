@@ -2,6 +2,29 @@
 
 <!-- version list -->
 
+## v1.3.1 (2026-03-30)
+
+### Bug Fixes
+
+- Wire auto_save and improve kernel crash notification
+  ([#75](https://github.com/ansh-info/ipynb.nvim/pull/75),
+  [`b887b8e`](https://github.com/ansh-info/ipynb.nvim/commit/b887b8e92eb3f5b0511a42d552465535fbed3472))
+
+- **lua**: Fix stylua formatting in on_exit error messages
+  ([#75](https://github.com/ansh-info/ipynb.nvim/pull/75),
+  [`b887b8e`](https://github.com/ansh-info/ipynb.nvim/commit/b887b8e92eb3f5b0511a42d552465535fbed3472))
+
+- **lua**: Fix stylua formatting in on_exit error messages
+  ([`6355bd9`](https://github.com/ansh-info/ipynb.nvim/commit/6355bd9fc57354aa7ec18c502c6947590b96df18))
+
+- **lua**: Wire auto_save and improve kernel crash handling
+  ([#75](https://github.com/ansh-info/ipynb.nvim/pull/75),
+  [`b887b8e`](https://github.com/ansh-info/ipynb.nvim/commit/b887b8e92eb3f5b0511a42d552465535fbed3472))
+
+- **lua**: Wire auto_save and improve kernel crash handling
+  ([`b87b3c2`](https://github.com/ansh-info/ipynb.nvim/commit/b87b3c293b4c21268aefcc5ada8075bcf3221bd9))
+
+
 ## v1.3.0 (2026-03-30)
 
 ### Documentation
