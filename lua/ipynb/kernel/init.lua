@@ -406,6 +406,33 @@ function M.run_current_cell(bufnr)
   send(bufnr, { cmd = "execute", code = code, msg_id = mid })
 end
 
+--- Execute the current cell and advance to the next one.
+--- If the cursor is on the last cell, a new code cell is created below it.
+--- Mirrors the Shift+Enter behaviour in Jupyter Lab / Colab.
+---@param bufnr integer
+function M.run_cell_and_advance(bufnr)
+  local cs, idx = cell.cell_at_cursor(bufnr)
+  if not cs then
+    utils.warn("Cursor is not inside a cell.")
+    return
+  end
+
+  -- Execute (non-blocking - kernel runs in background).
+  M.run_current_cell(bufnr)
+
+  -- Advance immediately, like Jupyter - don't wait for execution to finish.
+  local cells = cell.get_cells(bufnr)
+  if idx and idx < #cells then
+    cell.goto_next_cell(bufnr)
+  elseif idx then
+    -- Last cell - create a new code cell below and move into it.
+    cell.add_cell_below(bufnr, idx)
+    vim.schedule(function()
+      cell.goto_next_cell(bufnr)
+    end)
+  end
+end
+
 --- Execute every code cell in the notebook.
 ---@param bufnr integer
 function M.run_all(bufnr)
