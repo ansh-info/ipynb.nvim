@@ -303,6 +303,9 @@ local function nb_output_to_chunks(out)
     }
   elseif ot == "execute_result" or ot == "display_data" then
     local data = out.data or {}
+    -- If any image MIME is present, suppress text/plain to avoid showing
+    -- the redundant object repr (e.g. "<Figure size 600x300>") above the image.
+    local has_image = data["image/png"] or data["image/jpeg"] or data["image/svg+xml"]
     if data["image/png"] then
       chunks[#chunks + 1] = { type = "image", mime = "image/png", data = data["image/png"] }
     end
@@ -316,7 +319,7 @@ local function nb_output_to_chunks(out)
       end
       chunks[#chunks + 1] = { type = "image", mime = "image/svg+xml", data = svg }
     end
-    if data["text/plain"] then
+    if data["text/plain"] and not has_image then
       local text = data["text/plain"]
       if type(text) == "table" then
         text = table.concat(text)
