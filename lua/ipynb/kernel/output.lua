@@ -42,10 +42,10 @@ local _store = {}
 -- image.nvim's magick_cli processor uses vim.wait() which runs the Neovim
 -- event loop mid-render.  A second output.append() arriving during that window
 -- would fire another vim.schedule callback that calls image.clear(), deleting
--- the temp PNG file the first magick process is still reading → crash + freeze.
+-- the temp PNG file the first magick process is still reading -> crash + freeze.
 --
--- _active  : cell_key → true while a vim.schedule render callback is executing.
--- _pending : cell_key → true when a re-render was requested during an active one.
+-- _active  : cell_key -> true while a vim.schedule render callback is executing.
+-- _pending : cell_key -> true when a re-render was requested during an active one.
 --
 -- When a callback sees _active, it sets _pending and returns without touching
 -- image.clear().  Once the active render finishes it checks _pending and calls
@@ -77,7 +77,7 @@ function M.clear(bufnr, cell_state)
   end
 end
 
--- ── Text → virt_lines conversion ──────────────────────────────────────────────
+-- ── Text -> virt_lines conversion ──────────────────────────────────────────────
 
 --- Split a multi-line string and convert each line into a virt_line chunk-list.
 --- Respects config.ui.output_max_lines (0 = unlimited).
@@ -106,7 +106,7 @@ local function text_to_virt_lines(text, hl, max_lines)
     vl[#vl + 1] = { { line, hl } }
   end
   if truncated > 0 then
-    vl[#vl + 1] = { { string.format("  … %d more lines (truncated)", truncated), HL.meta } }
+    vl[#vl + 1] = { { string.format("  ... %d more lines (truncated)", truncated), HL.meta } }
   end
   return vl
 end
@@ -117,7 +117,7 @@ local function divider()
   return { { "  " .. string.rep("·", 40), HL.divider } }
 end
 
--- ── Chunk → virt_lines ────────────────────────────────────────────────────────
+-- ── Chunk -> virt_lines ────────────────────────────────────────────────────────
 
 --- Convert a single output chunk into a list of virt_line chunk-lists.
 ---@param chunk table
@@ -180,8 +180,8 @@ function M.append(bufnr, cell_state, chunk)
 end
 
 --- Re-render all accumulated chunks for a cell.
---- Text chunks → virt_lines via cell.set_output_virt_lines.
---- Image chunks → image.lua (positioned after the text block).
+--- Text chunks -> virt_lines via cell.set_output_virt_lines.
+--- Image chunks -> image.lua (rendered after text virt_lines are committed).
 ---@param bufnr integer
 ---@param cell_state table
 function M._render(bufnr, cell_state)
@@ -197,25 +197,16 @@ function M._render(bufnr, cell_state)
   local ok_img, image = pcall(require, "ipynb.ui.image")
   local img_supported = ok_img and image.is_supported()
 
-  local all_vl = {} -- text virt_lines (+ spacers reserved for image floats)
-  local img_queue = {} -- { chunk, text_offset } pairs
+  local all_vl = {} -- text virt_lines only
+  local img_chunks = {} -- image chunks to render after virt_lines are set
 
   -- Top divider.
   all_vl[#all_vl + 1] = divider()
 
   for i, chunk in ipairs(chunks) do
     if chunk.type == "image" and img_supported then
-      -- Record the text offset at which this image should appear, then add
-      -- blank spacer virt_lines to reserve screen rows for the float window.
-      -- This prevents the next cell's content from showing through the float.
-      local text_offset = #all_vl
-      img_queue[#img_queue + 1] = { chunk = chunk, text_offset = text_offset }
-      local spacers = cfg.ui.output_max_lines > 0
-          and math.min(cfg.image.max_height, cfg.ui.output_max_lines)
-        or cfg.image.max_height
-      for _ = 1, spacers do
-        all_vl[#all_vl + 1] = { { "", "Normal" } }
-      end
+      -- Collect for rendering after virt_lines are committed.
+      img_chunks[#img_chunks + 1] = chunk
     else
       local vl = chunk_to_virt_lines(chunk, max_lines)
       for _, line in ipairs(vl) do
@@ -245,28 +236,24 @@ function M._render(bufnr, cell_state)
     end
     _active[key] = true
 
-    -- 1. Place text virt_lines (includes spacers for image floats).
+    -- 1. Place text virt_lines.
     cell.set_output_virt_lines(bufnr, cell_state, all_vl)
 
-    -- 2. Clear old image floats.
+    -- 2. Clear old image renders.
     if ok_img then
       image.clear(bufnr, cell_state)
     end
 
-    _active[key] = nil
-
-    -- 3. Render image floats after virt_lines are committed so that
-    --    screenpos() inside image.render() sees the final layout.
-    if ok_img and #img_queue > 0 then
-      vim.schedule(function()
-        if not vim.api.nvim_buf_is_valid(bufnr) then
-          return
-        end
-        for _, entry in ipairs(img_queue) do
-          image.render(bufnr, cell_state, entry.chunk, entry.text_offset)
-        end
-      end)
+    -- 3. Render image chunks. The separator line (end_row + 1) used by
+    --    image.lua is a real buffer line that sits after all virt_lines in
+    --    screen space, so screenpos() returns the correct row automatically.
+    if ok_img and #img_chunks > 0 then
+      for _, img_chunk in ipairs(img_chunks) do
+        image.render(bufnr, cell_state, img_chunk)
+      end
     end
+
+    _active[key] = nil
 
     -- If more output arrived while we were rendering, re-render now so the
     -- latest chunks (e.g. a second matplotlib figure) are always displayed.
