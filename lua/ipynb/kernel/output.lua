@@ -198,20 +198,16 @@ function M._render(bufnr, cell_state)
   local img_supported = ok_img and image.is_supported()
 
   local all_vl = {} -- text virt_lines only
-  -- Each entry: { chunk = <chunk>, index = <0-based image position> }
-  -- The index drives vertical stacking: y = sep_row + index * max_height.
+  -- Collected image chunks passed as a list to image.render_stacked().
   local img_chunks = {}
-  local img_index = 0
 
   -- Top divider.
   all_vl[#all_vl + 1] = divider()
 
   for i, chunk in ipairs(chunks) do
     if chunk.type == "image" and img_supported then
-      -- Collect for rendering after virt_lines are committed.
-      -- Each image gets a unique index so they stack vertically below the cell.
-      img_chunks[#img_chunks + 1] = { chunk = chunk, index = img_index }
-      img_index = img_index + 1
+      -- Collect image chunks; render_stacked() combines them into one PNG.
+      img_chunks[#img_chunks + 1] = chunk
     else
       local vl = chunk_to_virt_lines(chunk, max_lines)
       for _, line in ipairs(vl) do
@@ -264,9 +260,9 @@ function M._render(bufnr, cell_state)
           _active[key] = nil
           return
         end
-        for _, entry in ipairs(img_chunks) do
-          image.render(bufnr, cell_state, entry.chunk, entry.index)
-        end
+        -- render_stacked combines all chunks into one vertically-stacked PNG
+        -- so y always equals sep_row (no buffer-length overflow for N>1).
+        image.render_stacked(bufnr, cell_state, img_chunks)
         -- Release guard and process any render that arrived during this cycle.
         _active[key] = nil
         if _pending[key] then
