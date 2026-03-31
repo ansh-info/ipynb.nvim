@@ -198,7 +198,10 @@ function M._render(bufnr, cell_state)
   local img_supported = ok_img and image.is_supported()
 
   local all_vl = {} -- text virt_lines only
-  local img_chunks = {} -- image chunks to render after virt_lines are set
+  -- Each entry: { chunk = <chunk>, index = <0-based image position> }
+  -- The index drives vertical stacking: y = sep_row + index * max_height.
+  local img_chunks = {}
+  local img_index = 0
 
   -- Top divider.
   all_vl[#all_vl + 1] = divider()
@@ -206,7 +209,9 @@ function M._render(bufnr, cell_state)
   for i, chunk in ipairs(chunks) do
     if chunk.type == "image" and img_supported then
       -- Collect for rendering after virt_lines are committed.
-      img_chunks[#img_chunks + 1] = chunk
+      -- Each image gets a unique index so they stack vertically below the cell.
+      img_chunks[#img_chunks + 1] = { chunk = chunk, index = img_index }
+      img_index = img_index + 1
     else
       local vl = chunk_to_virt_lines(chunk, max_lines)
       for _, line in ipairs(vl) do
@@ -256,8 +261,8 @@ function M._render(bufnr, cell_state)
         if not vim.api.nvim_buf_is_valid(bufnr) then
           return
         end
-        for _, img_chunk in ipairs(img_chunks) do
-          image.render(bufnr, cell_state, img_chunk)
+        for _, entry in ipairs(img_chunks) do
+          image.render(bufnr, cell_state, entry.chunk, entry.index)
         end
       end)
     end
