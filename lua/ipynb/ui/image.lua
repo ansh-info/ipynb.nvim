@@ -99,6 +99,34 @@ local function chunk_to_tmp(chunk)
   return nil, nil
 end
 
+--- Combine a list of image temp files into one vertically-stacked PNG via
+--- ImageMagick `convert -append`.  Returns (path, is_new) where is_new is
+--- true when a composite file was created (caller must remove it later).
+--- Falls back to tmps[1] when only one file is given or convert fails.
+---@param tmps string[]
+---@return string path, boolean is_new
+local function combine_vertical(tmps)
+  if #tmps == 1 then
+    return tmps[1], false
+  end
+  local out = vim.fn.tempname() .. ".png"
+  local args = {}
+  for _, t in ipairs(tmps) do
+    args[#args + 1] = vim.fn.shellescape(t)
+  end
+  local cmd = string.format(
+    "convert %s -append %s 2>/dev/null",
+    table.concat(args, " "),
+    vim.fn.shellescape(out)
+  )
+  vim.fn.system(cmd)
+  if vim.fn.filereadable(out) == 1 and vim.fn.getfsize(out) > 0 then
+    return out, true
+  end
+  pcall(os.remove, out)
+  return tmps[1], false
+end
+
 -- ── Rendering ─────────────────────────────────────────────────────────────────
 
 --- Render one image chunk below a cell's text output.
@@ -219,6 +247,134 @@ function M.render(bufnr, cell_state, chunk, img_index)
   return true
 end
 
+--- Render all image chunks for a cell as a single vertically-stacked image.
+--- All chunks are combined via ImageMagick `convert -append` so the rendered
+--- y coordinate is always sep_row - no buffer-length overflow for multi-image
+--- cells.  Single-image cells skip the combine step entirely.
+---
+---@param bufnr integer
+---@param cell_state table
+---@param chunks table[]  list of { type="image", mime, data } chunks
+---@return boolean  true if the image object was created
+function M.render_stacked(bufnr, cell_state, chunks)
+  if not M.is_supported() then
+    return false
+  end
+  if not chunks or #chunks == 0 then
+    return false
+  end
+
+  local ok_api, image_api = pcall(require, "image")
+  if not ok_api then
+    return false
+  end
+
+  local cfg = require("ipynb.config").get()
+  local cell_mod = require("ipynb.core.cell")
+  local utils = require("ipynb.utils")
+
+  -- Decode every chunk to its own temp file.
+  local tmps = {}
+  for _, chunk in ipairs(chunks) do
+    local tmp = chunk_to_tmp(chunk)
+    if tmp then
+      tmps[#tmps + 1] = tmp
+    end
+  end
+  if #tmps == 0 then
+    utils.debug("image.lua render_stacked: could not decode any image payload")
+    return false
+  end
+
+  -- Combine into one vertically stacked PNG (no-op for a single image).
+  local combined, is_composite = combine_vertical(tmps)
+  if is_composite then
+    for _, t in ipairs(tmps) do
+      pcall(os.remove, t)
+    end
+  end
+
+  -- Locate the cell end_mark row.
+  local ns = cell_mod.namespace()
+  local em_pos = vim.api.nvim_buf_get_extmark_by_id(bufnr, ns, cell_state.end_mark, {})
+  local end_row = (em_pos and em_pos[1]) or 0
+  local max_row = math.max(0, vim.api.nvim_buf_line_count(bufnr) - 1)
+  end_row = math.min(end_row, max_row)
+  local sep_row = math.min(end_row + 1, max_row)
+
+  local source_win = vim.fn.bufwinid(bufnr)
+  if source_win == -1 then
+    source_win = vim.api.nvim_get_current_win()
+  end
+
+  -- Total height: one slot per original chunk so stacked images are not clipped.
+  local img_height = cfg.image.max_height * #chunks
+
+  -- Viewport guard: register without rendering when sep_row is off-screen.
+  local info = vim.fn.getwininfo(source_win)
+  if info and info[1] then
+    local botline = info[1].botline
+    if sep_row + 1 > botline then
+      local key = cell_key(bufnr, cell_state)
+      if not _registry[key] then
+        _registry[key] = {}
+      end
+      _registry[key][#_registry[key] + 1] = {
+        img = nil,
+        tmp = combined,
+        end_row = end_row,
+        img_index = 0,
+        img_height = img_height,
+        source_win = source_win,
+      }
+      return true
+    end
+  end
+
+  local key = cell_key(bufnr, cell_state)
+  if not _registry[key] then
+    _registry[key] = {}
+  end
+
+  local img_id = "ipynb_" .. key:gsub(":", "_") .. "_stacked"
+
+  local img
+  local ok_from
+  ok_from, img = pcall(image_api.from_file, combined, {
+    id = img_id,
+    buffer = bufnr,
+    window = source_win,
+    x = 2,
+    y = sep_row,
+    width = cfg.image.max_width,
+    height = img_height,
+    with_virtual_padding = true,
+  })
+  if not ok_from then
+    utils.debug("image.nvim from_file error: " .. tostring(img))
+    pcall(os.remove, combined)
+    return false
+  end
+
+  _registry[key][#_registry[key] + 1] = {
+    img = img,
+    tmp = combined,
+    end_row = end_row,
+    img_index = 0,
+    img_height = img_height,
+    source_win = source_win,
+  }
+
+  local ok_render, render_err = pcall(function()
+    img:render()
+  end)
+  if not ok_render then
+    utils.debug("image.nvim render error (will retry on scroll): " .. tostring(render_err))
+  end
+
+  return true
+end
+
 -- ── Scroll re-render ─────────────────────────────────────────────────────────
 
 --- Re-render / reposition all registered images for a buffer.
@@ -248,7 +404,7 @@ function M.rerender_all(bufnr)
 
       local max_row = math.max(0, vim.api.nvim_buf_line_count(bufnr) - 1)
       local sep_row = math.min(entry.end_row + 1, max_row)
-      local y = sep_row + (entry.img_index or 0) * cfg.image.max_height
+      local y = sep_row + (entry.img_index or 0) * (entry.img_height or cfg.image.max_height)
 
       -- Viewport guard: skip images whose row is fully off-screen.
       local info = vim.fn.getwininfo(source_win)
@@ -281,7 +437,7 @@ function M.rerender_all(bufnr)
           x = 2,
           y = y,
           width = cfg.image.max_width,
-          height = cfg.image.max_height,
+          height = entry.img_height or cfg.image.max_height,
           with_virtual_padding = true,
         })
         if ok_from then
