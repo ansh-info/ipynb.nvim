@@ -103,16 +103,17 @@ end
 
 --- Render one image chunk below a cell's text output.
 ---
---- The image is placed at y = separator_line (end_row + 1), which is a real
---- buffer line that sits AFTER all virt_lines (borders, text output) in screen
---- space.  screenpos() on that line returns the correct terminal row so the
---- image appears naturally below the output block without overlap.
+--- The image is placed at y = sep_row + img_index * max_height, where sep_row
+--- is end_row + 1 (the real buffer line after all virt_lines).  img_index (0
+--- for the first image, 1 for the second, etc.) stacks multiple images from
+--- the same cell vertically so they do not overlap.
 ---
 ---@param bufnr integer
 ---@param cell_state table
----@param chunk table   { type="image", mime, data }
+---@param chunk table    { type="image", mime, data }
+---@param img_index integer  0-based position among images in this cell (default 0)
 ---@return boolean  true if image object was created
-function M.render(bufnr, cell_state, chunk)
+function M.render(bufnr, cell_state, chunk, img_index)
   if not M.is_supported() then
     return false
   end
@@ -121,6 +122,8 @@ function M.render(bufnr, cell_state, chunk)
   if not ok_api then
     return false
   end
+
+  img_index = img_index or 0
 
   local cfg = require("ipynb.config").get()
   local cell_mod = require("ipynb.core.cell")
@@ -139,22 +142,23 @@ function M.render(bufnr, cell_state, chunk)
   local max_row = math.max(0, vim.api.nvim_buf_line_count(bufnr) - 1)
   end_row = math.min(end_row, max_row)
 
-  -- Use the separator line (end_row + 1) so that screenpos() skips over all
-  -- virt_lines and returns the row directly below the output block.
+  -- sep_row is the real buffer line after all virt_lines; screenpos() on it
+  -- returns the terminal row directly below the output block.
+  -- Each subsequent image is offset by max_height rows so they stack vertically.
   local sep_row = math.min(end_row + 1, max_row)
+  local y = sep_row + img_index * cfg.image.max_height
 
   local source_win = vim.fn.bufwinid(bufnr)
   if source_win == -1 then
     source_win = vim.api.nvim_get_current_win()
   end
 
-  -- Viewport guard: if the separator line is below the visible window bottom,
-  -- skip rendering this pass. rerender_all() will pick it up on scroll.
+  -- Viewport guard: if this image's row is below the visible window bottom,
+  -- register without rendering so rerender_all() picks it up on scroll.
   local info = vim.fn.getwininfo(source_win)
   if info and info[1] then
     local botline = info[1].botline -- 1-based
-    if sep_row + 1 > botline then
-      -- Register without rendering so rerender_all() can handle it later.
+    if y + 1 > botline then
       local key = cell_key(bufnr, cell_state)
       if not _registry[key] then
         _registry[key] = {}
@@ -163,6 +167,7 @@ function M.render(bufnr, cell_state, chunk)
         img = nil,
         tmp = tmp,
         end_row = end_row,
+        img_index = img_index,
         source_win = source_win,
         chunk = chunk,
       }
@@ -175,7 +180,7 @@ function M.render(bufnr, cell_state, chunk)
     _registry[key] = {}
   end
 
-  local img_id = "ipynb_" .. key:gsub(":", "_") .. "_" .. tostring(os.time())
+  local img_id = "ipynb_" .. key:gsub(":", "_") .. "_" .. tostring(img_index)
 
   local img
   local ok_from
@@ -184,7 +189,7 @@ function M.render(bufnr, cell_state, chunk)
     buffer = bufnr,
     window = source_win,
     x = 2,
-    y = sep_row,
+    y = y,
     width = cfg.image.max_width,
     height = cfg.image.max_height,
     with_virtual_padding = true,
@@ -199,6 +204,7 @@ function M.render(bufnr, cell_state, chunk)
     img = img,
     tmp = tmp,
     end_row = end_row,
+    img_index = img_index,
     source_win = source_win,
     chunk = chunk,
   }
@@ -242,15 +248,16 @@ function M.rerender_all(bufnr)
 
       local max_row = math.max(0, vim.api.nvim_buf_line_count(bufnr) - 1)
       local sep_row = math.min(entry.end_row + 1, max_row)
+      local y = sep_row + (entry.img_index or 0) * cfg.image.max_height
 
-      -- Viewport guard: skip cells that are fully off-screen.
+      -- Viewport guard: skip images whose row is fully off-screen.
       local info = vim.fn.getwininfo(source_win)
       if not info or not info[1] then
         goto next_entry
       end
       local botline = info[1].botline
-      if sep_row + 1 > botline then
-        -- Cell scrolled off-screen: clear the image to prevent tmux bleed.
+      if y + 1 > botline then
+        -- Image scrolled off-screen: clear to prevent tmux bleed.
         if entry.img then
           pcall(function()
             entry.img:clear()
@@ -260,18 +267,19 @@ function M.rerender_all(bufnr)
         goto next_entry
       end
 
-      -- Cell is visible. If no live image object, create one now.
+      -- Image is visible. If no live image object, create one now.
       if not entry.img then
         if not entry.tmp or vim.fn.filereadable(entry.tmp) == 0 then
           goto next_entry
         end
-        local img_id = "ipynb_retry_" .. key:gsub(":", "_") .. "_" .. tostring(os.time())
+        local idx = entry.img_index or 0
+        local img_id = "ipynb_retry_" .. key:gsub(":", "_") .. "_" .. tostring(idx)
         local ok_from, img2 = pcall(image_api.from_file, entry.tmp, {
           id = img_id,
           buffer = bufnr,
           window = source_win,
           x = 2,
-          y = sep_row,
+          y = y,
           width = cfg.image.max_width,
           height = cfg.image.max_height,
           with_virtual_padding = true,
@@ -285,7 +293,7 @@ function M.rerender_all(bufnr)
         goto next_entry
       end
 
-      -- Live image: just re-render to update position after scroll.
+      -- Live image: re-render to update position after scroll.
       pcall(function()
         entry.img:render()
       end)
