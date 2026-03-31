@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.4.9 (2026-03-31)
+
+### Bug Fixes
+
+- **lua**: Add 16px transparent gap between stacked images
+  ([`9bc3688`](https://github.com/ansh-info/ipynb.nvim/commit/9bc368880ce4363162c2ad85c94b55060b8e4f02))
+
+
 ## v1.4.8 (2026-03-31)
 
 ### Bug Fixes
