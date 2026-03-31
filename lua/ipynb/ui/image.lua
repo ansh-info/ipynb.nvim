@@ -335,6 +335,7 @@ function M.render_stacked(bufnr, cell_state, chunks)
         end_row = end_row,
         img_index = 0,
         img_height = img_height,
+        last_y = nil, -- not yet rendered; rerender_all will set it on first draw
         source_win = source_win,
       }
       return true
@@ -372,6 +373,7 @@ function M.render_stacked(bufnr, cell_state, chunks)
     end_row = end_row,
     img_index = 0,
     img_height = img_height,
+    last_y = sep_row, -- track rendered position to skip no-op rerenders
     source_win = source_win,
   }
 
@@ -452,6 +454,7 @@ function M.rerender_all(bufnr)
         })
         if ok_from then
           entry.img = img2
+          entry.last_y = y
           pcall(function()
             img2:render()
           end)
@@ -459,7 +462,13 @@ function M.rerender_all(bufnr)
         goto next_entry
       end
 
-      -- Live image: re-render to update position after scroll.
+      -- Live image: only re-render when the screen row actually changed.
+      -- Skipping no-op renders avoids sending Kitty graphics protocol sequences
+      -- that interrupt the cursor animation and cause visible flicker on [[/]].
+      if y == entry.last_y then
+        goto next_entry
+      end
+      entry.last_y = y
       pcall(function()
         entry.img:render()
       end)
