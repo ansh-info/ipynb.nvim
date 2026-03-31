@@ -2,6 +2,22 @@
 
 <!-- version list -->
 
+## v1.4.5 (2026-03-31)
+
+### Bug Fixes
+
+- **lua**: Stack multiple images vertically using img_index offset
+  ([`764a43b`](https://github.com/ansh-info/ipynb.nvim/commit/764a43b61748c13ccd71a4cac709db253e2b31a9))
+
+- **lua**: Track per-image index in output renderer for vertical stacking
+  ([`12b1a89`](https://github.com/ansh-info/ipynb.nvim/commit/12b1a898a8b4aa2eadde9d3cb73ee3e0e6c4f616))
+
+### Testing
+
+- Add multi-image cell to test notebook for vertical stacking
+  ([`5c9c756`](https://github.com/ansh-info/ipynb.nvim/commit/5c9c756fe4b51b342b49612c2ca61a0abc4cd38b))
+
+
 ## v1.4.4 (2026-03-30)
 
 ### Bug Fixes
