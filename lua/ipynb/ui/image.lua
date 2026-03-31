@@ -512,6 +512,38 @@ function M.clear_all(bufnr, cells)
   end
 end
 
+--- Clear live image objects whose stored y row is now beyond the buffer end.
+---
+--- image.nvim stores the y coordinate passed at render time and re-renders from
+--- its own TextChanged/WinScrolled autocmds using that stored value.  After undo
+--- shrinks the buffer, the stored y may exceed buf_line_count - 1, causing
+--- image.nvim's renderer to call screenpos() with an invalid 1-based row -> E966.
+---
+--- Call this whenever buffer lines are removed (e.g. from nvim_buf_attach
+--- on_lines) to clear stale image objects before image.nvim's autocmds fire.
+---@param bufnr integer
+function M.clear_stale(bufnr)
+  local line_count = vim.api.nvim_buf_line_count(bufnr)
+  local prefix = tostring(bufnr) .. ":"
+  for key, entries in pairs(_registry) do
+    if key:sub(1, #prefix) ~= prefix then
+      goto next_key
+    end
+    for _, entry in ipairs(entries) do
+      -- image.nvim calls screenpos(win, last_y + 1, 1).
+      -- Valid iff last_y + 1 <= line_count, i.e. last_y < line_count.
+      if entry.img and entry.last_y ~= nil and entry.last_y >= line_count then
+        pcall(function()
+          entry.img:clear()
+        end)
+        entry.img = nil
+        entry.last_y = nil
+      end
+    end
+    ::next_key::
+  end
+end
+
 --- Return a human-readable placeholder string for unsupported environments.
 ---@param chunk table
 ---@return string

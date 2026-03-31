@@ -201,6 +201,34 @@ function M.open(path, bufnr)
     end,
   })
 
+  -- Guard image.nvim against E966 "Invalid line number" on undo.
+  --
+  -- image.nvim registers its own TextChanged autocmd that calls screenpos()
+  -- with the y coordinate stored at render time.  After undo shrinks the
+  -- buffer, that stored y can exceed buf_line_count - 1, crashing image.nvim.
+  -- image.nvim's autocmd fires BEFORE ours (it was registered at startup),
+  -- so we cannot clear the stale image in a TextChanged callback.
+  --
+  -- nvim_buf_attach on_lines fires synchronously BEFORE any TextChanged
+  -- autocmds, giving us a reliable window to clear stale images first.
+  if pcall(require, "ipynb.ui.image") then
+    vim.api.nvim_buf_attach(bufnr, false, {
+      on_lines = function(_, _, _, _, last_old, last_new)
+        -- Only act when lines were removed (last_new < last_old).
+        if last_new >= last_old then
+          return
+        end
+        if not vim.api.nvim_buf_is_valid(bufnr) then
+          return true -- detach
+        end
+        local ok, image = pcall(require, "ipynb.ui.image")
+        if ok then
+          image.clear_stale(bufnr)
+        end
+      end,
+    })
+  end
+
   -- Snap cursor back into the nearest cell if it escapes all cell regions.
   -- This prevents typing in the gap between cells from corrupting the buffer.
   vim.api.nvim_create_autocmd("CursorMoved", {
