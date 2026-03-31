@@ -448,13 +448,22 @@ function M.add_cell_below(bufnr, idx, cell_type)
   -- Re-render the whole buffer to reflect the new cell.
   M.render(bufnr, notebook)
 
-  -- Position cursor in the new cell.
-  local new_cs = state.cells[idx + 1]
-  if new_cs then
-    local s, _ = cell_line_range(bufnr, new_cs)
-    vim.api.nvim_win_set_cursor(0, { s + 1, 0 })
-    vim.cmd("startinsert")
-  end
+  -- Defer cursor placement until after render-triggered autocmds settle.
+  -- M.render() rebuilds all extmarks; CursorMoved fires during the rebuild
+  -- and snap_cursor_to_nearest can fire with incomplete state.  Waiting one
+  -- tick ensures extmarks are stable before we move the cursor.
+  local captured_idx = idx
+  vim.schedule(function()
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+      return
+    end
+    local new_cs = state.cells[captured_idx + 1]
+    if new_cs then
+      local s, _ = cell_line_range(bufnr, new_cs)
+      vim.api.nvim_win_set_cursor(0, { s + 1, 0 })
+      vim.cmd("startinsert")
+    end
+  end)
 end
 
 --- Add a new empty cell above the cell at `idx`.
@@ -481,12 +490,18 @@ function M.add_cell_above(bufnr, idx, cell_type)
 
   M.render(bufnr, notebook)
 
-  local new_cs = state.cells[idx]
-  if new_cs then
-    local s, _ = cell_line_range(bufnr, new_cs)
-    vim.api.nvim_win_set_cursor(0, { s + 1, 0 })
-    vim.cmd("startinsert")
-  end
+  local captured_idx = idx
+  vim.schedule(function()
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+      return
+    end
+    local new_cs = state.cells[captured_idx]
+    if new_cs then
+      local s, _ = cell_line_range(bufnr, new_cs)
+      vim.api.nvim_win_set_cursor(0, { s + 1, 0 })
+      vim.cmd("startinsert")
+    end
+  end)
 end
 
 --- Delete the cell at `idx`.
