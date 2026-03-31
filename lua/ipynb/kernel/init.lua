@@ -227,6 +227,8 @@ local function dispatch(bufnr, msg)
               nb.cells[ci].outputs[#nb.cells[ci].outputs + 1] = nb_out
             end
           end
+          -- Mark buffer modified so Neovim warns on :q with unsaved outputs.
+          pcall(vim.api.nvim_buf_set_option, bufnr, "modified", true)
         end
         if t == "error" then
           cell.update_status(bufnr, pending.cell_state, "error", nil)
