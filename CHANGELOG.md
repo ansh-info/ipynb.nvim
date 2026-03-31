@@ -2,6 +2,17 @@
 
 <!-- version list -->
 
+## v1.4.6 (2026-03-31)
+
+### Bug Fixes
+
+- **lua**: Extend _active guard to cover nested image schedule
+  ([`cf7cd8a`](https://github.com/ansh-info/ipynb.nvim/commit/cf7cd8aadfd17ce63b19c61ed6ad6e40e73c49e6))
+
+- **lua**: Mark buffer modified when cell outputs are written to notebook model
+  ([`3d1c66b`](https://github.com/ansh-info/ipynb.nvim/commit/3d1c66b9f3989089932e50a8c3a4e02b8e235d9c))
+
+
 ## v1.4.5 (2026-03-31)
 
 ### Bug Fixes
