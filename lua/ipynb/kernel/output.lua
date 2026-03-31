@@ -229,12 +229,12 @@ function M._render(bufnr, cell_state)
       return
     end
 
-    -- Guard against re-entrant renders.  image.nvim's magick_cli uses
-    -- vim.wait() which runs the event loop while magick converts the PNG.
-    -- A second output.append() during that window queues another vim.schedule
-    -- callback that would call image.clear(), deleting the temp file the first
-    -- magick process is still reading.  Instead, record the request as pending
-    -- and let it run once the active render finishes.
+    -- Guard against re-entrant renders.
+    -- _active covers the FULL render cycle including the nested image schedule.
+    -- This prevents image.clear() from deleting a temp file that a still-pending
+    -- magick_cli process (inside img:render() via vim.wait()) is reading.
+    -- New output.append() calls that arrive while _active is true are recorded
+    -- as _pending and processed once the active render fully completes.
     if _active[key] then
       _pending[key] = true
       return
@@ -249,29 +249,38 @@ function M._render(bufnr, cell_state)
       image.clear(bufnr, cell_state)
     end
 
-    _active[key] = nil
-
     -- 3. Render image chunks in a nested vim.schedule so that Neovim has one
     --    event loop tick to repaint the virt_lines before image.nvim writes
     --    Kitty escape sequences to the terminal.  Without the extra tick,
     --    Neovim's TUI repaint can overwrite the image pixels, causing the image
     --    to be invisible until the next key press or scroll event.
+    --
+    --    _active is released INSIDE the nested callback, after all image renders
+    --    complete.  This ensures image.clear() (called at step 2 of the next
+    --    render) can never run while magick_cli is still reading a temp file.
     if ok_img and #img_chunks > 0 then
       vim.schedule(function()
         if not vim.api.nvim_buf_is_valid(bufnr) then
+          _active[key] = nil
           return
         end
         for _, entry in ipairs(img_chunks) do
           image.render(bufnr, cell_state, entry.chunk, entry.index)
         end
+        -- Release guard and process any render that arrived during this cycle.
+        _active[key] = nil
+        if _pending[key] then
+          _pending[key] = nil
+          M._render(bufnr, cell_state)
+        end
       end)
-    end
-
-    -- If more output arrived while we were rendering, re-render now so the
-    -- latest chunks (e.g. a second matplotlib figure) are always displayed.
-    if _pending[key] then
-      _pending[key] = nil
-      M._render(bufnr, cell_state)
+    else
+      -- No images: release guard immediately and handle any pending re-render.
+      _active[key] = nil
+      if _pending[key] then
+        _pending[key] = nil
+        M._render(bufnr, cell_state)
+      end
     end
   end)
 end
