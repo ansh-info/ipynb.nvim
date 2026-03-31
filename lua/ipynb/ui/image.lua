@@ -110,9 +110,19 @@ local function combine_vertical(tmps)
     return tmps[1], false
   end
   local out = vim.fn.tempname() .. ".png"
+  -- Add 16px of transparent padding below every image except the last so
+  -- stacked plots are visually separated.  Transparent pixels render as the
+  -- terminal background colour in Kitty, giving a natural gap on any theme.
   local args = {}
-  for _, t in ipairs(tmps) do
-    args[#args + 1] = vim.fn.shellescape(t)
+  for i, t in ipairs(tmps) do
+    if i < #tmps then
+      args[#args + 1] = string.format(
+        "\\( %s -background none -gravity South -splice 0x16 \\)",
+        vim.fn.shellescape(t)
+      )
+    else
+      args[#args + 1] = vim.fn.shellescape(t)
+    end
   end
   local cmd = string.format(
     "convert %s -append %s 2>/dev/null",
