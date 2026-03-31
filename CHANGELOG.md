@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.4.8 (2026-03-31)
+
+### Bug Fixes
+
+- **lua**: Use pattern=python with double vim.schedule for LSP attach
+  ([`d033625`](https://github.com/ansh-info/ipynb.nvim/commit/d033625a83017476f95d80f536d27c2463cfed67))
+
+
 ## v1.4.7 (2026-03-31)
 
 ### Bug Fixes
