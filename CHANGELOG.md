@@ -2,6 +2,23 @@
 
 <!-- version list -->
 
+## v1.4.7 (2026-03-31)
+
+### Bug Fixes
+
+- **lua**: Call render_stacked with chunk list instead of indexed renders
+  ([`f43af4b`](https://github.com/ansh-info/ipynb.nvim/commit/f43af4b632fe0fbed51b8e7ab7914a09954aeaa9))
+
+- **lua**: Combine multiple images vertically before rendering
+  ([`1d449de`](https://github.com/ansh-info/ipynb.nvim/commit/1d449dec4fadf8de0062c01a06a5e66957c0c333))
+
+- **lua**: Defer cursor placement after add_cell to avoid snap jump
+  ([`a90b7b0`](https://github.com/ansh-info/ipynb.nvim/commit/a90b7b0140503957f6d643cfda2bdba3ab13c81f))
+
+- **lua**: Use buf=bufnr in exec_autocmds to fix LSP not attaching
+  ([`27121bb`](https://github.com/ansh-info/ipynb.nvim/commit/27121bbcd4c7a7cff97820804b27530767fac157))
+
+
 ## v1.4.6 (2026-03-31)
 
 ### Bug Fixes
