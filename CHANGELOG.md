@@ -2,6 +2,17 @@
 
 <!-- version list -->
 
+## v1.4.11 (2026-03-31)
+
+### Bug Fixes
+
+- **lua**: Add clear_stale() to remove images with invalid buffer row
+  ([`7088106`](https://github.com/ansh-info/ipynb.nvim/commit/7088106320265bfd5919dea7ca73e65d91ec8bc9))
+
+- **lua**: Use nvim_buf_attach on_lines to clear stale images before undo crash
+  ([`6ca72c6`](https://github.com/ansh-info/ipynb.nvim/commit/6ca72c60a47c08d34b2b5e32dfdd3e1a8ab80cfb))
+
+
 ## v1.4.10 (2026-03-31)
 
 ### Bug Fixes
