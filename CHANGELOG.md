@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.4.10 (2026-03-31)
+
+### Bug Fixes
+
+- **lua**: Skip image re-render when screen row unchanged
+  ([`479601e`](https://github.com/ansh-info/ipynb.nvim/commit/479601ec9e33e48df3b0f435875354e795e06c7d))
+
+
 ## v1.4.9 (2026-03-31)
 
 ### Bug Fixes
