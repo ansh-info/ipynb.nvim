@@ -7,7 +7,7 @@
 ---     ft = "ipynb",
 ---     dependencies = {
 ---       "nvim-treesitter/nvim-treesitter",
----       "3rd/image.nvim",          -- optional, for image rendering
+---       "folke/snacks.nvim",        -- optional, for image rendering
 ---     },
 ---     opts = {
 ---       -- override any defaults from config.lua
