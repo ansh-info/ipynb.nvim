@@ -2,6 +2,59 @@
 
 <!-- version list -->
 
+## v1.5.0 (2026-04-01)
+
+### Chores
+
+- **config**: Add syntax = "Lua52" to stylua config
+  ([`050dee6`](https://github.com/ansh-info/ipynb.nvim/commit/050dee6d6f3e3cf83fec525d12ef97ad9de7a155))
+
+- **config**: Remove dead backend field from ImageConfig
+  ([`909df5e`](https://github.com/ansh-info/ipynb.nvim/commit/909df5e1d30b03ed1473bd6c73085f631e5c137b))
+
+- **config**: Revert syntax = "Lua52" from stylua config
+  ([`28655ac`](https://github.com/ansh-info/ipynb.nvim/commit/28655ac42a54a0a93ccc4f6de3e0a4036d08401e))
+
+- **lua**: Remove stale render_stacked and magick_cli comments
+  ([`36c3c20`](https://github.com/ansh-info/ipynb.nvim/commit/36c3c20196c4be1b5735e7c4ce868e468f775138))
+
+- **lua**: Remove WinScrolled rerender and on_lines stale-image guard
+  ([`d27208d`](https://github.com/ansh-info/ipynb.nvim/commit/d27208d1c2959a997063aaebda0fc6389ea509a5))
+
+- **lua**: Update init.lua comment to reference snacks.nvim
+  ([`94e7c99`](https://github.com/ansh-info/ipynb.nvim/commit/94e7c99e0fab14d64b1d48c6d1da95c82748a022))
+
+- **lua**: Update output.lua for snacks image backend
+  ([`6b43e24`](https://github.com/ansh-info/ipynb.nvim/commit/6b43e2413e80e33c6eb6369a3507f2dca4d1f308))
+
+### Documentation
+
+- Replace image.nvim with snacks.nvim, remove ImageMagick requirement
+  ([`4f518ed`](https://github.com/ansh-info/ipynb.nvim/commit/4f518ed2d92b7d041fd72f60b404dd381b34c64b))
+
+- **docs**: Update CLAUDE.md for snacks.nvim migration
+  ([`280e5ca`](https://github.com/ansh-info/ipynb.nvim/commit/280e5cad365e63b85fa7fa94591c7817365e91af))
+
+- **docs**: Update CONTRIBUTING.md layout for snacks.nvim migration
+  ([`9937fdf`](https://github.com/ansh-info/ipynb.nvim/commit/9937fdf39597ab9d3f8b3bf3c78f70ceba2ad7e4))
+
+### Features
+
+- **lua**: Add :checkhealth ipynb provider
+  ([`d93038b`](https://github.com/ansh-info/ipynb.nvim/commit/d93038bb02a90146de6b259c2cc41bdabce09623))
+
+- **lua**: Rewrite image rendering using snacks.nvim placements
+  ([`208d14b`](https://github.com/ansh-info/ipynb.nvim/commit/208d14b7ae93d87b81fb0b7d5876835077fad4a0))
+
+- **plugin**: Register :checkhealth ipynb and :IpynbHealth command
+  ([`a59178d`](https://github.com/ansh-info/ipynb.nvim/commit/a59178d0c2279bdface74b17ed940f42bbb59a57))
+
+### Refactoring
+
+- **lua**: Replace goto/label with if-guards in image.lua
+  ([`23abac5`](https://github.com/ansh-info/ipynb.nvim/commit/23abac52234a117347a0c7a7019c3a8be75dd9bf))
+
+
 ## v1.4.11 (2026-03-31)
 
 ### Bug Fixes
