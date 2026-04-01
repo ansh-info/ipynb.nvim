@@ -28,32 +28,29 @@ rendering, full Vim modal editing, live kernel execution, and inline output.
 
 ## Requirements
 
-- Neovim >= 0.10.0
-- [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
+- Neovim >= 0.9
 - Python >= 3.12
 - [uv](https://github.com/astral-sh/uv) (recommended) or python3 (built-in venv fallback)
 
-**Optional - image rendering** (matplotlib plots, inline PNG/JPEG)
+**Required for image rendering** (matplotlib plots, inline PNG/JPEG/SVG)
 
-- [3rd/image.nvim](https://github.com/3rd/image.nvim)
-- Kitty, Ghostty, or WezTerm terminal (Kitty graphics protocol), or `ueberzugpp` for others
-- `imagemagick` system library (required by image.nvim)
-- **tmux users:** add these three lines to `~/.tmux.conf` and restart tmux:
+- [folke/snacks.nvim](https://github.com/folke/snacks.nvim) with `image` module enabled
+- A terminal with Kitty graphics protocol **unicode placeholder** support:
+
+| Terminal | Supported |
+|---|---|
+| [kitty](https://sw.kovidgoyal.net/kitty/) >= 0.28 | yes |
+| [Ghostty](https://ghostty.org/) | yes |
+| [WezTerm](https://wezfurlong.org/wezterm/) | yes |
+| tmux (wrapping any of the above) | yes - see note below |
+| alacritty, iTerm2, others | no |
+
+- **tmux users:** add to `~/.tmux.conf` and restart tmux:
   ```
   set -gq allow-passthrough on
   set -g visual-activity off
   set-option -g focus-events on
   ```
-
-```bash
-# macOS
-brew install imagemagick
-```
-
-```bash
-# Linux (Debian/Ubuntu)
-sudo apt install imagemagick
-```
 
 **Optional - richer markdown cells**
 
@@ -62,6 +59,10 @@ sudo apt install imagemagick
 **Optional - completion**
 
 - [nvim-cmp](https://github.com/hrsh7th/nvim-cmp)
+
+**Optional - language icons in cell borders**
+
+- [nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons)
 
 ## Installation
 
@@ -73,9 +74,6 @@ return {
     "ansh-info/ipynb.nvim",
     lazy = false,
     build = "uv sync --project python/ || (python3 -m venv python/.venv && python/.venv/bin/pip install ./python/)",
-    dependencies = {
-      "nvim-treesitter/nvim-treesitter",
-    },
     opts = {},
   },
 }
@@ -99,18 +97,15 @@ return {
     lazy = false,
     build = "uv sync --project python/ || (python3 -m venv python/.venv && python/.venv/bin/pip install ./python/)",
     dependencies = {
-      "nvim-treesitter/nvim-treesitter",
       {
-        "3rd/image.nvim",
-        build = false,
+        "folke/snacks.nvim",
         opts = {
-          backend   = "kitty",       -- "kitty" for Kitty/Ghostty/WezTerm
-          processor = "magick_cli",  -- uses system ImageMagick, no Lua rock needed
-          max_height_window_percentage = 50,
+          image = { enabled = true },
         },
       },
       { "MeanderingProgrammer/render-markdown.nvim", opts = {} },
       { "hrsh7th/nvim-cmp" },
+      { "nvim-tree/nvim-web-devicons" },
     },
     opts = {},
   },
@@ -247,8 +242,7 @@ require("ipynb").setup({
     output_max_lines     = 50,   -- max output lines per cell; 0 = unlimited
   },
   image = {
-    enabled    = true,
-    backend    = "auto",         -- "kitty" | "ueberzug" | "sixel" | "auto"
+    enabled    = true,           -- requires snacks.nvim + unicode placeholder terminal
     max_width  = 80,
     max_height = 20,
   },
