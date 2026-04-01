@@ -49,8 +49,7 @@ local M = {}
 ---@field add_markdown_above string
 
 ---@class ImageConfig
----@field enabled boolean          Enable image rendering (requires image.nvim)
----@field backend string           "kitty" | "ueberzug" | "sixel" | "auto"
+---@field enabled boolean          Enable image rendering (requires snacks.nvim + unicode placeholder terminal)
 ---@field max_width integer        Max image width in columns
 ---@field max_height integer       Max image height in rows
 
@@ -116,7 +115,6 @@ M.defaults = {
 
   image = {
     enabled = true,
-    backend = "auto",
     max_width = 80,
     max_height = 20,
   },
