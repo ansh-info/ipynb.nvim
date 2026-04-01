@@ -128,7 +128,8 @@ lua/ipynb/
 │   ├── output.lua        # Output renderer
 │   └── completion.lua    # omnifunc + nvim-cmp source
 └── ui/
-    ├── image.lua         # image.nvim integration
+    ├── image.lua         # snacks.nvim image rendering via Placement API
+    ├── health.lua        # :checkhealth ipynb provider
     ├── markdown.lua      # Markdown cell decorator
     ├── inspector.lua     # Variable inspector
     ├── keymaps.lua       # Buffer-local keymaps

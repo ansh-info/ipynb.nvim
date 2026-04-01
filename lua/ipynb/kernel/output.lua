@@ -39,17 +39,13 @@ local HL = {
 local _store = {}
 
 -- ── Re-entrancy guards for image rendering ────────────────────────────────────
--- image.nvim's magick_cli processor uses vim.wait() which runs the Neovim
--- event loop mid-render.  A second output.append() arriving during that window
--- would fire another vim.schedule callback that calls image.clear(), deleting
--- the temp PNG file the first magick process is still reading -> crash + freeze.
---
 -- _active  : cell_key -> true while a vim.schedule render callback is executing.
 -- _pending : cell_key -> true when a re-render was requested during an active one.
 --
--- When a callback sees _active, it sets _pending and returns without touching
--- image.clear().  Once the active render finishes it checks _pending and calls
--- M._render again so the latest chunks are always shown.
+-- Prevents a second output.append() that arrives mid-render from calling
+-- image.clear() before the current render cycle completes.  Once the active
+-- render finishes it checks _pending and calls M._render again so the latest
+-- chunks are always shown.
 local _active = {}
 local _pending = {}
 
@@ -147,7 +143,7 @@ local function chunk_to_virt_lines(chunk, max_lines)
   elseif t == "image" then
     -- image.lua handles actual rendering; return empty here so the image
     -- chunks are tracked in the store but don't produce duplicate text lines.
-    -- A placeholder is returned only when image.nvim is unavailable.
+    -- A placeholder is returned only when snacks image support is unavailable.
     local ok, image = pcall(require, "ipynb.ui.image")
     if ok and image.is_supported() then
       return {} -- image.lua renders it; no text virt_line needed
@@ -198,7 +194,7 @@ function M._render(bufnr, cell_state)
   local img_supported = ok_img and image.is_supported()
 
   local all_vl = {} -- text virt_lines only
-  -- Collected image chunks passed as a list to image.render_stacked().
+  -- Collected image chunks passed as a list to image.render().
   local img_chunks = {}
 
   -- Top divider.
@@ -206,7 +202,7 @@ function M._render(bufnr, cell_state)
 
   for i, chunk in ipairs(chunks) do
     if chunk.type == "image" and img_supported then
-      -- Collect image chunks; render_stacked() combines them into one PNG.
+      -- Collect image chunks; image.render() creates one snacks Placement per chunk.
       img_chunks[#img_chunks + 1] = chunk
     else
       local vl = chunk_to_virt_lines(chunk, max_lines)
@@ -227,8 +223,6 @@ function M._render(bufnr, cell_state)
 
     -- Guard against re-entrant renders.
     -- _active covers the FULL render cycle including the nested image schedule.
-    -- This prevents image.clear() from deleting a temp file that a still-pending
-    -- magick_cli process (inside img:render() via vim.wait()) is reading.
     -- New output.append() calls that arrive while _active is true are recorded
     -- as _pending and processed once the active render fully completes.
     if _active[key] then
@@ -246,23 +240,20 @@ function M._render(bufnr, cell_state)
     end
 
     -- 3. Render image chunks in a nested vim.schedule so that Neovim has one
-    --    event loop tick to repaint the virt_lines before image.nvim writes
-    --    Kitty escape sequences to the terminal.  Without the extra tick,
-    --    Neovim's TUI repaint can overwrite the image pixels, causing the image
-    --    to be invisible until the next key press or scroll event.
+    --    event loop tick to repaint the virt_lines before snacks writes Kitty
+    --    unicode placeholder sequences.  Without the extra tick, Neovim's TUI
+    --    repaint can overwrite the placeholder pixels causing a brief blank flash.
     --
-    --    _active is released INSIDE the nested callback, after all image renders
-    --    complete.  This ensures image.clear() (called at step 2 of the next
-    --    render) can never run while magick_cli is still reading a temp file.
+    --    _active is released INSIDE the nested callback after all renders complete.
     if ok_img and #img_chunks > 0 then
       vim.schedule(function()
         if not vim.api.nvim_buf_is_valid(bufnr) then
           _active[key] = nil
           return
         end
-        -- render_stacked combines all chunks into one vertically-stacked PNG
-        -- so y always equals sep_row (no buffer-length overflow for N>1).
-        image.render_stacked(bufnr, cell_state, img_chunks)
+        -- render() creates one snacks Placement per chunk; placements stack
+        -- at end_row and move with the buffer automatically.
+        image.render(bufnr, cell_state, img_chunks)
         -- Release guard and process any render that arrived during this cycle.
         _active[key] = nil
         if _pending[key] then

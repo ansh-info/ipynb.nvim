@@ -14,3 +14,9 @@ if vim.g.loaded_ipynb or vim.fn.has("nvim") == 0 then
   return
 end
 vim.g.loaded_ipynb = true
+
+-- Register :checkhealth ipynb provider.
+vim.health = vim.health or {}
+vim.api.nvim_create_user_command("IpynbHealth", function()
+  vim.cmd("checkhealth ipynb")
+end, { desc = "Run :checkhealth ipynb" })
