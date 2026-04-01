@@ -32,7 +32,8 @@ ipynb/
 │   │   ├── output.lua        # Output chunk -> virt_lines renderer + accumulator
 │   │   └── completion.lua    # omnifunc + nvim-cmp async source
 │   └── ui/
-│       ├── image.lua         # image.nvim integration: PNG/JPEG/SVG rendering
+│       ├── image.lua         # snacks.nvim image rendering: PNG/JPEG/SVG via Placement
+│       ├── health.lua        # :checkhealth ipynb provider
 │       ├── markdown.lua      # Markdown cell extmark decorator (concealing)
 │       ├── inspector.lua     # Variable inspector floating window
 │       ├── keymaps.lua       # Buffer-local keymaps + floating help overlay
@@ -87,6 +88,7 @@ ipynb/
 | `require("ipynb.ui.inspector")` | `lua/ipynb/ui/inspector.lua` |
 | `require("ipynb.ui.keymaps")` | `lua/ipynb/ui/keymaps.lua` |
 | `require("ipynb.ui.commands")` | `lua/ipynb/ui/commands.lua` |
+| `require("ipynb.health")` | `lua/ipynb/health.lua` |
 
 `kernel/init.lua` is intentional - Lua resolves `require("ipynb.kernel")` to
 `kernel/init.lua` automatically.
@@ -231,9 +233,12 @@ Never insert decorations or output as real buffer lines.
 newline-delimited JSON on stdin/stdout. Do not switch to pynvim remote plugin
 architecture.
 
-### image.nvim delegation
-All image rendering goes through `image.nvim`. Do not write raw Kitty escape
-sequences in Lua.
+### snacks.nvim image rendering
+All image rendering goes through `snacks.nvim` Placement API (`snacks.image.placement`).
+Do not write raw Kitty escape sequences in Lua. Do not use image.nvim.
+Placements use Kitty unicode placeholders embedded in virt_lines - they scroll
+automatically with the buffer. No WinScrolled sync, no viewport guards, no
+ImageMagick dependency. Support is detected via `terminal.env().placeholders`.
 
 ### pcall guard on optional modules
 Modules that depend on optional features (kernel, image, markdown, nvim-cmp) are
