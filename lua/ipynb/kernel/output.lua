@@ -194,7 +194,7 @@ function M._render(bufnr, cell_state)
   local img_supported = ok_img and image.is_supported()
 
   local all_vl = {} -- text virt_lines only
-  -- Collected image chunks passed as a list to image.render_stacked().
+  -- Collected image chunks passed as a list to image.render().
   local img_chunks = {}
 
   -- Top divider.
@@ -202,7 +202,7 @@ function M._render(bufnr, cell_state)
 
   for i, chunk in ipairs(chunks) do
     if chunk.type == "image" and img_supported then
-      -- Collect image chunks; render_stacked() combines them into one PNG.
+      -- Collect image chunks; image.render() creates one snacks Placement per chunk.
       img_chunks[#img_chunks + 1] = chunk
     else
       local vl = chunk_to_virt_lines(chunk, max_lines)
@@ -223,8 +223,6 @@ function M._render(bufnr, cell_state)
 
     -- Guard against re-entrant renders.
     -- _active covers the FULL render cycle including the nested image schedule.
-    -- This prevents image.clear() from deleting a temp file that a still-pending
-    -- magick_cli process (inside img:render() via vim.wait()) is reading.
     -- New output.append() calls that arrive while _active is true are recorded
     -- as _pending and processed once the active render fully completes.
     if _active[key] then
