@@ -161,27 +161,24 @@ function M.render(bufnr, cell_state, chunks)
     local tmp = chunk_to_tmp(chunk)
     if not tmp then
       utils.debug("image.lua: could not decode chunk mime=" .. (chunk.mime or "?"))
-      goto continue
+    else
+      -- All images anchor at base_row; snacks appends each placement's virt_lines
+      -- below the previous one in creation order, giving natural stacking.
+      local ok_new, placement = pcall(Placement.new, bufnr, tmp, {
+        pos = { base_row, 0 },
+        inline = true,
+        auto_resize = true,
+        max_width = cfg.image.max_width,
+        max_height = cfg.image.max_height,
+      })
+      if not ok_new then
+        utils.debug("snacks Placement.new error: " .. tostring(placement))
+        pcall(os.remove, tmp)
+      else
+        _placements[key][#_placements[key] + 1] = { placement = placement, tmp = tmp }
+        created = true
+      end
     end
-
-    -- All images anchor at base_row; snacks appends each placement's virt_lines
-    -- below the previous one in creation order, giving natural stacking.
-    local ok_new, placement = pcall(Placement.new, bufnr, tmp, {
-      pos = { base_row, 0 },
-      inline = true,
-      auto_resize = true,
-      max_width = cfg.image.max_width,
-      max_height = cfg.image.max_height,
-    })
-    if not ok_new then
-      utils.debug("snacks Placement.new error: " .. tostring(placement))
-      pcall(os.remove, tmp)
-      goto continue
-    end
-
-    _placements[key][#_placements[key] + 1] = { placement = placement, tmp = tmp }
-    created = true
-    ::continue::
   end
 
   return created
