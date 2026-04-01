@@ -1,34 +1,26 @@
 --- ipynb.ui.image
---- Image rendering for cell output using image.nvim.
+--- Image rendering for cell output using snacks.nvim placements.
 ---
---- image.nvim (github.com/3rd/image.nvim) is an optional dependency.
---- If it is not installed the module falls back to a text placeholder.
+--- snacks.nvim (folke/snacks.nvim) renders images via Kitty unicode
+--- placeholders embedded as virtual text.  Placements move with the buffer
+--- automatically - no WinScrolled re-render, no viewport guard, no ImageMagick.
 ---
---- Images are rendered directly into the source window using image.nvim's
---- native positioning. The y-coordinate is set to the separator line
---- (end_row + 1), which is a real buffer line placed AFTER all virt_lines,
---- so screenpos() naturally returns the correct screen row. This avoids
---- float windows and all associated visual artefacts (black rectangles,
---- misalignment, tmux pane bleed).
+--- Required: snacks.nvim with image support enabled, terminal with Kitty
+--- graphics protocol unicode placeholder support (kitty 0.28+, Ghostty, WezTerm).
 ---
 --- Public API:
----   image.render(bufnr, cell_state, chunk) -> boolean
+---   image.is_supported()                    -> boolean
+---   image.render(bufnr, cell_state, chunks) -> boolean
 ---   image.clear(bufnr, cell_state)
 ---   image.clear_all(bufnr, cells)
----   image.rerender_all(bufnr)
----   image.is_supported() -> boolean
+---   image.placeholder(chunk)                -> string
 
 local M = {}
 
--- ── Per-cell image registry ───────────────────────────────────────────────────
--- Key:   bufnr .. ":" .. cell_state.start_mark
--- Value: list of {
---   img        : image.nvim object
---   tmp        : string   temp file path
---   end_row    : integer  0-based buffer row of the separator line
---   source_win : integer  main buffer window
--- }
-local _registry = {}
+-- ── Per-cell placement registry ───────────────────────────────────────────────
+-- Key:   tostring(bufnr) .. ":" .. tostring(cell_state.start_mark)
+-- Value: list of { placement: snacks Placement object, tmp: string path }
+local _placements = {}
 
 local function cell_key(bufnr, cs)
   return tostring(bufnr) .. ":" .. tostring(cs.start_mark)
@@ -36,13 +28,26 @@ end
 
 -- ── Support detection ─────────────────────────────────────────────────────────
 
+--- Return true when snacks.nvim image placement is available AND the terminal
+--- supports Kitty unicode placeholders.
 ---@return boolean
 function M.is_supported()
   local cfg = require("ipynb.config").get()
   if not cfg.image.enabled then
     return false
   end
-  return require("ipynb.utils").has_plugin("image")
+  local ok_p = pcall(require, "snacks.image.placement")
+  if not ok_p then
+    return false
+  end
+  local ok_t, terminal = pcall(require, "snacks.image.terminal")
+  if not ok_t then
+    return false
+  end
+  local ok_e, env = pcall(function()
+    return terminal.env()
+  end)
+  return ok_e and env ~= nil and env.placeholders == true
 end
 
 -- ── Temp file helpers ─────────────────────────────────────────────────────────
@@ -56,6 +61,7 @@ local function write_b64_to_tmp(b64, ext)
   end
   f:write(b64)
   f:close()
+  -- Support both GNU base64 (-d) and macOS base64 (-D).
   local cmd = string.format(
     "base64 -d < %s > %s 2>/dev/null || base64 -D < %s > %s 2>/dev/null",
     vim.fn.shellescape(b64_tmp),
@@ -82,191 +88,42 @@ local function write_svg_to_tmp(svg_text)
   return tmp
 end
 
+--- Decode one image output chunk to a temp file.
+--- Returns the file path, or nil if decoding fails.
+---@param chunk table  { type="image", mime, data }
+---@return string|nil
 local function chunk_to_tmp(chunk)
   local mime = chunk.mime or "image/png"
   local data = chunk.data or ""
   if mime == "image/png" then
-    return write_b64_to_tmp(data, "png"), "png"
+    return write_b64_to_tmp(data, "png")
   elseif mime == "image/jpeg" then
-    return write_b64_to_tmp(data, "jpg"), "jpg"
+    return write_b64_to_tmp(data, "jpg")
   elseif mime == "image/svg+xml" then
     local svg = data
     if type(svg) == "table" then
       svg = table.concat(svg)
     end
-    return write_svg_to_tmp(svg), "svg"
+    return write_svg_to_tmp(svg)
   end
-  return nil, nil
-end
-
---- Combine a list of image temp files into one vertically-stacked PNG via
---- ImageMagick `convert -append`.  Returns (path, is_new) where is_new is
---- true when a composite file was created (caller must remove it later).
---- Falls back to tmps[1] when only one file is given or convert fails.
----@param tmps string[]
----@return string path, boolean is_new
-local function combine_vertical(tmps)
-  if #tmps == 1 then
-    return tmps[1], false
-  end
-  local out = vim.fn.tempname() .. ".png"
-  -- Add 16px of transparent padding below every image except the last so
-  -- stacked plots are visually separated.  Transparent pixels render as the
-  -- terminal background colour in Kitty, giving a natural gap on any theme.
-  local args = {}
-  for i, t in ipairs(tmps) do
-    if i < #tmps then
-      args[#args + 1] = string.format(
-        "\\( %s -background none -gravity South -splice 0x16 \\)",
-        vim.fn.shellescape(t)
-      )
-    else
-      args[#args + 1] = vim.fn.shellescape(t)
-    end
-  end
-  local cmd = string.format(
-    "convert %s -append %s 2>/dev/null",
-    table.concat(args, " "),
-    vim.fn.shellescape(out)
-  )
-  vim.fn.system(cmd)
-  if vim.fn.filereadable(out) == 1 and vim.fn.getfsize(out) > 0 then
-    return out, true
-  end
-  pcall(os.remove, out)
-  return tmps[1], false
+  return nil
 end
 
 -- ── Rendering ─────────────────────────────────────────────────────────────────
 
---- Render one image chunk below a cell's text output.
+--- Render all image chunks for a cell using snacks.nvim Placement objects.
 ---
---- The image is placed at y = sep_row + img_index * max_height, where sep_row
---- is end_row + 1 (the real buffer line after all virt_lines).  img_index (0
---- for the first image, 1 for the second, etc.) stacks multiple images from
---- the same cell vertically so they do not overlap.
----
----@param bufnr integer
----@param cell_state table
----@param chunk table    { type="image", mime, data }
----@param img_index integer  0-based position among images in this cell (default 0)
----@return boolean  true if image object was created
-function M.render(bufnr, cell_state, chunk, img_index)
-  if not M.is_supported() then
-    return false
-  end
-
-  local ok_api, image_api = pcall(require, "image")
-  if not ok_api then
-    return false
-  end
-
-  img_index = img_index or 0
-
-  local cfg = require("ipynb.config").get()
-  local cell_mod = require("ipynb.core.cell")
-  local utils = require("ipynb.utils")
-
-  local tmp = chunk_to_tmp(chunk)
-  if not tmp then
-    utils.debug("image.lua: could not decode image payload (mime=" .. (chunk.mime or "?") .. ")")
-    return false
-  end
-
-  -- Locate the cell's end_mark buffer row.
-  local ns = cell_mod.namespace()
-  local em_pos = vim.api.nvim_buf_get_extmark_by_id(bufnr, ns, cell_state.end_mark, {})
-  local end_row = (em_pos and em_pos[1]) or 0
-  local max_row = math.max(0, vim.api.nvim_buf_line_count(bufnr) - 1)
-  end_row = math.min(end_row, max_row)
-
-  -- sep_row is the real buffer line after all virt_lines; screenpos() on it
-  -- returns the terminal row directly below the output block.
-  -- Each subsequent image is offset by max_height rows so they stack vertically.
-  local sep_row = math.min(end_row + 1, max_row)
-  local y = sep_row + img_index * cfg.image.max_height
-
-  local source_win = vim.fn.bufwinid(bufnr)
-  if source_win == -1 then
-    source_win = vim.api.nvim_get_current_win()
-  end
-
-  -- Viewport guard: if this image's row is below the visible window bottom,
-  -- register without rendering so rerender_all() picks it up on scroll.
-  local info = vim.fn.getwininfo(source_win)
-  if info and info[1] then
-    local botline = info[1].botline -- 1-based
-    if y + 1 > botline then
-      local key = cell_key(bufnr, cell_state)
-      if not _registry[key] then
-        _registry[key] = {}
-      end
-      _registry[key][#_registry[key] + 1] = {
-        img = nil,
-        tmp = tmp,
-        end_row = end_row,
-        img_index = img_index,
-        source_win = source_win,
-        chunk = chunk,
-      }
-      return true
-    end
-  end
-
-  local key = cell_key(bufnr, cell_state)
-  if not _registry[key] then
-    _registry[key] = {}
-  end
-
-  local img_id = "ipynb_" .. key:gsub(":", "_") .. "_" .. tostring(img_index)
-
-  local img
-  local ok_from
-  ok_from, img = pcall(image_api.from_file, tmp, {
-    id = img_id,
-    buffer = bufnr,
-    window = source_win,
-    x = 2,
-    y = y,
-    width = cfg.image.max_width,
-    height = cfg.image.max_height,
-    with_virtual_padding = true,
-  })
-  if not ok_from then
-    utils.debug("image.nvim from_file error: " .. tostring(img))
-    os.remove(tmp)
-    return false
-  end
-
-  _registry[key][#_registry[key] + 1] = {
-    img = img,
-    tmp = tmp,
-    end_row = end_row,
-    img_index = img_index,
-    source_win = source_win,
-    chunk = chunk,
-  }
-
-  local ok_render, render_err = pcall(function()
-    img:render()
-  end)
-  if not ok_render then
-    utils.debug("image.nvim render error (will retry on scroll): " .. tostring(render_err))
-  end
-
-  return true
-end
-
---- Render all image chunks for a cell as a single vertically-stacked image.
---- All chunks are combined via ImageMagick `convert -append` so the rendered
---- y coordinate is always sep_row - no buffer-length overflow for multi-image
---- cells.  Single-image cells skip the combine step entirely.
+--- Each chunk becomes its own Placement anchored at end_row.  Multiple
+--- placements at the same row have their virt_lines appended in creation order,
+--- so images stack naturally below the cell without any coordinate arithmetic.
+--- snacks handles scroll sync and resize via auto_resize = true - no WinScrolled
+--- autocmd or rerender_all logic is required on our side.
 ---
 ---@param bufnr integer
 ---@param cell_state table
 ---@param chunks table[]  list of { type="image", mime, data } chunks
----@return boolean  true if the image object was created
-function M.render_stacked(bufnr, cell_state, chunks)
+---@return boolean  true if at least one placement was created
+function M.render(bufnr, cell_state, chunks)
   if not M.is_supported() then
     return false
   end
@@ -274,8 +131,8 @@ function M.render_stacked(bufnr, cell_state, chunks)
     return false
   end
 
-  local ok_api, image_api = pcall(require, "image")
-  if not ok_api then
+  local ok_p, Placement = pcall(require, "snacks.image.placement")
+  if not ok_p then
     return false
   end
 
@@ -283,227 +140,78 @@ function M.render_stacked(bufnr, cell_state, chunks)
   local cell_mod = require("ipynb.core.cell")
   local utils = require("ipynb.utils")
 
-  -- Decode every chunk to its own temp file.
-  local tmps = {}
-  for _, chunk in ipairs(chunks) do
-    local tmp = chunk_to_tmp(chunk)
-    if tmp then
-      tmps[#tmps + 1] = tmp
-    end
-  end
-  if #tmps == 0 then
-    utils.debug("image.lua render_stacked: could not decode any image payload")
-    return false
-  end
-
-  -- Combine into one vertically stacked PNG (no-op for a single image).
-  local combined, is_composite = combine_vertical(tmps)
-  if is_composite then
-    for _, t in ipairs(tmps) do
-      pcall(os.remove, t)
-    end
-  end
-
-  -- Locate the cell end_mark row.
+  -- Locate the cell end_mark buffer row (0-indexed).
   local ns = cell_mod.namespace()
   local em_pos = vim.api.nvim_buf_get_extmark_by_id(bufnr, ns, cell_state.end_mark, {})
   local end_row = (em_pos and em_pos[1]) or 0
   local max_row = math.max(0, vim.api.nvim_buf_line_count(bufnr) - 1)
   end_row = math.min(end_row, max_row)
-  local sep_row = math.min(end_row + 1, max_row)
 
-  local source_win = vim.fn.bufwinid(bufnr)
-  if source_win == -1 then
-    source_win = vim.api.nvim_get_current_win()
-  end
-
-  -- Total height: one slot per original chunk so stacked images are not clipped.
-  local img_height = cfg.image.max_height * #chunks
-
-  -- Viewport guard: register without rendering when sep_row is off-screen.
-  local info = vim.fn.getwininfo(source_win)
-  if info and info[1] then
-    local botline = info[1].botline
-    if sep_row + 1 > botline then
-      local key = cell_key(bufnr, cell_state)
-      if not _registry[key] then
-        _registry[key] = {}
-      end
-      _registry[key][#_registry[key] + 1] = {
-        img = nil,
-        tmp = combined,
-        end_row = end_row,
-        img_index = 0,
-        img_height = img_height,
-        last_y = nil, -- not yet rendered; rerender_all will set it on first draw
-        source_win = source_win,
-      }
-      return true
-    end
-  end
+  -- snacks pos is {row, col} with 1-indexed row.
+  -- Place images at the row immediately after end_mark (clamped to buffer end).
+  local base_row = math.min(end_row + 2, max_row + 1)
 
   local key = cell_key(bufnr, cell_state)
-  if not _registry[key] then
-    _registry[key] = {}
+  if not _placements[key] then
+    _placements[key] = {}
   end
 
-  local img_id = "ipynb_" .. key:gsub(":", "_") .. "_stacked"
-
-  local img
-  local ok_from
-  ok_from, img = pcall(image_api.from_file, combined, {
-    id = img_id,
-    buffer = bufnr,
-    window = source_win,
-    x = 2,
-    y = sep_row,
-    width = cfg.image.max_width,
-    height = img_height,
-    with_virtual_padding = true,
-  })
-  if not ok_from then
-    utils.debug("image.nvim from_file error: " .. tostring(img))
-    pcall(os.remove, combined)
-    return false
-  end
-
-  _registry[key][#_registry[key] + 1] = {
-    img = img,
-    tmp = combined,
-    end_row = end_row,
-    img_index = 0,
-    img_height = img_height,
-    last_y = sep_row, -- track rendered position to skip no-op rerenders
-    source_win = source_win,
-  }
-
-  local ok_render, render_err = pcall(function()
-    img:render()
-  end)
-  if not ok_render then
-    utils.debug("image.nvim render error (will retry on scroll): " .. tostring(render_err))
-  end
-
-  return true
-end
-
--- ── Scroll re-render ─────────────────────────────────────────────────────────
-
---- Re-render / reposition all registered images for a buffer.
---- Called from the WinScrolled debounce.
----@param bufnr integer
-function M.rerender_all(bufnr)
-  if not M.is_supported() then
-    return
-  end
-  local cfg = require("ipynb.config").get()
-  local ok_api, image_api = pcall(require, "image")
-  if not ok_api then
-    return
-  end
-
-  local prefix = tostring(bufnr) .. ":"
-  for key, entries in pairs(_registry) do
-    if key:sub(1, #prefix) ~= prefix then
-      goto next_key
+  local created = false
+  for _, chunk in ipairs(chunks) do
+    local tmp = chunk_to_tmp(chunk)
+    if not tmp then
+      utils.debug("image.lua: could not decode chunk mime=" .. (chunk.mime or "?"))
+      goto continue
     end
 
-    for _, entry in ipairs(entries) do
-      local source_win = entry.source_win
-      if not source_win or not vim.api.nvim_win_is_valid(source_win) then
-        goto next_entry
-      end
-
-      local max_row = math.max(0, vim.api.nvim_buf_line_count(bufnr) - 1)
-      local sep_row = math.min(entry.end_row + 1, max_row)
-      local y = sep_row + (entry.img_index or 0) * (entry.img_height or cfg.image.max_height)
-
-      -- Viewport guard: skip images whose row is fully off-screen.
-      local info = vim.fn.getwininfo(source_win)
-      if not info or not info[1] then
-        goto next_entry
-      end
-      local botline = info[1].botline
-      if y + 1 > botline then
-        -- Image scrolled off-screen: clear to prevent tmux bleed.
-        if entry.img then
-          pcall(function()
-            entry.img:clear()
-          end)
-          entry.img = nil
-        end
-        goto next_entry
-      end
-
-      -- Image is visible. If no live image object, create one now.
-      if not entry.img then
-        if not entry.tmp or vim.fn.filereadable(entry.tmp) == 0 then
-          goto next_entry
-        end
-        local idx = entry.img_index or 0
-        local img_id = "ipynb_retry_" .. key:gsub(":", "_") .. "_" .. tostring(idx)
-        local ok_from, img2 = pcall(image_api.from_file, entry.tmp, {
-          id = img_id,
-          buffer = bufnr,
-          window = source_win,
-          x = 2,
-          y = y,
-          width = cfg.image.max_width,
-          height = entry.img_height or cfg.image.max_height,
-          with_virtual_padding = true,
-        })
-        if ok_from then
-          entry.img = img2
-          entry.last_y = y
-          pcall(function()
-            img2:render()
-          end)
-        end
-        goto next_entry
-      end
-
-      -- Live image: only re-render when the screen row actually changed.
-      -- Skipping no-op renders avoids sending Kitty graphics protocol sequences
-      -- that interrupt the cursor animation and cause visible flicker on [[/]].
-      if y == entry.last_y then
-        goto next_entry
-      end
-      entry.last_y = y
-      pcall(function()
-        entry.img:render()
-      end)
-
-      ::next_entry::
+    -- All images anchor at base_row; snacks appends each placement's virt_lines
+    -- below the previous one in creation order, giving natural stacking.
+    local ok_new, placement = pcall(Placement.new, bufnr, tmp, {
+      pos = { base_row, 0 },
+      inline = true,
+      auto_resize = true,
+      max_width = cfg.image.max_width,
+      max_height = cfg.image.max_height,
+    })
+    if not ok_new then
+      utils.debug("snacks Placement.new error: " .. tostring(placement))
+      pcall(os.remove, tmp)
+      goto continue
     end
-    ::next_key::
+
+    _placements[key][#_placements[key] + 1] = { placement = placement, tmp = tmp }
+    created = true
+    ::continue::
   end
+
+  return created
 end
 
 -- ── Cleanup ───────────────────────────────────────────────────────────────────
 
---- Clear all rendered images for a single cell.
+--- Close all placements and remove temp files for a single cell.
 ---@param bufnr integer
 ---@param cell_state table
 function M.clear(bufnr, cell_state)
   local key = cell_key(bufnr, cell_state)
-  local entries = _registry[key]
+  local entries = _placements[key]
   if not entries then
     return
   end
   for _, entry in ipairs(entries) do
-    if entry.img then
+    if entry.placement then
       pcall(function()
-        entry.img:clear()
+        entry.placement:close()
       end)
     end
     if entry.tmp then
       pcall(os.remove, entry.tmp)
     end
   end
-  _registry[key] = nil
+  _placements[key] = nil
 end
 
---- Clear all images for every cell in a buffer (used on kernel restart).
+--- Close all placements for every cell in a buffer (kernel restart / buf wipe).
 ---@param bufnr integer
 ---@param cells table[]
 function M.clear_all(bufnr, cells)
@@ -512,44 +220,12 @@ function M.clear_all(bufnr, cells)
   end
 end
 
---- Clear live image objects whose stored y row is now beyond the buffer end.
----
---- image.nvim stores the y coordinate passed at render time and re-renders from
---- its own TextChanged/WinScrolled autocmds using that stored value.  After undo
---- shrinks the buffer, the stored y may exceed buf_line_count - 1, causing
---- image.nvim's renderer to call screenpos() with an invalid 1-based row -> E966.
----
---- Call this whenever buffer lines are removed (e.g. from nvim_buf_attach
---- on_lines) to clear stale image objects before image.nvim's autocmds fire.
----@param bufnr integer
-function M.clear_stale(bufnr)
-  local line_count = vim.api.nvim_buf_line_count(bufnr)
-  local prefix = tostring(bufnr) .. ":"
-  for key, entries in pairs(_registry) do
-    if key:sub(1, #prefix) ~= prefix then
-      goto next_key
-    end
-    for _, entry in ipairs(entries) do
-      -- image.nvim calls screenpos(win, last_y + 1, 1).
-      -- Valid iff last_y + 1 <= line_count, i.e. last_y < line_count.
-      if entry.img and entry.last_y ~= nil and entry.last_y >= line_count then
-        pcall(function()
-          entry.img:clear()
-        end)
-        entry.img = nil
-        entry.last_y = nil
-      end
-    end
-    ::next_key::
-  end
-end
-
 --- Return a human-readable placeholder string for unsupported environments.
 ---@param chunk table
 ---@return string
 function M.placeholder(chunk)
   local mime = (chunk.mime or "image/png"):gsub("image/", "")
-  return string.format("  [%s image - install image.nvim for rendering]", mime)
+  return string.format("  [%s image - snacks.nvim + unicode placeholders required]", mime)
 end
 
 return M
