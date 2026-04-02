@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.5.1 (2026-04-02)
+
+### Bug Fixes
+
+- **lua**: Disable undo during render() to prevent buffer corruption
+  ([`72ad413`](https://github.com/ansh-info/ipynb.nvim/commit/72ad4130ed10cfb8da256f39c029f1fe2367336a))
+
+
 ## v1.5.0 (2026-04-01)
 
 ### Chores
