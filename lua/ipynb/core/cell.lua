@@ -201,6 +201,17 @@ function M.render(bufnr, notebook)
   vim.api.nvim_buf_set_option(bufnr, "modifiable", true)
   vim.api.nvim_buf_set_option(bufnr, "readonly", false)
 
+  -- Make all nvim_buf_set_lines calls in this function undo-invisible.
+  -- Neovim's undo system has no concept of cells; render() rewrites the entire
+  -- buffer and each set_lines call would otherwise become its own undo entry.
+  -- Undoing to those entries produces empty buffers, borders without source, or
+  -- mixed content from two render cycles - none of which the plugin can recover.
+  -- Setting undolevels = -1 prevents any of these writes from entering the undo
+  -- tree. The value is restored before the function returns so that in-cell
+  -- typing the user does after this render remains fully undoable.
+  local saved_ul = vim.api.nvim_buf_get_option(bufnr, "undolevels")
+  vim.api.nvim_buf_set_option(bufnr, "undolevels", -1)
+
   -- Clear everything.
   vim.api.nvim_buf_clear_namespace(bufnr, NS, 0, -1)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
@@ -278,6 +289,10 @@ function M.render(bufnr, notebook)
 
   -- Lock filetype for syntax highlighting.
   vim.api.nvim_buf_set_option(bufnr, "filetype", "python")
+
+  -- All buffer line writes are complete. Restore undo tracking so that
+  -- in-cell editing after this render is undoable.
+  vim.api.nvim_buf_set_option(bufnr, "undolevels", saved_ul)
 
   -- Apply markdown decorations after all cells are placed.
   -- Deferred so extmark positions are stable before markdown.render() reads them.
