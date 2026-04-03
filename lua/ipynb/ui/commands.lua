@@ -139,6 +139,60 @@ function M.setup()
     end
   end, { desc = "Add a markdown cell above the cursor" })
 
+  vim.api.nvim_create_user_command("IpynbCellMoveUp", function()
+    local cell_mod = require("ipynb.core.cell")
+    local bufnr = vim.api.nvim_get_current_buf()
+    local _, idx = cell_mod.cell_at_cursor(bufnr)
+    if idx then
+      cell_mod.move_cell_up(bufnr, idx)
+    end
+  end, { desc = "Move the current cell one position up" })
+
+  vim.api.nvim_create_user_command("IpynbCellMoveDown", function()
+    local cell_mod = require("ipynb.core.cell")
+    local bufnr = vim.api.nvim_get_current_buf()
+    local _, idx = cell_mod.cell_at_cursor(bufnr)
+    if idx then
+      cell_mod.move_cell_down(bufnr, idx)
+    end
+  end, { desc = "Move the current cell one position down" })
+
+  vim.api.nvim_create_user_command("IpynbCellDuplicate", function()
+    local cell_mod = require("ipynb.core.cell")
+    local bufnr = vim.api.nvim_get_current_buf()
+    local _, idx = cell_mod.cell_at_cursor(bufnr)
+    if idx then
+      cell_mod.duplicate_cell(bufnr, idx)
+    end
+  end, { desc = "Duplicate the current cell below" })
+
+  vim.api.nvim_create_user_command("IpynbCellYank", function()
+    local cell_mod = require("ipynb.core.cell")
+    local bufnr = vim.api.nvim_get_current_buf()
+    local _, idx = cell_mod.cell_at_cursor(bufnr)
+    if idx then
+      cell_mod.yank_cell(bufnr, idx)
+    end
+  end, { desc = "Yank the current cell into the cell register" })
+
+  vim.api.nvim_create_user_command("IpynbCellPaste", function()
+    local cell_mod = require("ipynb.core.cell")
+    local bufnr = vim.api.nvim_get_current_buf()
+    local _, idx = cell_mod.cell_at_cursor(bufnr)
+    if idx then
+      cell_mod.paste_cell(bufnr, idx)
+    end
+  end, { desc = "Paste the yanked cell below the current cell" })
+
+  vim.api.nvim_create_user_command("IpynbCellToggleType", function()
+    local cell_mod = require("ipynb.core.cell")
+    local bufnr = vim.api.nvim_get_current_buf()
+    local _, idx = cell_mod.cell_at_cursor(bufnr)
+    if idx then
+      cell_mod.toggle_cell_type(bufnr, idx)
+    end
+  end, { desc = "Toggle current cell type between code and markdown" })
+
   -- ── Output commands ───────────────────────────────────────────────────
 
   vim.api.nvim_create_user_command("IpynbClearOutput", function()
