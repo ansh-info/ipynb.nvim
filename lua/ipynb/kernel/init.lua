@@ -170,7 +170,9 @@ local function dispatch(bufnr, msg)
           pending._snippet_cb(table.concat(pending._accumulated, ""), nil)
           s.pending[id] = nil
         end
-      else
+      elseif pending.cell_state then
+        -- Guard: cell_state may have been nulled by the render hook when the
+        -- cell was deleted while executing.
         if state == "busy" then
           cell.update_status(bufnr, pending.cell_state, "busy", nil)
         elseif state == "idle" then
@@ -193,7 +195,13 @@ local function dispatch(bufnr, msg)
   -- ── execute_input (kernel echoes code back with execution count) ──────────
   elseif t == "execute_input" then
     local pending = (id ~= "") and s.pending[id] or nil
-    if pending and type(pending) == "table" and not pending._snippet_cb and msg.exec_count then
+    if
+      pending
+      and type(pending) == "table"
+      and not pending._snippet_cb
+      and pending.cell_state
+      and msg.exec_count
+    then
       cell.update_execution_count(bufnr, pending.cell_state, msg.exec_count)
       local nb = cell.get_notebook(bufnr)
       if nb and pending.cell_state.index then
@@ -210,7 +218,8 @@ local function dispatch(bufnr, msg)
         if t == "stream" and (msg.name or "stdout") == "stdout" then
           pending._accumulated[#pending._accumulated + 1] = msg.text or ""
         end
-      else
+      elseif pending.cell_state then
+        -- Guard: cell_state may be nil if the cell was deleted during execution.
         output.append(bufnr, pending.cell_state, msg)
         -- Persist to notebook model so save() writes the correct outputs.
         local nb = cell.get_notebook(bufnr)
@@ -502,7 +511,8 @@ function M.run_current_cell(bufnr)
   clear_cell_output(bufnr, cs)
 
   local mid = next_msg_id(bufnr)
-  s.pending[mid] = { cell_state = cs, bufnr = bufnr, start_ms = vim.loop.now() }
+  s.pending[mid] =
+    { cell_state = cs, cell_id = cs.cell_id, bufnr = bufnr, start_ms = vim.loop.now() }
 
   cell.update_status(bufnr, cs, "busy", nil)
   local code = cell.get_cell_source(bufnr, cs)
@@ -550,7 +560,8 @@ function M.run_all(bufnr)
     if cs.cell_type == "code" then
       clear_cell_output(bufnr, cs)
       local mid = next_msg_id(bufnr)
-      s.pending[mid] = { cell_state = cs, bufnr = bufnr, start_ms = vim.loop.now() }
+      s.pending[mid] =
+        { cell_state = cs, cell_id = cs.cell_id, bufnr = bufnr, start_ms = vim.loop.now() }
       cell.update_status(bufnr, cs, "busy", nil)
       send(bufnr, { cmd = "execute", code = cell.get_cell_source(bufnr, cs), msg_id = mid })
     end
@@ -574,7 +585,8 @@ function M.run_all_above(bufnr)
     if cs.cell_type == "code" then
       clear_cell_output(bufnr, cs)
       local mid = next_msg_id(bufnr)
-      s.pending[mid] = { cell_state = cs, bufnr = bufnr, start_ms = vim.loop.now() }
+      s.pending[mid] =
+        { cell_state = cs, cell_id = cs.cell_id, bufnr = bufnr, start_ms = vim.loop.now() }
       cell.update_status(bufnr, cs, "busy", nil)
       send(bufnr, { cmd = "execute", code = cell.get_cell_source(bufnr, cs), msg_id = mid })
     end
@@ -599,7 +611,8 @@ function M.run_all_below(bufnr)
     if cs.cell_type == "code" then
       clear_cell_output(bufnr, cs)
       local mid = next_msg_id(bufnr)
-      s.pending[mid] = { cell_state = cs, bufnr = bufnr, start_ms = vim.loop.now() }
+      s.pending[mid] =
+        { cell_state = cs, cell_id = cs.cell_id, bufnr = bufnr, start_ms = vim.loop.now() }
       cell.update_status(bufnr, cs, "busy", nil)
       send(bufnr, { cmd = "execute", code = cell.get_cell_source(bufnr, cs), msg_id = mid })
     end
@@ -712,5 +725,46 @@ function M.on_buf_delete(bufnr)
   end
   _state[bufnr] = nil
 end
+
+-- ── Post-render hook: remap stale pending cell_state references ───────────────
+--
+-- When any structural cell operation (move, delete, duplicate, paste) calls
+-- render(), new extmarks are assigned.  Any pending kernel execution that was
+-- running before render() now holds a cell_state with an obsolete start_mark.
+-- Dispatching output to that stale cell_state places borders and output at
+-- row 0 of the buffer.
+--
+-- This hook runs immediately after render() rebuilds state.cells.  It builds
+-- a lookup by stable cell_id and updates each pending entry to point at the
+-- freshly-created cell_state.  If the cell was deleted, cell_state is nulled so
+-- the nil-checks in dispatch silently drop the output for that execution.
+cell.register_render_hook(function(bufnr, new_cells)
+  local s = _state[bufnr]
+  if not s then
+    return
+  end
+  -- Build cell_id -> new cell_state lookup.
+  local by_id = {}
+  for _, cs in ipairs(new_cells) do
+    if cs.cell_id then
+      by_id[cs.cell_id] = cs
+    end
+  end
+  -- Remap every pending cell execution to its post-render cell_state.
+  for _, pending in pairs(s.pending) do
+    if type(pending) == "table" and pending.cell_state and not pending._snippet_cb then
+      local cid = pending.cell_id
+      if cid then
+        local new_cs = by_id[cid]
+        if new_cs then
+          pending.cell_state = new_cs
+        else
+          -- Cell was deleted while executing; null out so dispatch drops safely.
+          pending.cell_state = nil
+        end
+      end
+    end
+  end
+end)
 
 return M
