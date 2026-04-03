@@ -167,6 +167,17 @@ local buf_state = {}
 -- TextChanged event that render() itself fires during recovery.
 local _integrity_guard = {}
 
+-- Hooks called after each render() with (bufnr, cells).
+-- Used by kernel/init.lua to remap stale pending cell_state references.
+local _render_hooks = {}
+
+--- Register a callback invoked after every render().
+--- cb(bufnr, cells) is called with the freshly-built state.cells array.
+---@param cb function
+function M.register_render_hook(cb)
+  _render_hooks[#_render_hooks + 1] = cb
+end
+
 --- Return or create the state table for a buffer.
 ---@param bufnr integer
 ---@return table
@@ -194,6 +205,21 @@ function M.render(bufnr, notebook)
   define_highlights()
 
   local state = get_state(bufnr)
+
+  -- Release output store, image placements, and re-entrancy guards for all
+  -- existing cells BEFORE the namespace wipe so old start_mark-based keys can
+  -- still be resolved.  Without this, every structural operation (move, delete,
+  -- duplicate, paste) leaks entries in output._store and image._placements,
+  -- and active image placements are never closed.
+  if state.cells and #state.cells > 0 then
+    local ok_out, output_mod = pcall(require, "ipynb.kernel.output")
+    if ok_out then
+      for _, cs in ipairs(state.cells) do
+        output_mod.clear(bufnr, cs)
+      end
+    end
+  end
+
   state.notebook = notebook
   state.cells = {}
 
@@ -254,6 +280,7 @@ function M.render(bufnr, notebook)
     -- ── Record cell state ───────────────────────────────────────────────
     state.cells[i] = {
       index = i,
+      cell_id = cell.id, -- stable notebook cell id; used to remap kernel pending
       cell_type = cell.cell_type,
       language = language,
       execution_count = cell.execution_count,
@@ -293,6 +320,12 @@ function M.render(bufnr, notebook)
   -- All buffer line writes are complete. Restore undo tracking so that
   -- in-cell editing after this render is undoable.
   vim.api.nvim_buf_set_option(bufnr, "undolevels", saved_ul)
+
+  -- Notify render hooks (e.g. kernel remap of pending cell_state refs).
+  -- state.cells is fully built at this point.
+  for _, hook in ipairs(_render_hooks) do
+    pcall(hook, bufnr, state.cells)
+  end
 
   -- Apply markdown decorations after all cells are placed.
   -- Deferred so extmark positions are stable before markdown.render() reads them.
