@@ -821,7 +821,10 @@ end
 ---
 --- Called from InsertLeave and TextChanged autocmds in notebook_buf.lua.
 ---@param bufnr integer
-function M.reanchor_end_marks(bufnr)
+---@param active_idx integer|nil  1-based index of the cell being edited.
+---   When provided only that cell and its immediate neighbours are processed
+---   (O(1) extmark writes instead of O(n)).  Pass nil to reanchor all cells.
+function M.reanchor_end_marks(bufnr, active_idx)
   local state = get_state(bufnr)
   if not state or #state.cells == 0 then
     return
@@ -833,7 +836,17 @@ function M.reanchor_end_marks(bufnr)
   local line_count = vim.api.nvim_buf_line_count(bufnr)
   local win_width = vim.api.nvim_win_get_width(0)
 
-  for i, cs in ipairs(state.cells) do
+  -- Clamp the iteration range to the active cell and its neighbours.
+  -- Cells further away cannot have had their end_mark affected by this edit.
+  -- Fall back to all cells when active_idx is unknown.
+  local i_start = active_idx and math.max(1, active_idx - 1) or 1
+  local i_end = active_idx and math.min(#state.cells, active_idx + 1) or #state.cells
+
+  for i = i_start, i_end do
+    local cs = state.cells[i]
+    if not cs then
+      goto continue
+    end
     local sm = vim.api.nvim_buf_get_extmark_by_id(bufnr, NS, cs.start_mark, {})
     if not sm or #sm == 0 then
       goto continue
@@ -907,7 +920,10 @@ end
 --- model. Called before structural integrity checks so rebuilt cells carry
 --- the latest edits.
 ---@param bufnr integer
-function M.sync_sources_from_buf(bufnr)
+---@param active_idx integer|nil  1-based index of the cell being edited.
+---   When provided only that cell is synced (O(1) instead of O(n)).
+---   Pass nil to sync all cells (used at save time).
+function M.sync_sources_from_buf(bufnr, active_idx)
   local state = get_state(bufnr)
   local nb = state.notebook
   if not state or not nb or #state.cells == 0 then
@@ -917,7 +933,19 @@ function M.sync_sources_from_buf(bufnr)
     return
   end
   local line_count = vim.api.nvim_buf_line_count(bufnr)
-  for _, cs in ipairs(state.cells) do
+
+  -- When the active cell is known, only sync that one cell - O(1) extmark
+  -- reads per keystroke instead of O(n).  The full sync path (nil) is kept
+  -- for save and any caller that needs all cells current.
+  local cells_to_sync
+  if active_idx then
+    local cs = state.cells[active_idx]
+    cells_to_sync = cs and { cs } or {}
+  else
+    cells_to_sync = state.cells
+  end
+
+  for _, cs in ipairs(cells_to_sync) do
     local sm = vim.api.nvim_buf_get_extmark_by_id(bufnr, NS, cs.start_mark, {})
     if sm and #sm > 0 and sm[1] < line_count and nb.cells[cs.index] then
       local s = sm[1]
