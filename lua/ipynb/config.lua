@@ -47,6 +47,12 @@ local M = {}
 ---@field clear_all_output string
 ---@field add_markdown_below string
 ---@field add_markdown_above string
+---@field move_cell_up string
+---@field move_cell_down string
+---@field duplicate_cell string
+---@field yank_cell string
+---@field paste_cell string
+---@field toggle_cell_type string
 
 ---@class ImageConfig
 ---@field enabled boolean          Enable image rendering (requires snacks.nvim + unicode placeholder terminal)
@@ -111,6 +117,12 @@ M.defaults = {
     clear_all_output = "<leader>cX",
     add_markdown_below = "<leader>mo",
     add_markdown_above = "<leader>mO",
+    move_cell_up = "<leader>ck",
+    move_cell_down = "<leader>cj",
+    duplicate_cell = "<leader>cc",
+    yank_cell = "<leader>cy",
+    paste_cell = "<leader>cv",
+    toggle_cell_type = "<leader>ct",
   },
 
   image = {
