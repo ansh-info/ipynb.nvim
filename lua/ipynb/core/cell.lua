@@ -537,6 +537,187 @@ function M.delete_cell(bufnr, idx)
   M.render(bufnr, notebook)
 end
 
+--- Move the cell at `idx` one position up (swap with the cell above).
+---@param bufnr integer
+---@param idx integer
+function M.move_cell_up(bufnr, idx)
+  local state = get_state(bufnr)
+  local notebook = state.notebook
+  if not notebook or idx <= 1 then
+    return
+  end
+
+  notebook.cells[idx], notebook.cells[idx - 1] = notebook.cells[idx - 1], notebook.cells[idx]
+  M.render(bufnr, notebook)
+
+  local captured = idx - 1
+  vim.schedule(function()
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+      return
+    end
+    local cs = state.cells[captured]
+    if cs then
+      local s, _ = cell_line_range(bufnr, cs)
+      vim.api.nvim_win_set_cursor(0, { s + 1, 0 })
+    end
+  end)
+end
+
+--- Move the cell at `idx` one position down (swap with the cell below).
+---@param bufnr integer
+---@param idx integer
+function M.move_cell_down(bufnr, idx)
+  local state = get_state(bufnr)
+  local notebook = state.notebook
+  if not notebook or idx >= #notebook.cells then
+    return
+  end
+
+  notebook.cells[idx], notebook.cells[idx + 1] = notebook.cells[idx + 1], notebook.cells[idx]
+  M.render(bufnr, notebook)
+
+  local captured = idx + 1
+  vim.schedule(function()
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+      return
+    end
+    local cs = state.cells[captured]
+    if cs then
+      local s, _ = cell_line_range(bufnr, cs)
+      vim.api.nvim_win_set_cursor(0, { s + 1, 0 })
+    end
+  end)
+end
+
+--- Duplicate the cell at `idx`, inserting the copy immediately below.
+--- Outputs and execution_count are cleared on the copy.
+---@param bufnr integer
+---@param idx integer
+function M.duplicate_cell(bufnr, idx)
+  local state = get_state(bufnr)
+  local notebook = state.notebook
+  if not notebook then
+    return
+  end
+
+  local copy = vim.deepcopy(notebook.cells[idx])
+  copy.id = utils.uid()
+  copy.execution_count = nil
+  if copy.outputs then
+    copy.outputs = {}
+  end
+
+  table.insert(notebook.cells, idx + 1, copy)
+  M.render(bufnr, notebook)
+
+  local captured = idx + 1
+  vim.schedule(function()
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+      return
+    end
+    local cs = state.cells[captured]
+    if cs then
+      local s, _ = cell_line_range(bufnr, cs)
+      vim.api.nvim_win_set_cursor(0, { s + 1, 0 })
+    end
+  end)
+end
+
+-- ── Cell yank / paste ─────────────────────────────────────────────────────────
+
+-- Process-local yank register: holds one deep-copied notebook cell.
+local _yank_register = nil
+
+--- Copy the cell at `idx` into the yank register.
+---@param bufnr integer
+---@param idx integer
+function M.yank_cell(bufnr, idx)
+  local state = get_state(bufnr)
+  local notebook = state.notebook
+  if not notebook then
+    return
+  end
+
+  _yank_register = vim.deepcopy(notebook.cells[idx])
+  utils.info("Cell yanked.")
+end
+
+--- Paste the yanked cell below the cell at `idx`.
+--- Outputs and execution_count are cleared on the pasted copy.
+---@param bufnr integer
+---@param idx integer
+function M.paste_cell(bufnr, idx)
+  if not _yank_register then
+    utils.warn("No cell in yank register.")
+    return
+  end
+
+  local state = get_state(bufnr)
+  local notebook = state.notebook
+  if not notebook then
+    return
+  end
+
+  local pasted = vim.deepcopy(_yank_register)
+  pasted.id = utils.uid()
+  pasted.execution_count = nil
+  if pasted.outputs then
+    pasted.outputs = {}
+  end
+
+  table.insert(notebook.cells, idx + 1, pasted)
+  M.render(bufnr, notebook)
+
+  local captured = idx + 1
+  vim.schedule(function()
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+      return
+    end
+    local cs = state.cells[captured]
+    if cs then
+      local s, _ = cell_line_range(bufnr, cs)
+      vim.api.nvim_win_set_cursor(0, { s + 1, 0 })
+    end
+  end)
+end
+
+--- Toggle the cell at `idx` between "code" and "markdown".
+--- Outputs and execution_count are cleared when switching to markdown.
+---@param bufnr integer
+---@param idx integer
+function M.toggle_cell_type(bufnr, idx)
+  local state = get_state(bufnr)
+  local notebook = state.notebook
+  if not notebook then
+    return
+  end
+
+  local c = notebook.cells[idx]
+  if c.cell_type == "code" then
+    c.cell_type = "markdown"
+    c.outputs = nil
+    c.execution_count = nil
+  else
+    c.cell_type = "code"
+    c.outputs = {}
+    c.execution_count = nil
+  end
+
+  M.render(bufnr, notebook)
+
+  local captured = idx
+  vim.schedule(function()
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+      return
+    end
+    local cs = state.cells[captured]
+    if cs then
+      local s, _ = cell_line_range(bufnr, cs)
+      vim.api.nvim_win_set_cursor(0, { s + 1, 0 })
+    end
+  end)
+end
+
 -- ── Output rendering ──────────────────────────────────────────────────────────
 
 --- Append a virt_lines output block below the cell.
