@@ -2,6 +2,23 @@
 
 <!-- version list -->
 
+## v1.6.0 (2026-04-03)
+
+### Features
+
+- **config**: Add keymap defaults for new cell operations
+  ([`cf477aa`](https://github.com/ansh-info/ipynb.nvim/commit/cf477aa8c3f1e79ca6c3d3c53bc27385d87e4ddf))
+
+- **lua**: Add :Ipynb* user commands for new cell operations
+  ([`fb1fc7a`](https://github.com/ansh-info/ipynb.nvim/commit/fb1fc7a8a64a5b86814834c6d2d33e02114119e3))
+
+- **lua**: Add keymaps and help overlay entries for new cell operations
+  ([`2f6e15e`](https://github.com/ansh-info/ipynb.nvim/commit/2f6e15ebae01565c1dd520c3dbfcd2281b37edf3))
+
+- **lua**: Add move, duplicate, yank/paste, toggle cell type operations
+  ([`0b87ce6`](https://github.com/ansh-info/ipynb.nvim/commit/0b87ce65da1c7a0071d413c4bf5b5bb72b510ee8))
+
+
 ## v1.5.1 (2026-04-02)
 
 ### Bug Fixes
