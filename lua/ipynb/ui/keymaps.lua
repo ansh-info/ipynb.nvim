@@ -122,6 +122,54 @@ function M.attach(bufnr)
     end
   end, "Jupyter: add markdown cell above")
 
+  map("n", km.move_cell_up, function()
+    local cell_mod = require("ipynb.core.cell")
+    local _, idx = cell_mod.cell_at_cursor(bufnr)
+    if idx then
+      cell_mod.move_cell_up(bufnr, idx)
+    end
+  end, "Jupyter: move cell up")
+
+  map("n", km.move_cell_down, function()
+    local cell_mod = require("ipynb.core.cell")
+    local _, idx = cell_mod.cell_at_cursor(bufnr)
+    if idx then
+      cell_mod.move_cell_down(bufnr, idx)
+    end
+  end, "Jupyter: move cell down")
+
+  map("n", km.duplicate_cell, function()
+    local cell_mod = require("ipynb.core.cell")
+    local _, idx = cell_mod.cell_at_cursor(bufnr)
+    if idx then
+      cell_mod.duplicate_cell(bufnr, idx)
+    end
+  end, "Jupyter: duplicate cell")
+
+  map("n", km.yank_cell, function()
+    local cell_mod = require("ipynb.core.cell")
+    local _, idx = cell_mod.cell_at_cursor(bufnr)
+    if idx then
+      cell_mod.yank_cell(bufnr, idx)
+    end
+  end, "Jupyter: yank cell")
+
+  map("n", km.paste_cell, function()
+    local cell_mod = require("ipynb.core.cell")
+    local _, idx = cell_mod.cell_at_cursor(bufnr)
+    if idx then
+      cell_mod.paste_cell(bufnr, idx)
+    end
+  end, "Jupyter: paste cell below")
+
+  map("n", km.toggle_cell_type, function()
+    local cell_mod = require("ipynb.core.cell")
+    local _, idx = cell_mod.cell_at_cursor(bufnr)
+    if idx then
+      cell_mod.toggle_cell_type(bufnr, idx)
+    end
+  end, "Jupyter: toggle cell type code/markdown")
+
   -- ── Save ───────────────────────────────────────────────────────────────
   -- Override :w so it saves back to .ipynb format.
   map("n", "<leader>w", function()
@@ -163,6 +211,12 @@ function M.show_help()
     "  " .. km.add_cell_below .. "  → add cell below",
     "  " .. km.add_cell_above .. "  → add cell above",
     "  " .. km.delete_cell .. "  → delete cell",
+    "  " .. km.duplicate_cell .. "  → duplicate cell",
+    "  " .. km.yank_cell .. "  → yank cell",
+    "  " .. km.paste_cell .. "  → paste cell below",
+    "  " .. km.toggle_cell_type .. "  → toggle code/markdown",
+    "  " .. km.move_cell_up .. "  → move cell up",
+    "  " .. km.move_cell_down .. "  → move cell down",
     "  " .. km.add_markdown_below .. "  → add markdown cell below",
     "  " .. km.add_markdown_above .. "  → add markdown cell above",
     "  " .. km.clear_output .. "  → clear cell output",
