@@ -2,6 +2,17 @@
 
 <!-- version list -->
 
+## v1.6.2 (2026-04-03)
+
+### Bug Fixes
+
+- **lua**: Clean up stale output/image refs before render and add render hooks
+  ([`38cbb9c`](https://github.com/ansh-info/ipynb.nvim/commit/38cbb9c43ad709e472da086fdf0177473b1fa0f6))
+
+- **lua**: Remap kernel pending cell_state refs after render, guard nil cell
+  ([`64f179c`](https://github.com/ansh-info/ipynb.nvim/commit/64f179c9f026db65db9e43c631c3796b800879b0))
+
+
 ## v1.6.1 (2026-04-03)
 
 ### Performance Improvements
