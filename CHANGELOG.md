@@ -2,6 +2,17 @@
 
 <!-- version list -->
 
+## v1.6.1 (2026-04-03)
+
+### Performance Improvements
+
+- **lua**: Limit sync_sources_from_buf to active cell on keystrokes
+  ([`7af09e0`](https://github.com/ansh-info/ipynb.nvim/commit/7af09e0a2fe93accbe9114f61d1c39f5bb0b41f0))
+
+- **lua**: Pass active cell index to reanchor and sync on TextChanged
+  ([`493940b`](https://github.com/ansh-info/ipynb.nvim/commit/493940b1d527b1b43b7adbaf29df832df2a4e126))
+
+
 ## v1.6.0 (2026-04-03)
 
 ### Features
