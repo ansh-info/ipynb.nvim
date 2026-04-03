@@ -195,8 +195,12 @@ function M.open(path, bufnr)
       if not vim.api.nvim_buf_is_valid(bufnr) then
         return
       end
-      cell.sync_sources_from_buf(bufnr)
-      cell.reanchor_end_marks(bufnr)
+      -- Identify the active cell once and pass the index to both functions so
+      -- each only processes the edited cell and its immediate neighbours.
+      -- This reduces per-keystroke extmark reads from O(n) to O(1).
+      local _, active_idx = cell.cell_at_cursor(bufnr)
+      cell.sync_sources_from_buf(bufnr, active_idx)
+      cell.reanchor_end_marks(bufnr, active_idx)
       cell.check_structural_integrity(bufnr)
     end,
   })
