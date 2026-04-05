@@ -223,17 +223,44 @@ function M.open(path, bufnr)
     end,
   })
 
-  -- Re-render borders when the window is resized (border widths depend on
-  -- the window width).  preserve_undo keeps any in-cell typing history intact
-  -- so the user does not lose undo just because they resized the terminal.
+  -- Re-render borders when the window width changes.  Border text is built
+  -- once at render time using the current window width; they need to be
+  -- redrawn whenever that width changes.
+  --
+  -- VimResized fires on terminal resize but NOT when the user opens or closes
+  -- a vertical split.  WinEnter fires on every window switch, so we track the
+  -- last rendered width and skip the re-render when width is unchanged.
+  -- preserve_undo keeps in-cell typing history intact across both events.
+  local _last_win_width = vim.api.nvim_win_get_width(0)
+
+  local function rerender_if_width_changed()
+    local nb2 = cell.get_notebook(bufnr)
+    if not nb2 then
+      return
+    end
+    local w = vim.api.nvim_win_get_width(0)
+    if w ~= _last_win_width then
+      _last_win_width = w
+      cell.render(bufnr, nb2, { preserve_undo = true })
+    end
+  end
+
   vim.api.nvim_create_autocmd("VimResized", {
     buffer = bufnr,
     callback = function()
+      -- Terminal resize: width always changes, update unconditionally and
+      -- reset the tracker so WinEnter after the resize is also a no-op.
       local nb2 = cell.get_notebook(bufnr)
       if nb2 then
+        _last_win_width = vim.api.nvim_win_get_width(0)
         cell.render(bufnr, nb2, { preserve_undo = true })
       end
     end,
+  })
+
+  vim.api.nvim_create_autocmd("WinEnter", {
+    buffer = bufnr,
+    callback = rerender_if_width_changed,
   })
 
   -- Auto-start the kernel immediately so it is ready by the time the user
