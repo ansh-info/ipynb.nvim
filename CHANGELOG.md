@@ -2,6 +2,17 @@
 
 <!-- version list -->
 
+## v1.6.3 (2026-04-05)
+
+### Bug Fixes
+
+- **lua**: Preserve undo history across structural cell operations
+  ([`3d8d5e0`](https://github.com/ansh-info/ipynb.nvim/commit/3d8d5e03753ecddc5a66c8467b4ed5e52972ea65))
+
+- **lua**: Preserve undo history on VimResized re-render
+  ([`65d8f6a`](https://github.com/ansh-info/ipynb.nvim/commit/65d8f6a0c0af00c99a81bb92ff2a49ce04b1ec02))
+
+
 ## v1.6.2 (2026-04-03)
 
 ### Bug Fixes
