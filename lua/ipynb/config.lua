@@ -64,6 +64,7 @@ local M = {}
 ---@field default_kernel string    Default kernel name when starting fresh
 ---@field auto_start boolean       Auto-start kernel on first run attempt
 ---@field connection_dir string    Where to look for existing connection files
+---@field restart_on_crash boolean Auto-restart kernel after an unexpected crash
 
 ---@class NotebookConfig
 ---@field auto_save boolean        Save .ipynb after every cell execution
@@ -136,6 +137,7 @@ M.defaults = {
     default_kernel = "python3",
     auto_start = true,
     connection_dir = vim.fn.expand("~/.local/share/jupyter/runtime"),
+    restart_on_crash = false,
   },
 
   notebook = {
