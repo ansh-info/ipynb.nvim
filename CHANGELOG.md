@@ -2,6 +2,17 @@
 
 <!-- version list -->
 
+## v1.6.5 (2026-04-05)
+
+### Bug Fixes
+
+- **config**: Add restart_on_crash kernel option
+  ([`5be35a5`](https://github.com/ansh-info/ipynb.nvim/commit/5be35a53c81e9be84c5a6432510317be00d98905))
+
+- **lua**: Fix kernel crash recovery and add restart_on_crash option
+  ([`8c65cfc`](https://github.com/ansh-info/ipynb.nvim/commit/8c65cfc8555c50870c3c5c166f8ed66e8c091f4c))
+
+
 ## v1.6.4 (2026-04-05)
 
 ### Bug Fixes
