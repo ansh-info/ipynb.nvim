@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.6.4 (2026-04-05)
+
+### Bug Fixes
+
+- **lua**: Re-render borders on WinEnter when window width changes
+  ([`3f800de`](https://github.com/ansh-info/ipynb.nvim/commit/3f800de735ba0480e0d1e5fdcfb919d59558d74b))
+
+
 ## v1.6.3 (2026-04-05)
 
 ### Bug Fixes
