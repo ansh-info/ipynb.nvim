@@ -359,12 +359,23 @@ local function spawn_bridge(bufnr)
             string.format("Kernel failed to start (exit %d). Check :messages for details.", code)
           )
         else
-          utils.err(
-            string.format(
-              "Kernel stopped unexpectedly (exit %d). Run :IpynbKernelRestart to recover.",
-              code
+          local kn_saved = st.kernel_name
+          if config.get().kernel.restart_on_crash then
+            utils.warn(
+              string.format("Kernel stopped unexpectedly (exit %d). Auto-restarting...", code)
             )
-          )
+            vim.defer_fn(function()
+              _state[bufnr] = nil
+              M.start(bufnr, kn_saved)
+            end, 1000)
+          else
+            utils.err(
+              string.format(
+                "Kernel stopped unexpectedly (exit %d). Run :IpynbKernelRestart to recover.",
+                code
+              )
+            )
+          end
         end
       end
     end,
@@ -433,11 +444,18 @@ function M.restart(bufnr)
   local s = get_state(bufnr)
   local kn = s.kernel_name
   output.clear_all(bufnr, cell.get_cells(bufnr))
-  M.stop(bufnr)
-  vim.defer_fn(function()
+  if s.job_id then
+    -- Kernel is still running - stop it gracefully then start fresh.
+    M.stop(bufnr)
+    vim.defer_fn(function()
+      _state[bufnr] = nil
+      M.start(bufnr, kn)
+    end, 700)
+  else
+    -- Kernel already stopped (e.g. after a crash) - start fresh immediately.
     _state[bufnr] = nil
     M.start(bufnr, kn)
-  end, 700)
+  end
 end
 
 --- Attach to an already-running kernel via its connection file.
