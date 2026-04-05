@@ -294,15 +294,21 @@ function M.render(bufnr)
   local ns = cell.namespace()
   local cells = cell.get_cells(bufnr)
 
-  for _, cs in ipairs(cells) do
-    if cs.cell_type == "markdown" then
-      -- Get line range from extmarks.
-      local sm = vim.api.nvim_buf_get_extmark_by_id(bufnr, ns, cs.start_mark, {})
-      local em = vim.api.nvim_buf_get_extmark_by_id(bufnr, ns, cs.end_mark, {})
-      local start_row = sm[1] or 0
-      local end_row = em[1] or start_row
+  -- Collect code cell ranges for treesitter region restriction (see below).
+  local code_regions = {}
 
-      -- Subtle background tint for the whole cell.
+  for _, cs in ipairs(cells) do
+    -- Get line range from extmarks.
+    local sm = vim.api.nvim_buf_get_extmark_by_id(bufnr, ns, cs.start_mark, {})
+    local em = vim.api.nvim_buf_get_extmark_by_id(bufnr, ns, cs.end_mark, {})
+    local start_row = sm[1] or 0
+    local end_row = em[1] or start_row
+
+    if cs.cell_type == "code" then
+      -- Range4: {start_row, start_col, end_row, end_col} (0-indexed).
+      code_regions[#code_regions + 1] = { start_row, 0, end_row, 0 }
+    else
+      -- Subtle background tint for the whole markdown cell.
       vim.api.nvim_buf_set_extmark(bufnr, NS, start_row, 0, {
         end_row = end_row + 1,
         end_col = 0,
@@ -317,6 +323,22 @@ function M.render(bufnr)
         decorate_line(bufnr, start_row + i - 1, line)
       end
     end
+  end
+
+  -- Restrict the Python treesitter parser to code cell ranges so that markdown
+  -- prose is not highlighted with Python syntax colors.
+  -- set_included_regions is available since Neovim 0.9; guard with pcall.
+  local ok_p, parser = pcall(vim.treesitter.get_parser, bufnr, "python")
+  if ok_p and parser and parser.set_included_regions then
+    pcall(function()
+      -- Passing an empty outer list resets to "parse whole buffer"; pass a
+      -- non-empty list only when there are code cells to restrict to.
+      if #code_regions > 0 then
+        parser:set_included_regions({ code_regions })
+      else
+        parser:set_included_regions({})
+      end
+    end)
   end
 end
 

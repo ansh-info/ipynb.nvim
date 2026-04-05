@@ -285,6 +285,85 @@ function M.open(path, bufnr)
     end)
   end)
 
+  -- Filter LSP diagnostics that fall inside markdown cell ranges.
+  --
+  -- The buffer filetype is python so pyright/pylsp attach and publish
+  -- diagnostics for the whole buffer.  Markdown prose (English sentences,
+  -- bullet points, etc.) is not Python code and produces false "undefined
+  -- name" / syntax errors.  After every diagnostic publish cycle, walk each
+  -- LSP client's namespace and drop diagnostics whose line falls inside a
+  -- markdown cell.
+  --
+  -- _in_diag_filter prevents re-entrant loops: vim.diagnostic.set() fires
+  -- DiagnosticChanged synchronously, so the guard must be set before the
+  -- inner vim.schedule and cleared after the set() call returns.
+  local _in_diag_filter = false
+  vim.api.nvim_create_autocmd("DiagnosticChanged", {
+    buffer = bufnr,
+    callback = function()
+      if _in_diag_filter then
+        return
+      end
+      _in_diag_filter = true
+      vim.schedule(function()
+        -- Bail out early when LSP diagnostic namespace lookup is unavailable
+        -- (Neovim < 0.9) or when there are no markdown cells to filter.
+        if not (vim.lsp.diagnostic and vim.lsp.diagnostic.get_namespace) then
+          _in_diag_filter = false
+          return
+        end
+
+        -- Build markdown cell ranges from current extmarks.
+        local cell_ns = cell.namespace()
+        local md_ranges = {}
+        for _, cs in ipairs(cell.get_cells(bufnr)) do
+          if cs.cell_type == "markdown" then
+            local sm = vim.api.nvim_buf_get_extmark_by_id(bufnr, cell_ns, cs.start_mark, {})
+            local em = vim.api.nvim_buf_get_extmark_by_id(bufnr, cell_ns, cs.end_mark, {})
+            md_ranges[#md_ranges + 1] = { sm[1] or 0, em[1] or 0 }
+          end
+        end
+
+        if #md_ranges == 0 then
+          _in_diag_filter = false
+          return
+        end
+
+        local function in_markdown(lnum)
+          for _, r in ipairs(md_ranges) do
+            if lnum >= r[1] and lnum <= r[2] then
+              return true
+            end
+          end
+          return false
+        end
+
+        -- Filter each LSP client's diagnostics for this buffer.
+        local get_clients = vim.lsp.get_clients or vim.lsp.get_active_clients
+        for _, client in ipairs(get_clients({ bufnr = bufnr })) do
+          local diag_ns = vim.lsp.diagnostic.get_namespace(client.id)
+          local diags = vim.diagnostic.get(bufnr, { namespace = diag_ns })
+          local filtered = {}
+          local removed = 0
+          for _, d in ipairs(diags) do
+            if in_markdown(d.lnum) then
+              removed = removed + 1
+            else
+              filtered[#filtered + 1] = d
+            end
+          end
+          if removed > 0 then
+            -- set() fires DiagnosticChanged synchronously; the guard above
+            -- ensures we do not recurse.
+            vim.diagnostic.set(diag_ns, bufnr, filtered)
+          end
+        end
+
+        _in_diag_filter = false
+      end)
+    end,
+  })
+
   -- Mark buffer as not modified after initial load.
   vim.api.nvim_buf_set_option(bufnr, "modified", false)
 
