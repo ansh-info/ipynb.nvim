@@ -201,7 +201,14 @@ end
 ---
 ---@param bufnr integer
 ---@param notebook table  Notebook from notebook.lua
-function M.render(bufnr, notebook)
+---@param opts table|nil  Options:
+---   opts.preserve_undo (boolean) - when true, skip the undolevels=-1 block so
+---   that in-cell typing undo history is preserved across the render call.
+---   Pass this from user-facing structural ops (add/delete/move/etc.) so that
+---   typing done before the op remains undoable afterwards.
+---   Omit (or false) for initial file load, VimResized, and integrity-recovery
+---   renders where starting with a clean undo tree is correct.
+function M.render(bufnr, notebook, opts)
   define_highlights()
 
   local state = get_state(bufnr)
@@ -227,16 +234,23 @@ function M.render(bufnr, notebook)
   vim.api.nvim_buf_set_option(bufnr, "modifiable", true)
   vim.api.nvim_buf_set_option(bufnr, "readonly", false)
 
-  -- Make all nvim_buf_set_lines calls in this function undo-invisible.
-  -- Neovim's undo system has no concept of cells; render() rewrites the entire
-  -- buffer and each set_lines call would otherwise become its own undo entry.
-  -- Undoing to those entries produces empty buffers, borders without source, or
-  -- mixed content from two render cycles - none of which the plugin can recover.
-  -- Setting undolevels = -1 prevents any of these writes from entering the undo
-  -- tree. The value is restored before the function returns so that in-cell
-  -- typing the user does after this render remains fully undoable.
-  local saved_ul = vim.api.nvim_buf_get_option(bufnr, "undolevels")
-  vim.api.nvim_buf_set_option(bufnr, "undolevels", -1)
+  -- Optionally make all nvim_buf_set_lines calls undo-invisible.
+  --
+  -- When preserve_undo is false (default): set undolevels=-1 before writes so
+  -- render() entries never appear in the undo tree.  Used for initial file load
+  -- and check_structural_integrity recovery where a clean undo start is correct.
+  --
+  -- When preserve_undo is true: skip this block so that typing the user did
+  -- before a structural op (add/delete/move/duplicate/paste/toggle) stays
+  -- undoable after the op.  The render() writes for structural ops do enter the
+  -- undo tree, but check_structural_integrity will recover if the user undoes
+  -- through them (it detects divergence and re-renders from the notebook model).
+  local preserve_undo = opts and opts.preserve_undo or false
+  local saved_ul
+  if not preserve_undo then
+    saved_ul = vim.api.nvim_buf_get_option(bufnr, "undolevels")
+    vim.api.nvim_buf_set_option(bufnr, "undolevels", -1)
+  end
 
   -- Clear everything.
   vim.api.nvim_buf_clear_namespace(bufnr, NS, 0, -1)
@@ -317,9 +331,10 @@ function M.render(bufnr, notebook)
   -- Lock filetype for syntax highlighting.
   vim.api.nvim_buf_set_option(bufnr, "filetype", "python")
 
-  -- All buffer line writes are complete. Restore undo tracking so that
-  -- in-cell editing after this render is undoable.
-  vim.api.nvim_buf_set_option(bufnr, "undolevels", saved_ul)
+  -- Restore undo tracking (only when we suppressed it above).
+  if not preserve_undo then
+    vim.api.nvim_buf_set_option(bufnr, "undolevels", saved_ul)
+  end
 
   -- Notify render hooks (e.g. kernel remap of pending cell_state refs).
   -- state.cells is fully built at this point.
@@ -494,7 +509,8 @@ function M.add_cell_below(bufnr, idx, cell_type)
   table.insert(notebook.cells, idx + 1, new_cell)
 
   -- Re-render the whole buffer to reflect the new cell.
-  M.render(bufnr, notebook)
+  -- preserve_undo keeps any typing the user did before this op undoable.
+  M.render(bufnr, notebook, { preserve_undo = true })
 
   -- Defer cursor placement until after render-triggered autocmds settle.
   -- M.render() rebuilds all extmarks; CursorMoved fires during the rebuild
@@ -536,7 +552,7 @@ function M.add_cell_above(bufnr, idx, cell_type)
   }
   table.insert(notebook.cells, idx, new_cell)
 
-  M.render(bufnr, notebook)
+  M.render(bufnr, notebook, { preserve_undo = true })
 
   local captured_idx = idx
   vim.schedule(function()
@@ -567,7 +583,7 @@ function M.delete_cell(bufnr, idx)
   end
 
   table.remove(notebook.cells, idx)
-  M.render(bufnr, notebook)
+  M.render(bufnr, notebook, { preserve_undo = true })
 end
 
 --- Move the cell at `idx` one position up (swap with the cell above).
@@ -581,7 +597,7 @@ function M.move_cell_up(bufnr, idx)
   end
 
   notebook.cells[idx], notebook.cells[idx - 1] = notebook.cells[idx - 1], notebook.cells[idx]
-  M.render(bufnr, notebook)
+  M.render(bufnr, notebook, { preserve_undo = true })
 
   local captured = idx - 1
   vim.schedule(function()
@@ -607,7 +623,7 @@ function M.move_cell_down(bufnr, idx)
   end
 
   notebook.cells[idx], notebook.cells[idx + 1] = notebook.cells[idx + 1], notebook.cells[idx]
-  M.render(bufnr, notebook)
+  M.render(bufnr, notebook, { preserve_undo = true })
 
   local captured = idx + 1
   vim.schedule(function()
@@ -641,7 +657,7 @@ function M.duplicate_cell(bufnr, idx)
   end
 
   table.insert(notebook.cells, idx + 1, copy)
-  M.render(bufnr, notebook)
+  M.render(bufnr, notebook, { preserve_undo = true })
 
   local captured = idx + 1
   vim.schedule(function()
@@ -699,7 +715,7 @@ function M.paste_cell(bufnr, idx)
   end
 
   table.insert(notebook.cells, idx + 1, pasted)
-  M.render(bufnr, notebook)
+  M.render(bufnr, notebook, { preserve_undo = true })
 
   local captured = idx + 1
   vim.schedule(function()
@@ -736,7 +752,7 @@ function M.toggle_cell_type(bufnr, idx)
     c.execution_count = nil
   end
 
-  M.render(bufnr, notebook)
+  M.render(bufnr, notebook, { preserve_undo = true })
 
   local captured = idx
   vim.schedule(function()

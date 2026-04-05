@@ -224,13 +224,14 @@ function M.open(path, bufnr)
   })
 
   -- Re-render borders when the window is resized (border widths depend on
-  -- the window width).
+  -- the window width).  preserve_undo keeps any in-cell typing history intact
+  -- so the user does not lose undo just because they resized the terminal.
   vim.api.nvim_create_autocmd("VimResized", {
     buffer = bufnr,
     callback = function()
       local nb2 = cell.get_notebook(bufnr)
       if nb2 then
-        cell.render(bufnr, nb2)
+        cell.render(bufnr, nb2, { preserve_undo = true })
       end
     end,
   })
