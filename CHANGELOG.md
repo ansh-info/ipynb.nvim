@@ -2,6 +2,17 @@
 
 <!-- version list -->
 
+## v1.6.6 (2026-04-05)
+
+### Bug Fixes
+
+- **lua**: Filter LSP diagnostics out of markdown cell ranges
+  ([`16b4487`](https://github.com/ansh-info/ipynb.nvim/commit/16b4487885d0e332b2e09977b317732843882eae))
+
+- **lua**: Restrict Python treesitter to code cell ranges
+  ([`7756eb2`](https://github.com/ansh-info/ipynb.nvim/commit/7756eb2f801d197c50a7ede8b8f7cd4e90284cb0))
+
+
 ## v1.6.5 (2026-04-05)
 
 ### Bug Fixes
