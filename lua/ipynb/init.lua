@@ -113,4 +113,64 @@ function M.get_notebook()
   return require("ipynb.core.cell").get_notebook(vim.api.nvim_get_current_buf())
 end
 
+-- ── Statusline component ─────────────────────────────────────────────────────
+
+local _status_icons = {
+  idle = { icon = "⬤", hl = "DiagnosticOk" },
+  busy = { icon = "⬤", hl = "DiagnosticWarn" },
+  starting = { icon = "⬤", hl = "DiagnosticInfo" },
+  stopped = { icon = "⬤", hl = "DiagnosticError" },
+}
+
+--- Return a formatted string showing the kernel name and status for the
+--- current buffer.  Designed for embedding in lualine, heirline, or any
+--- statusline plugin.
+---
+--- Returns an empty string when the current buffer is not a managed notebook,
+--- so the component disappears outside of .ipynb files.
+---
+--- Example output: "⬤ python3 [idle]"
+---
+---@return string
+function M.statusline()
+  local bufnr = vim.api.nvim_get_current_buf()
+  if not require("ipynb.core.notebook_buf").is_managed(bufnr) then
+    return ""
+  end
+
+  local ok, kernel = pcall(require, "ipynb.kernel")
+  if not ok then
+    return ""
+  end
+
+  local status = kernel.status(bufnr)
+  local name = kernel.kernel_name(bufnr)
+  local entry = _status_icons[status] or _status_icons.stopped
+
+  if name == "" then
+    return entry.icon .. " (no kernel)"
+  end
+  return entry.icon .. " " .. name .. " [" .. status .. "]"
+end
+
+--- Return the highlight group name for the current kernel status.
+--- Useful for statusline plugins that support per-component coloring.
+---
+---@return string  highlight group name (e.g. "DiagnosticOk")
+function M.statusline_hl()
+  local bufnr = vim.api.nvim_get_current_buf()
+  if not require("ipynb.core.notebook_buf").is_managed(bufnr) then
+    return "StatusLine"
+  end
+
+  local ok, kernel = pcall(require, "ipynb.kernel")
+  if not ok then
+    return "StatusLine"
+  end
+
+  local status = kernel.status(bufnr)
+  local entry = _status_icons[status] or _status_icons.stopped
+  return entry.hl
+end
+
 return M
