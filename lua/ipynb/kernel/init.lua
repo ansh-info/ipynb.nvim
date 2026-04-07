@@ -734,6 +734,13 @@ function M.status(bufnr)
   return get_state(bufnr).status
 end
 
+--- Return the kernel name for a buffer (e.g. "python3").
+---@param bufnr integer
+---@return string
+function M.kernel_name(bufnr)
+  return get_state(bufnr).kernel_name
+end
+
 --- Clean up kernel state when a buffer is deleted.
 ---@param bufnr integer
 function M.on_buf_delete(bufnr)
