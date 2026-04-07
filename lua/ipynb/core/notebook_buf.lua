@@ -19,6 +19,11 @@ local M = {}
 -- Track which buffers ipynb has already initialised.
 local managed = {}
 
+-- Reverse map: normalised path → bufnr.  Used to detect when the same
+-- notebook file is opened in a second buffer, which would cause silent
+-- save conflicts (both buffers write to the same .ipynb).
+local managed_paths = {}
+
 -- ── Buffer setup ──────────────────────────────────────────────────────────────
 
 --- Configure buffer-level options for a notebook buffer.
@@ -127,6 +132,8 @@ end
 ---@param path string  Absolute path of the notebook file.
 ---@param bufnr integer
 function M.open(path, bufnr)
+  local norm_path = vim.fn.fnamemodify(path, ":p")
+
   if managed[bufnr] then
     -- Already open; re-render from disk.
     local nb, err = notebook.load(path)
@@ -135,6 +142,23 @@ function M.open(path, bufnr)
       return
     end
     cell.render(bufnr, nb)
+    return
+  end
+
+  -- Guard: if another buffer already manages this file, switch to it
+  -- instead of creating a duplicate that would cause silent save conflicts.
+  local existing = managed_paths[norm_path]
+  if existing and existing ~= bufnr and vim.api.nvim_buf_is_valid(existing) then
+    utils.warn("Notebook already open in buffer " .. existing .. ". Switching to it.")
+    -- Wipe the empty duplicate buffer and jump to the existing one.
+    vim.schedule(function()
+      if vim.api.nvim_buf_is_valid(bufnr) then
+        vim.api.nvim_buf_delete(bufnr, { force = true })
+      end
+      if vim.api.nvim_buf_is_valid(existing) then
+        vim.api.nvim_set_current_buf(existing)
+      end
+    end)
     return
   end
 
@@ -148,6 +172,7 @@ function M.open(path, bufnr)
 
   -- Mark as managed before calling render so recursive triggers don't loop.
   managed[bufnr] = true
+  managed_paths[norm_path] = bufnr
 
   setup_buf_options(bufnr)
   set_buf_name(bufnr, path)
@@ -177,6 +202,8 @@ function M.open(path, bufnr)
       if ok then
         kernel.on_buf_delete(bufnr)
       end
+      -- Remove from both tracking tables so the path can be reopened.
+      managed_paths[norm_path] = nil
       managed[bufnr] = nil
     end,
   })
