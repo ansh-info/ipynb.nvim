@@ -2,6 +2,22 @@
 
 <!-- version list -->
 
+## v1.7.0 (2026-04-07)
+
+### Documentation
+
+- **docs**: Add statusline section with lualine and heirline examples
+  ([`f67b916`](https://github.com/ansh-info/ipynb.nvim/commit/f67b916a3bbe8d95f641a9c80f46e9f28bd6607d))
+
+### Features
+
+- **lua**: Add statusline() and statusline_hl() public API
+  ([`b3a58cb`](https://github.com/ansh-info/ipynb.nvim/commit/b3a58cb737b1390ad1faede8e930aa9a72679f20))
+
+- **lua**: Expose kernel_name() getter on kernel module
+  ([`45887d0`](https://github.com/ansh-info/ipynb.nvim/commit/45887d05cf25977d33bb60d61fc917bae415eeba))
+
+
 ## v1.6.7 (2026-04-07)
 
 ### Bug Fixes
