@@ -24,6 +24,7 @@ rendering, full Vim modal editing, live kernel execution, and inline output.
 - [Keymaps](#keymaps)
 - [Commands](#commands)
 - [Configuration](#configuration)
+- [Statusline](#statusline)
 - [Contributing](#contributing)
 
 ## Requirements
@@ -267,6 +268,50 @@ require("ipynb").setup({
     auto_save = false,
   },
 })
+```
+
+## Statusline
+
+`require("ipynb").statusline()` returns a formatted string showing the kernel
+name and status for the current buffer. Returns an empty string for non-notebook
+buffers so the component disappears outside `.ipynb` files.
+
+```
+⬤ python3 [idle]       -- kernel ready
+⬤ python3 [busy]       -- cell executing
+⬤ python3 [starting]   -- kernel booting
+⬤ python3 [stopped]    -- kernel dead or not started
+```
+
+`require("ipynb").statusline_hl()` returns a highlight group name matching the
+status (`DiagnosticOk`, `DiagnosticWarn`, `DiagnosticInfo`, `DiagnosticError`).
+
+### lualine
+
+```lua
+require("lualine").setup({
+  sections = {
+    lualine_x = {
+      {
+        function() return require("ipynb").statusline() end,
+        cond = function() return require("ipynb").statusline() ~= "" end,
+        color = function()
+          return { fg = vim.fn.synIDattr(vim.fn.hlID(require("ipynb").statusline_hl()), "fg#") }
+        end,
+      },
+    },
+  },
+})
+```
+
+### heirline
+
+```lua
+local IpynbStatus = {
+  condition = function() return require("ipynb").statusline() ~= "" end,
+  provider = function() return " " .. require("ipynb").statusline() .. " " end,
+  hl = function() return require("ipynb").statusline_hl() end,
+}
 ```
 
 ## Contributing
