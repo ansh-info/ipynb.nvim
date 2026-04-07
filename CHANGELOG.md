@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.6.7 (2026-04-07)
+
+### Bug Fixes
+
+- **lua**: Prevent duplicate buffer open for same notebook file
+  ([`55dc2d5`](https://github.com/ansh-info/ipynb.nvim/commit/55dc2d5c8763c50061206d3fc418ffbe8d39bf16))
+
+
 ## v1.6.6 (2026-04-05)
 
 ### Bug Fixes
