@@ -59,12 +59,30 @@ from jupyter_client.blocking import BlockingKernelClient
 # the main stdin-reading thread both call send().
 _stdout_lock = threading.Lock()
 
-# ── ANSI escape strip ──────────────────────────────────────────────────────────
+# ── ANSI escape handling ──────────────────────────────────────────────────────
+# Full strip: removes ALL ANSI escapes (SGR + cursor movement + OSC + charset).
+# Used only for contexts that render plain text (e.g. inspect/documentation).
 _ANSI_RE = re.compile(r"\x1b(?:\[[0-9;?]*[A-Za-z]|\][^\x07]*\x07|[()][0-9A-Z])")
 
 
 def _strip_ansi(text: str) -> str:
     return _ANSI_RE.sub("", text)
+
+
+# Selective strip: removes non-SGR control sequences (cursor movement, erase,
+# OSC, charset selectors) but preserves SGR color/style codes (\x1b[...m) so
+# the Lua ANSI parser can render them as Neovim highlights.
+_ANSI_CONTROL_RE = re.compile(
+    r"\x1b\[[0-9;?]*[A-HJ-Za-ln-z]"  # CSI sequences except SGR (m)
+    r"|\x1b\][^\x07]*\x07"            # OSC sequences
+    r"|\x1b[()][0-9A-Z]"              # Charset selectors
+    r"|\r"                             # Carriage return (tqdm line rewrites)
+)
+
+
+def _strip_ansi_controls(text: str) -> str:
+    """Remove non-SGR ANSI escapes while preserving color/style codes."""
+    return _ANSI_CONTROL_RE.sub("", text)
 
 
 def _venv_kernel_python() -> Optional[str]:
@@ -204,7 +222,7 @@ def _process_iopub(msg: dict) -> None:
         send({
             "type": "stream",
             "name": content.get("name", "stdout"),
-            "text": _strip_ansi(content.get("text", "")),
+            "text": _strip_ansi_controls(content.get("text", "")),
             "msg_id": lid,
         })
 
@@ -230,18 +248,18 @@ def _process_iopub(msg: dict) -> None:
         if "text/plain" in data and not has_image:
             send({
                 "type": "result",
-                "text": _strip_ansi(data.get("text/plain", "")),
+                "text": _strip_ansi_controls(data.get("text/plain", "")),
                 "html": data.get("text/html", ""),
                 "msg_id": lid,
             })
 
     elif msg_type == "error":
         raw_tb = content.get("traceback", [])
-        clean_tb = [_strip_ansi(line) for line in raw_tb]
+        clean_tb = [_strip_ansi_controls(line) for line in raw_tb]
         send({
             "type":      "error",
             "ename":     content.get("ename", ""),
-            "evalue":    _strip_ansi(content.get("evalue", "")),
+            "evalue":    _strip_ansi_controls(content.get("evalue", "")),
             "traceback": clean_tb,
             "msg_id":    lid,
         })
