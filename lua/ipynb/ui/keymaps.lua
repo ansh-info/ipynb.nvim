@@ -170,6 +170,22 @@ function M.attach(bufnr)
     end
   end, "Jupyter: toggle cell type code/markdown")
 
+  map("n", km.split_cell, function()
+    local cell_mod = require("ipynb.core.cell")
+    local _, idx = cell_mod.cell_at_cursor(bufnr)
+    if idx then
+      cell_mod.split_cell(bufnr, idx)
+    end
+  end, "Jupyter: split cell at cursor")
+
+  map("n", km.merge_cell, function()
+    local cell_mod = require("ipynb.core.cell")
+    local _, idx = cell_mod.cell_at_cursor(bufnr)
+    if idx then
+      cell_mod.merge_cell_below(bufnr, idx)
+    end
+  end, "Jupyter: merge cell with cell below")
+
   -- ── Save ───────────────────────────────────────────────────────────────
   -- Override :w so it saves back to .ipynb format.
   map("n", "<leader>w", function()
@@ -215,6 +231,8 @@ function M.show_help()
     "  " .. km.yank_cell .. "  → yank cell",
     "  " .. km.paste_cell .. "  → paste cell below",
     "  " .. km.toggle_cell_type .. "  → toggle code/markdown",
+    "  " .. km.split_cell .. "  → split cell at cursor",
+    "  " .. km.merge_cell .. "  → merge cell with below",
     "  " .. km.move_cell_up .. "  → move cell up",
     "  " .. km.move_cell_down .. "  → move cell down",
     "  " .. km.add_markdown_below .. "  → add markdown cell below",

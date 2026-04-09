@@ -193,6 +193,24 @@ function M.setup()
     end
   end, { desc = "Toggle current cell type between code and markdown" })
 
+  vim.api.nvim_create_user_command("IpynbCellSplit", function()
+    local cell_mod = require("ipynb.core.cell")
+    local bufnr = vim.api.nvim_get_current_buf()
+    local _, idx = cell_mod.cell_at_cursor(bufnr)
+    if idx then
+      cell_mod.split_cell(bufnr, idx)
+    end
+  end, { desc = "Split the current cell at the cursor line" })
+
+  vim.api.nvim_create_user_command("IpynbCellMerge", function()
+    local cell_mod = require("ipynb.core.cell")
+    local bufnr = vim.api.nvim_get_current_buf()
+    local _, idx = cell_mod.cell_at_cursor(bufnr)
+    if idx then
+      cell_mod.merge_cell_below(bufnr, idx)
+    end
+  end, { desc = "Merge the current cell with the cell below" })
+
   -- ── Output commands ───────────────────────────────────────────────────
 
   vim.api.nvim_create_user_command("IpynbClearOutput", function()

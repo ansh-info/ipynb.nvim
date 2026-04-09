@@ -767,6 +767,125 @@ function M.toggle_cell_type(bufnr, idx)
   end)
 end
 
+--- Split the cell at `idx` at the current cursor line into two cells of the
+--- same type.  The upper cell keeps lines above the cursor, the lower cell
+--- gets lines from the cursor down.
+---@param bufnr integer
+---@param idx integer
+function M.split_cell(bufnr, idx)
+  local state = get_state(bufnr)
+  local notebook = state.notebook
+  if not notebook then
+    return
+  end
+
+  local cs = state.cells[idx]
+  if not cs then
+    return
+  end
+
+  -- Determine the split line relative to the cell start.
+  local s, e = cell_line_range(bufnr, cs)
+  local cur_row = vim.api.nvim_win_get_cursor(0)[1] - 1 -- 0-based
+  local rel = cur_row - s -- 0-based offset within the cell
+
+  local all_lines = vim.api.nvim_buf_get_lines(bufnr, s, e + 1, false)
+  if rel < 0 then
+    rel = 0
+  end
+  if rel > #all_lines then
+    rel = #all_lines
+  end
+
+  local upper_lines = vim.list_slice(all_lines, 1, rel)
+  local lower_lines = vim.list_slice(all_lines, rel + 1)
+
+  -- Update the original cell's source and clear its outputs.
+  local c = notebook.cells[idx]
+  c.source = table.concat(upper_lines, "\n")
+  c.outputs = c.cell_type == "code" and {} or nil
+  c.execution_count = nil
+
+  -- Insert a new cell below with the lower portion.
+  local new_cell = {
+    id = require("ipynb.core.notebook").gen_cell_id
+        and require("ipynb.core.notebook").gen_cell_id()
+      or utils.uid(),
+    cell_type = c.cell_type,
+    source = table.concat(lower_lines, "\n"),
+    outputs = c.cell_type == "code" and {} or nil,
+    metadata = {},
+    execution_count = nil,
+  }
+  table.insert(notebook.cells, idx + 1, new_cell)
+
+  M.render(bufnr, notebook, { preserve_undo = true })
+
+  -- Place cursor at the start of the new lower cell.
+  local captured = idx + 1
+  vim.schedule(function()
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+      return
+    end
+    local new_cs = state.cells[captured]
+    if new_cs then
+      local ns, _ = cell_line_range(bufnr, new_cs)
+      vim.api.nvim_win_set_cursor(0, { ns + 1, 0 })
+    end
+  end)
+end
+
+--- Merge the cell at `idx` with the cell at `idx+1`.
+--- The merged cell keeps the cell_type of the upper cell.
+---@param bufnr integer
+---@param idx integer
+function M.merge_cell_below(bufnr, idx)
+  local state = get_state(bufnr)
+  local notebook = state.notebook
+  if not notebook then
+    return
+  end
+
+  if idx >= #notebook.cells then
+    utils.warn("No cell below to merge with.")
+    return
+  end
+
+  local upper = notebook.cells[idx]
+  local lower = notebook.cells[idx + 1]
+
+  -- Concatenate sources with a newline separator.
+  local upper_src = upper.source or ""
+  local lower_src = lower.source or ""
+  if upper_src ~= "" and lower_src ~= "" then
+    upper.source = upper_src .. "\n" .. lower_src
+  else
+    upper.source = upper_src .. lower_src
+  end
+
+  -- Clear outputs and execution count since the merged cell is a new unit.
+  upper.outputs = upper.cell_type == "code" and {} or nil
+  upper.execution_count = nil
+
+  -- Remove the lower cell from the notebook model.
+  table.remove(notebook.cells, idx + 1)
+
+  M.render(bufnr, notebook, { preserve_undo = true })
+
+  -- Place cursor at the original cell position.
+  local captured = idx
+  vim.schedule(function()
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+      return
+    end
+    local cs = state.cells[captured]
+    if cs then
+      local ns, _ = cell_line_range(bufnr, cs)
+      vim.api.nvim_win_set_cursor(0, { ns + 1, 0 })
+    end
+  end)
+end
+
 -- ── Output rendering ──────────────────────────────────────────────────────────
 
 --- Append a virt_lines output block below the cell.

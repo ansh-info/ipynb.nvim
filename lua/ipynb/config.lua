@@ -53,6 +53,8 @@ local M = {}
 ---@field yank_cell string
 ---@field paste_cell string
 ---@field toggle_cell_type string
+---@field split_cell string
+---@field merge_cell string
 
 ---@class ImageConfig
 ---@field enabled boolean          Enable image rendering (requires snacks.nvim + unicode placeholder terminal)
@@ -124,6 +126,8 @@ M.defaults = {
     yank_cell = "<leader>cy",
     paste_cell = "<leader>cv",
     toggle_cell_type = "<leader>ct",
+    split_cell = "<leader>cs",
+    merge_cell = "<leader>cm",
   },
 
   image = {
