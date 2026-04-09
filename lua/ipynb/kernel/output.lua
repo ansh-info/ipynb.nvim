@@ -17,6 +17,7 @@
 
 local config = require("ipynb.config")
 local cell = require("ipynb.core.cell")
+local ansi = require("ipynb.ui.ansi")
 
 local M = {}
 
@@ -76,9 +77,11 @@ end
 -- ── Text -> virt_lines conversion ──────────────────────────────────────────────
 
 --- Split a multi-line string and convert each line into a virt_line chunk-list.
+--- When the text contains ANSI escape sequences, each line is parsed into
+--- multiple {text, hl_group} pairs via the ANSI parser.
 --- Respects config.ui.output_max_lines (0 = unlimited).
 ---@param text string
----@param hl string  highlight group for every line
+---@param hl string  highlight group for every line (used as default when no ANSI)
 ---@param max_lines integer
 ---@return table[]  list of virt_line chunk-lists
 local function text_to_virt_lines(text, hl, max_lines)
@@ -97,9 +100,14 @@ local function text_to_virt_lines(text, hl, max_lines)
     lines = vim.list_slice(lines, 1, max_lines)
   end
 
+  local has_esc = ansi.has_ansi(text)
   local vl = {}
   for _, line in ipairs(lines) do
-    vl[#vl + 1] = { { line, hl } }
+    if has_esc then
+      vl[#vl + 1] = ansi.parse_line(line, hl)
+    else
+      vl[#vl + 1] = { { line, hl } }
+    end
   end
   if truncated > 0 then
     vl[#vl + 1] = { { string.format("  ... %d more lines (truncated)", truncated), HL.meta } }
