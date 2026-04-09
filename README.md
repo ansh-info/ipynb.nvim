@@ -220,6 +220,14 @@ Press `<leader>jh` to show the help overlay at any time.
 | `:IpynbCellDelete` | Delete current cell |
 | `:IpynbCellAddMarkdown` | Add markdown cell below |
 | `:IpynbCellAddMarkdownAbove` | Add markdown cell above |
+| `:IpynbCellMoveUp` | Move current cell up |
+| `:IpynbCellMoveDown` | Move current cell down |
+| `:IpynbCellDuplicate` | Duplicate current cell below |
+| `:IpynbCellYank` | Yank cell into cell register |
+| `:IpynbCellPaste` | Paste yanked cell below |
+| `:IpynbCellToggleType` | Toggle cell type (code/markdown) |
+| `:IpynbCellSplit` | Split cell at cursor line |
+| `:IpynbCellMerge` | Merge cell with the cell below |
 | `:IpynbClearOutput` | Clear output for cell under cursor |
 | `:IpynbClearAllOutput` | Clear output for every cell |
 | `:IpynbInspect` | Open variable inspector |
@@ -263,6 +271,14 @@ require("ipynb").setup({
     clear_all_output    = "<leader>cX",
     add_markdown_below  = "<leader>mo",
     add_markdown_above  = "<leader>mO",
+    move_cell_up        = "<leader>ck",
+    move_cell_down      = "<leader>cj",
+    duplicate_cell      = "<leader>cc",
+    yank_cell           = "<leader>cy",
+    paste_cell          = "<leader>cv",
+    toggle_cell_type    = "<leader>ct",
+    split_cell          = "<leader>cs",
+    merge_cell          = "<leader>cm",
   },
   notebook = {
     auto_save = false,
