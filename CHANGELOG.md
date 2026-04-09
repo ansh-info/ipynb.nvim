@@ -2,6 +2,20 @@
 
 <!-- version list -->
 
+## v1.8.0 (2026-04-09)
+
+### Features
+
+- **lua**: Add ANSI SGR escape sequence parser
+  ([`5739d28`](https://github.com/ansh-info/ipynb.nvim/commit/5739d28362aa7198fe5fc71d149635ef20519cfc))
+
+- **lua**: Integrate ANSI parser into kernel output rendering
+  ([`b212b47`](https://github.com/ansh-info/ipynb.nvim/commit/b212b4791bbab79ccd83a42df16a0403ddccf5f7))
+
+- **python**: Preserve ANSI color codes in kernel output
+  ([`a7555ae`](https://github.com/ansh-info/ipynb.nvim/commit/a7555aec47de2f9b5aa3c333470ef8b23d573269))
+
+
 ## v1.7.0 (2026-04-07)
 
 ### Documentation
