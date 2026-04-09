@@ -2,6 +2,28 @@
 
 <!-- version list -->
 
+## v1.9.0 (2026-04-09)
+
+### Documentation
+
+- **docs**: Document split/merge commands and missing keymaps in README
+  ([`9f90358`](https://github.com/ansh-info/ipynb.nvim/commit/9f903584d751135c5d1bea280760247727779097))
+
+### Features
+
+- **config**: Add split_cell and merge_cell keymap options
+  ([`1ae9bef`](https://github.com/ansh-info/ipynb.nvim/commit/1ae9befca979100e63c3cdd451c80284c84475b4))
+
+- **lua**: Add IpynbCellSplit and IpynbCellMerge user commands
+  ([`ecc6d44`](https://github.com/ansh-info/ipynb.nvim/commit/ecc6d44c1d9e409b990faa26d6bcb62c733f3839))
+
+- **lua**: Add split_cell and merge_cell_below operations
+  ([`21e50ba`](https://github.com/ansh-info/ipynb.nvim/commit/21e50bad60015d8dce878a192bfd1819c2fca3ee))
+
+- **lua**: Wire split_cell and merge_cell keymaps and help overlay
+  ([`036ba78`](https://github.com/ansh-info/ipynb.nvim/commit/036ba788f4b84a1a0dd2df5a38e192b3c58037ca))
+
+
 ## v1.8.0 (2026-04-09)
 
 ### Features
