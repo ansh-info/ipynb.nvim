@@ -688,12 +688,12 @@ function M.show_info(bufnr)
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
   vim.api.nvim_buf_set_option(buf, "modifiable", false)
 
-  local width = 38
-  local height = #lines
+  local width = math.min(38, vim.o.columns - 4)
+  local height = math.min(#lines, vim.o.lines - 4)
   local win = vim.api.nvim_open_win(buf, true, {
     relative = "editor",
-    row = math.floor((vim.o.lines - height) / 2),
-    col = math.floor((vim.o.columns - width) / 2),
+    row = math.max(0, math.floor((vim.o.lines - height) / 2)),
+    col = math.max(0, math.floor((vim.o.columns - width) / 2)),
     width = width,
     height = height,
     style = "minimal",
