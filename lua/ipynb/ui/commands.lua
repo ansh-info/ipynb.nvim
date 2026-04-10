@@ -128,6 +128,12 @@ function M.setup()
     local cell_mod = require("ipynb.core.cell")
     local bufnr = vim.api.nvim_get_current_buf()
     local _, idx = cell_mod.cell_at_cursor(bufnr)
+    if not idx then
+      local nb = cell_mod.get_notebook(bufnr)
+      if nb and #nb.cells == 0 then
+        idx = 0
+      end
+    end
     if idx then
       cell_mod.add_cell_below(bufnr, idx)
     end
@@ -146,6 +152,12 @@ function M.setup()
     local cell_mod = require("ipynb.core.cell")
     local bufnr = vim.api.nvim_get_current_buf()
     local _, idx = cell_mod.cell_at_cursor(bufnr)
+    if not idx then
+      local nb = cell_mod.get_notebook(bufnr)
+      if nb and #nb.cells == 0 then
+        idx = 0
+      end
+    end
     if idx then
       cell_mod.add_cell_below(bufnr, idx, "markdown")
     end
@@ -155,6 +167,12 @@ function M.setup()
     local cell_mod = require("ipynb.core.cell")
     local bufnr = vim.api.nvim_get_current_buf()
     local _, idx = cell_mod.cell_at_cursor(bufnr)
+    if not idx then
+      local nb = cell_mod.get_notebook(bufnr)
+      if nb and #nb.cells == 0 then
+        idx = 1
+      end
+    end
     if idx then
       cell_mod.add_cell_above(bufnr, idx, "markdown")
     end
