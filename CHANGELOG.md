@@ -2,6 +2,17 @@
 
 <!-- version list -->
 
+## v1.9.3 (2026-04-10)
+
+### Bug Fixes
+
+- **lua**: Handle empty notebook in add cell commands
+  ([`61dbc13`](https://github.com/ansh-info/ipynb.nvim/commit/61dbc13106e552febf9bde14f543a699e44b62d3))
+
+- **lua**: Handle empty notebook in add cell keymaps
+  ([`8bbc81b`](https://github.com/ansh-info/ipynb.nvim/commit/8bbc81b85f8127bce15a227bcdee0b11f2660237))
+
+
 ## v1.9.2 (2026-04-10)
 
 ### Bug Fixes
