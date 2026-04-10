@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.9.1 (2026-04-10)
+
+### Bug Fixes
+
+- **lua**: Add missing IpynbRunBelow and IpynbKernelAttach commands
+  ([`f8e7c08`](https://github.com/ansh-info/ipynb.nvim/commit/f8e7c080aec1b50f69e38f6849a64aeb0a51803a))
+
+
 ## v1.9.0 (2026-04-09)
 
 ### Documentation
