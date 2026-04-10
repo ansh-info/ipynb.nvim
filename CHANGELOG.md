@@ -2,6 +2,17 @@
 
 <!-- version list -->
 
+## v1.9.2 (2026-04-10)
+
+### Bug Fixes
+
+- **lua**: Clamp help overlay dimensions to terminal size
+  ([`ad9e311`](https://github.com/ansh-info/ipynb.nvim/commit/ad9e3119e25888644b70a80b26f8e9bf5c0163e3))
+
+- **lua**: Clamp kernel info window dimensions to terminal size
+  ([`3613aa0`](https://github.com/ansh-info/ipynb.nvim/commit/3613aa0a1974ea8b6785844c832b267b5437f318))
+
+
 ## v1.9.1 (2026-04-10)
 
 ### Bug Fixes
