@@ -77,6 +77,12 @@ function M.attach(bufnr)
   map("n", km.add_cell_below, function()
     local cell_mod = require("ipynb.core.cell")
     local _, idx = cell_mod.cell_at_cursor(bufnr)
+    if not idx then
+      local nb = cell_mod.get_notebook(bufnr)
+      if nb and #nb.cells == 0 then
+        idx = 0
+      end
+    end
     if idx then
       cell_mod.add_cell_below(bufnr, idx)
     end
@@ -85,6 +91,12 @@ function M.attach(bufnr)
   map("n", km.add_cell_above, function()
     local cell_mod = require("ipynb.core.cell")
     local _, idx = cell_mod.cell_at_cursor(bufnr)
+    if not idx then
+      local nb = cell_mod.get_notebook(bufnr)
+      if nb and #nb.cells == 0 then
+        idx = 1
+      end
+    end
     if idx then
       cell_mod.add_cell_above(bufnr, idx)
     end
@@ -109,6 +121,12 @@ function M.attach(bufnr)
   map("n", km.add_markdown_below, function()
     local cell_mod = require("ipynb.core.cell")
     local _, idx = cell_mod.cell_at_cursor(bufnr)
+    if not idx then
+      local nb = cell_mod.get_notebook(bufnr)
+      if nb and #nb.cells == 0 then
+        idx = 0
+      end
+    end
     if idx then
       cell_mod.add_cell_below(bufnr, idx, "markdown")
     end
@@ -117,6 +135,12 @@ function M.attach(bufnr)
   map("n", km.add_markdown_above, function()
     local cell_mod = require("ipynb.core.cell")
     local _, idx = cell_mod.cell_at_cursor(bufnr)
+    if not idx then
+      local nb = cell_mod.get_notebook(bufnr)
+      if nb and #nb.cells == 0 then
+        idx = 1
+      end
+    end
     if idx then
       cell_mod.add_cell_above(bufnr, idx, "markdown")
     end
