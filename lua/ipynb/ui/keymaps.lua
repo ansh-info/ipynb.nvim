@@ -251,10 +251,10 @@ function M.show_help()
   vim.api.nvim_buf_set_option(buf, "modifiable", false)
   vim.api.nvim_buf_set_option(buf, "buftype", "nofile")
 
-  local width = 44
-  local height = #lines
-  local row = math.floor((vim.o.lines - height) / 2)
-  local col = math.floor((vim.o.columns - width) / 2)
+  local width = math.min(44, vim.o.columns - 4)
+  local height = math.min(#lines, vim.o.lines - 4)
+  local row = math.max(0, math.floor((vim.o.lines - height) / 2))
+  local col = math.max(0, math.floor((vim.o.columns - width) / 2))
 
   local win = vim.api.nvim_open_win(buf, true, {
     relative = "editor",
