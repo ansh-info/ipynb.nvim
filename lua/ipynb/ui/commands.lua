@@ -67,6 +67,19 @@ function M.setup()
     end
   end, { desc = "Show info about the current kernel" })
 
+  vim.api.nvim_create_user_command("IpynbKernelAttach", function(args)
+    local bufnr = vim.api.nvim_get_current_buf()
+    local cf = args.args ~= "" and args.args or nil
+    local ok, kernel = pcall(require, "ipynb.kernel")
+    if ok then
+      kernel.attach(bufnr, cf)
+    end
+  end, {
+    nargs = "?",
+    complete = "file",
+    desc = "Attach to an existing Jupyter kernel via connection file",
+  })
+
   -- ── Cell execution commands ────────────────────────────────────────────
 
   vim.api.nvim_create_user_command("IpynbRun", function()
@@ -100,6 +113,14 @@ function M.setup()
       kernel.run_all_above(bufnr)
     end
   end, { desc = "Execute all cells above the cursor" })
+
+  vim.api.nvim_create_user_command("IpynbRunBelow", function()
+    local bufnr = vim.api.nvim_get_current_buf()
+    local ok, kernel = pcall(require, "ipynb.kernel")
+    if ok then
+      kernel.run_all_below(bufnr)
+    end
+  end, { desc = "Execute all cells below the cursor" })
 
   -- ── Cell editing commands ──────────────────────────────────────────────
 
