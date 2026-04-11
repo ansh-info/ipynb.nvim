@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.9.4 (2026-04-11)
+
+### Bug Fixes
+
+- **lua**: Deduplicate kernel ready notification with deferred fallback
+  ([`76c121d`](https://github.com/ansh-info/ipynb.nvim/commit/76c121d4a848c2b803fbe1306349386b8bd69ddb))
+
+
 ## v1.9.3 (2026-04-10)
 
 ### Bug Fixes
