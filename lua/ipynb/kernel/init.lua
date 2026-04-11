@@ -157,9 +157,22 @@ local function dispatch(bufnr, msg)
     local prev = s.status
     local state = msg.state or ""
     s.status = (state == "busy") and "busy" or "idle"
-    -- First idle after spawning: kernel is ready. Notify the user.
+    -- First idle after spawning: kernel is ready.
+    -- Notification is deferred to the kernel_info handler which has richer
+    -- info (language + version).  If kernel_info does not arrive within 3s,
+    -- fall back to a plain notification so the user is never left wondering.
     if prev == "starting" and s.status == "idle" then
-      utils.info("Kernel ready (" .. (s.kernel_name ~= "" and s.kernel_name or "python3") .. ")")
+      s._ready_notified = false
+      local captured_bufnr = bufnr
+      vim.defer_fn(function()
+        local st = _state[captured_bufnr]
+        if st and not st._ready_notified then
+          st._ready_notified = true
+          utils.info(
+            "Kernel ready (" .. (st.kernel_name ~= "" and st.kernel_name or "python3") .. ")"
+          )
+        end
+      end, 3000)
     end
 
     local pending = (id ~= "") and s.pending[id] or nil
@@ -251,7 +264,10 @@ local function dispatch(bufnr, msg)
   elseif t == "kernel_info" then
     s.language = msg.language or ""
     s.version = msg.version or ""
-    utils.info(string.format("Kernel ready: %s %s", s.language, s.version))
+    if not s._ready_notified then
+      s._ready_notified = true
+      utils.info(string.format("Kernel ready: %s %s", s.language, s.version))
+    end
 
   -- ── completions (callback stored in pending) ──────────────────────────────
   elseif t == "complete" then
