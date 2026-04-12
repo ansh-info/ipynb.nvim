@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.9.6 (2026-04-12)
+
+### Bug Fixes
+
+- **lua**: Remove WinResized handler that wiped undo tree on every resize
+  ([`db06a45`](https://github.com/ansh-info/ipynb.nvim/commit/db06a45698afbd258867e6f94cc6b34a032ba8f7))
+
+
 ## v1.9.5 (2026-04-12)
 
 ### Bug Fixes
