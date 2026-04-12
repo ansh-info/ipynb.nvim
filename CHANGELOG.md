@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.9.5 (2026-04-12)
+
+### Bug Fixes
+
+- **lua**: Set conceallevel=2 and target correct window for notebook buffers
+  ([`1d94eb3`](https://github.com/ansh-info/ipynb.nvim/commit/1d94eb34bfb0d85e5334f55fedee4b4c02ca0990))
+
+
 ## v1.9.4 (2026-04-11)
 
 ### Bug Fixes
