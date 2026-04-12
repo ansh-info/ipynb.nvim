@@ -45,9 +45,14 @@ local function setup_buf_options(bufnr)
   vim.b[bufnr].conform_format_on_insert_leave = false
   vim.bo[bufnr].formatexpr = ""
 
-  -- Conceal decorations look better without full conceallevel in insert mode.
-  vim.api.nvim_win_set_option(0, "conceallevel", 0)
-  vim.api.nvim_win_set_option(0, "signcolumn", "yes")
+  -- conceallevel=2 lets markdown.lua conceal heading markers, blockquote
+  -- prefixes, and link delimiters.  Target the actual notebook window, not
+  -- window 0 which may be a different split.
+  local win = vim.fn.bufwinid(bufnr)
+  if win ~= -1 then
+    vim.api.nvim_win_set_option(win, "conceallevel", 2)
+    vim.api.nvim_win_set_option(win, "signcolumn", "yes")
+  end
 end
 
 --- Set a human-readable buffer name (shows in tabline / statusline).
