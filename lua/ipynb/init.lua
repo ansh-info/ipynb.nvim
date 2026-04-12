@@ -74,22 +74,6 @@ function M._register_autocmds()
     end,
     desc = "ipynb: save .ipynb notebook",
   })
-
-  -- WinResized: re-render borders when the window width changes (border
-  -- decorations are width-aware).
-  vim.api.nvim_create_autocmd("WinResized", {
-    group = group,
-    callback = function()
-      local bufnr = vim.api.nvim_get_current_buf()
-      if require("ipynb.core.notebook_buf").is_managed(bufnr) then
-        local nb = require("ipynb.core.cell").get_notebook(bufnr)
-        if nb then
-          require("ipynb.core.cell").render(bufnr, nb)
-        end
-      end
-    end,
-    desc = "ipynb: re-render on window resize",
-  })
 end
 
 -- ── Convenience public API ────────────────────────────────────────────────────
