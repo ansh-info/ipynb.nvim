@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.9.7 (2026-04-13)
+
+### Bug Fixes
+
+- **lua**: Preserve existing cmp sources when adding ipynb kernel source
+  ([`e38ad69`](https://github.com/ansh-info/ipynb.nvim/commit/e38ad69721f1ae7ab3f3e27fd122d4577a0d1c1a))
+
+
 ## v1.9.6 (2026-04-12)
 
 ### Bug Fixes
