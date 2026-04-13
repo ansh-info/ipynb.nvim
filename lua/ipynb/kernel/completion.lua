@@ -177,14 +177,16 @@ function M.attach(bufnr)
     M._cmp_registered = true
   end
 
-  -- Add source to this buffer's cmp config.
-  cmp.setup.buffer({
-    sources = cmp.config.sources({
-      { name = "ipynb", priority = 1000 },
-    }, {
-      { name = "buffer" },
-    }),
-  })
+  -- Prepend ipynb source to the existing buffer/global sources so LSP,
+  -- snippets, path, etc. are preserved rather than replaced.
+  local existing = cmp.get_config().sources or {}
+  local merged = { { name = "ipynb", priority = 1000 } }
+  for _, s in ipairs(existing) do
+    if s.name ~= "ipynb" then
+      merged[#merged + 1] = s
+    end
+  end
+  cmp.setup.buffer({ sources = merged })
 end
 
 M._cmp_registered = false
