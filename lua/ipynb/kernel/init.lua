@@ -27,6 +27,10 @@ local M = {}
 -- Per-buffer kernel state.
 local _state = {}
 
+-- Crash-restart backoff: max 3 restarts within 60 seconds, then give up.
+local MAX_CRASH_RESTARTS = 3
+local CRASH_WINDOW_SECS = 60
+
 -- ── Helpers ───────────────────────────────────────────────────────────────────
 
 --- Return (creating if needed) the state table for a buffer.
@@ -43,6 +47,7 @@ local function get_state(bufnr)
       msg_counter = 0,
       pending = {},
       line_buf = "",
+      _crash_times = {},
     }
   end
   return _state[bufnr]
@@ -162,6 +167,7 @@ local function dispatch(bufnr, msg)
     -- info (language + version).  If kernel_info does not arrive within 3s,
     -- fall back to a plain notification so the user is never left wondering.
     if prev == "starting" and s.status == "idle" then
+      s._crash_times = {}
       s._ready_notified = false
       local captured_bufnr = bufnr
       vim.defer_fn(function()
@@ -377,13 +383,43 @@ local function spawn_bridge(bufnr)
         else
           local kn_saved = st.kernel_name
           if config.get().kernel.restart_on_crash then
-            utils.warn(
-              string.format("Kernel stopped unexpectedly (exit %d). Auto-restarting...", code)
-            )
-            vim.defer_fn(function()
-              _state[bufnr] = nil
-              M.start(bufnr, kn_saved)
-            end, 1000)
+            -- Track crash timestamps and prune those outside the window.
+            local now = vim.loop.now() / 1000
+            local recent = {}
+            for _, t in ipairs(st._crash_times or {}) do
+              if now - t < CRASH_WINDOW_SECS then
+                recent[#recent + 1] = t
+              end
+            end
+            recent[#recent + 1] = now
+            st._crash_times = recent
+
+            if #recent > MAX_CRASH_RESTARTS then
+              utils.err(
+                string.format(
+                  "Kernel crashed %d times in %ds. Auto-restart disabled. "
+                    .. "Run :IpynbKernelRestart to try manually.",
+                  #recent,
+                  CRASH_WINDOW_SECS
+                )
+              )
+            else
+              utils.warn(
+                string.format(
+                  "Kernel stopped unexpectedly (exit %d). Auto-restarting (%d/%d)...",
+                  code,
+                  #recent,
+                  MAX_CRASH_RESTARTS
+                )
+              )
+              local crash_times_saved = recent
+              vim.defer_fn(function()
+                _state[bufnr] = nil
+                local new_st = get_state(bufnr)
+                new_st._crash_times = crash_times_saved
+                M.start(bufnr, kn_saved)
+              end, 1000)
+            end
           else
             utils.err(
               string.format(
