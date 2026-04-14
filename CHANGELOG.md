@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.9.9 (2026-04-14)
+
+### Bug Fixes
+
+- **lua**: Use buffer window width instead of focused window for borders
+  ([`5a23844`](https://github.com/ansh-info/ipynb.nvim/commit/5a2384402490c8e910300812de69f99140187afa))
+
+
 ## v1.9.8 (2026-04-14)
 
 ### Bug Fixes
