@@ -178,6 +178,18 @@ function M.register_render_hook(cb)
   _render_hooks[#_render_hooks + 1] = cb
 end
 
+--- Return the width of the window displaying `bufnr`.
+--- Falls back to window 0 if the buffer is not visible.
+---@param bufnr integer
+---@return integer
+local function buf_win_width(bufnr)
+  local win = vim.fn.bufwinid(bufnr)
+  if win == -1 then
+    win = 0
+  end
+  return vim.api.nvim_win_get_width(win)
+end
+
 --- Return or create the state table for a buffer.
 ---@param bufnr integer
 ---@return table
@@ -256,7 +268,7 @@ function M.render(bufnr, notebook, opts)
   vim.api.nvim_buf_clear_namespace(bufnr, NS, 0, -1)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
 
-  local win_width = vim.api.nvim_win_get_width(0)
+  local win_width = buf_win_width(bufnr)
 
   local current_line = 0 -- 0-based
 
@@ -928,7 +940,7 @@ function M.update_status(bufnr, cell_state, status, elapsed_ms)
   cell_state.status = status
   cell_state.elapsed_ms = elapsed_ms
 
-  local win_width = vim.api.nvim_win_get_width(0)
+  local win_width = buf_win_width(bufnr)
   local bot_vl = bottom_border(status, elapsed_ms, win_width)
 
   local _, e = cell_line_range(bufnr, cell_state)
@@ -947,7 +959,7 @@ end
 function M.update_execution_count(bufnr, cell_state, exec_count)
   cell_state.execution_count = exec_count
 
-  local win_width = vim.api.nvim_win_get_width(0)
+  local win_width = buf_win_width(bufnr)
   local top_vl = top_border(cell_state.cell_type, cell_state.language, exec_count, win_width)
 
   local s, _ = cell_line_range(bufnr, cell_state)
@@ -1002,7 +1014,7 @@ function M.reanchor_end_marks(bufnr, active_idx)
   end
 
   local line_count = vim.api.nvim_buf_line_count(bufnr)
-  local win_width = vim.api.nvim_win_get_width(0)
+  local win_width = buf_win_width(bufnr)
 
   -- Clamp the iteration range to the active cell and its neighbours.
   -- Cells further away cannot have had their end_mark affected by this edit.
