@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.9.8 (2026-04-14)
+
+### Bug Fixes
+
+- **lua**: Add crash count limit to kernel auto-restart to prevent infinite loop
+  ([`e882161`](https://github.com/ansh-info/ipynb.nvim/commit/e88216117a2578b6d7036eb3740d826651b7a35a))
+
+
 ## v1.9.7 (2026-04-13)
 
 ### Bug Fixes
