@@ -194,6 +194,14 @@ Press `<leader>jh` to show the help overlay at any time.
 | `<leader>mo` | Add markdown cell below |
 | `<leader>mO` | Add markdown cell above |
 | `<leader>cd` | Delete current cell |
+| `<leader>ck` | Move current cell up |
+| `<leader>cj` | Move current cell down |
+| `<leader>cc` | Duplicate current cell |
+| `<leader>cy` | Yank cell into cell register |
+| `<leader>cv` | Paste yanked cell below |
+| `<leader>ct` | Toggle cell type (code/markdown) |
+| `<leader>cs` | Split cell at cursor line |
+| `<leader>cm` | Merge cell with the cell below |
 | `<leader>cx` | Clear current cell output |
 | `<leader>cX` | Clear all cell outputs |
 | `<leader>w` | Save notebook |
@@ -212,10 +220,12 @@ Press `<leader>jh` to show the help overlay at any time.
 | `:IpynbKernelRestart` | Restart kernel and clear all output |
 | `:IpynbKernelInterrupt` | Send interrupt (Ctrl-C) |
 | `:IpynbKernelInfo` | Show kernel status window |
+| `:IpynbKernelAttach [file]` | Attach to an existing kernel via connection file |
 | `:IpynbRun` | Run current cell |
 | `:IpynbRunAdvance` | Run cell and advance to next |
 | `:IpynbRunAll` | Run all cells |
 | `:IpynbRunAbove` | Run all cells above cursor |
+| `:IpynbRunBelow` | Run all cells from cursor downwards |
 | `:IpynbCellAdd` | Add code cell below |
 | `:IpynbCellDelete` | Delete current cell |
 | `:IpynbCellAddMarkdown` | Add markdown cell below |
@@ -241,9 +251,10 @@ or `setup()` to override.
 ```lua
 require("ipynb").setup({
   kernel = {
-    default_kernel = "python3",
-    auto_start     = true,       -- start kernel automatically on first run
-    python_path    = "python3",  -- fallback if uv venv is not found
+    default_kernel   = "python3",
+    auto_start       = true,       -- start kernel automatically on first run
+    python_path      = "python3",  -- fallback if uv venv is not found
+    restart_on_crash = false,      -- auto-restart kernel after unexpected crash
   },
   ui = {
     show_execution_count = true,
