@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.9.10 (2026-04-15)
+
+### Bug Fixes
+
+- **lua**: Clean up image temp files and output state on BufDelete
+  ([`5fa5a5a`](https://github.com/ansh-info/ipynb.nvim/commit/5fa5a5aa23fa3f8c928ffb037187fd9e8404312a))
+
+
 ## v1.9.9 (2026-04-14)
 
 ### Bug Fixes
