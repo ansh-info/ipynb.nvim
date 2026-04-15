@@ -2,6 +2,22 @@
 
 <!-- version list -->
 
+## v1.10.0 (2026-04-15)
+
+### Bug Fixes
+
+- **lua**: Remove hardcoded python filetype and fix LSP attachment
+  ([`8d9fd64`](https://github.com/ansh-info/ipynb.nvim/commit/8d9fd6469c7c2d88b43f918a76ff2fcaebba7d3a))
+
+- **lua**: Set buffer filetype from notebook kernel language in render
+  ([`f131750`](https://github.com/ansh-info/ipynb.nvim/commit/f131750f61a9588d4865894d31b6d5143ce06da4))
+
+### Features
+
+- **lua**: Add notebook_language() to derive filetype from metadata
+  ([`905334c`](https://github.com/ansh-info/ipynb.nvim/commit/905334cc7f644c98f33dc0ad295e02ed4d94e9b6))
+
+
 ## v1.9.10 (2026-04-15)
 
 ### Bug Fixes
