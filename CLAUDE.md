@@ -23,6 +23,7 @@ ipynb/
 │   ├── init.lua              # Entry point: setup(), BufReadCmd/BufWriteCmd autocmds
 │   ├── config.lua            # Typed defaults + user deep-merge (IpynbConfig)
 │   ├── utils.lua             # log/warn/err, read_file/write_file, uid, has_plugin
+│   ├── health.lua            # :checkhealth ipynb provider
 │   ├── core/
 │   │   ├── notebook.lua      # .ipynb parse / serialise - nbformat 3 & 4
 │   │   ├── notebook_buf.lua  # Buffer lifecycle: open, save, sync, cleanup hooks
@@ -32,12 +33,12 @@ ipynb/
 │   │   ├── output.lua        # Output chunk -> virt_lines renderer + accumulator
 │   │   └── completion.lua    # omnifunc + nvim-cmp async source
 │   └── ui/
+│       ├── ansi.lua          # SGR ANSI escape parser: 16/256/truecolor, bold/italic
 │       ├── image.lua         # snacks.nvim image rendering: PNG/JPEG/SVG via Placement
-│       ├── health.lua        # :checkhealth ipynb provider
 │       ├── markdown.lua      # Markdown cell extmark decorator (concealing)
 │       ├── inspector.lua     # Variable inspector floating window
 │       ├── keymaps.lua       # Buffer-local keymaps + floating help overlay
-│       └── commands.lua      # All :Jupyter* user commands
+│       └── commands.lua      # All :Ipynb* user commands
 ├── python/
 │   ├── pyproject.toml        # uv project, Python >=3.12 - runtime deps
 │   ├── uv.lock               # Reproducible lockfile - always commit alongside toml
@@ -49,6 +50,7 @@ ipynb/
 ├── test/
 │   ├── minimal_init.lua      # Minimal Neovim init for vusted test runner
 │   ├── headless_test.lua     # Headless integration checks (module loading, statics)
+│   ├── test_notebook.ipynb   # Sample notebook fixture for tests
 │   ├── config_spec.lua       # busted spec: ipynb.config
 │   ├── utils_spec.lua        # busted spec: ipynb.utils
 │   ├── notebook_spec.lua     # busted spec: ipynb.core.notebook
@@ -56,6 +58,11 @@ ipynb/
 │   ├── output_spec.lua       # busted spec: ipynb.kernel.output
 │   └── inspector_spec.lua    # busted spec: ipynb.ui.inspector
 ├── .github/
+│   ├── ISSUE_TEMPLATE/
+│   │   ├── bug_report.md     # Bug report issue template
+│   │   ├── feature_request.md # Feature request issue template
+│   │   ├── other.md          # General issue template
+│   │   └── config.yml        # Issue template chooser config
 │   └── workflows/
 │       ├── ci.yml            # test + lint + format-check on every push/PR
 │       └── release.yml       # python-semantic-release on push to main
@@ -83,6 +90,7 @@ ipynb/
 | `require("ipynb.kernel")` | `lua/ipynb/kernel/init.lua` |
 | `require("ipynb.kernel.output")` | `lua/ipynb/kernel/output.lua` |
 | `require("ipynb.kernel.completion")` | `lua/ipynb/kernel/completion.lua` |
+| `require("ipynb.ui.ansi")` | `lua/ipynb/ui/ansi.lua` |
 | `require("ipynb.ui.image")` | `lua/ipynb/ui/image.lua` |
 | `require("ipynb.ui.markdown")` | `lua/ipynb/ui/markdown.lua` |
 | `require("ipynb.ui.inspector")` | `lua/ipynb/ui/inspector.lua` |
