@@ -201,6 +201,15 @@ function M.open(path, bufnr)
     buffer = bufnr,
     once = true,
     callback = function()
+      -- Clean up output state, image placements, and temp files BEFORE
+      -- cell.on_buf_delete wipes buf_state (which holds the cell list).
+      local cells = cell.get_cells(bufnr)
+      if cells and #cells > 0 then
+        local ok_out, output_mod = pcall(require, "ipynb.kernel.output")
+        if ok_out then
+          output_mod.clear_all(bufnr, cells)
+        end
+      end
       cell.on_buf_delete(bufnr)
       -- Stop kernel bridge if one is running for this buffer.
       local ok, kernel = pcall(require, "ipynb.kernel")
