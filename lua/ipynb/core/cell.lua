@@ -340,8 +340,9 @@ function M.render(bufnr, notebook, opts)
     end
   end
 
-  -- Lock filetype for syntax highlighting.
-  vim.api.nvim_buf_set_option(bufnr, "filetype", "python")
+  -- Set filetype from notebook kernel language for correct treesitter / LSP.
+  local ft = require("ipynb.core.notebook").notebook_language(notebook)
+  vim.api.nvim_buf_set_option(bufnr, "filetype", ft)
 
   -- Restore undo tracking (only when we suppressed it above).
   if not preserve_undo then
