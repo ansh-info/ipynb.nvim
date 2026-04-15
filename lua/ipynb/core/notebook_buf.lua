@@ -35,9 +35,6 @@ local function setup_buf_options(bufnr)
   vim.api.nvim_buf_set_option(bufnr, "readonly", false)
   vim.api.nvim_buf_set_option(bufnr, "swapfile", false)
 
-  -- Python filetype for treesitter / LSP.
-  vim.api.nvim_buf_set_option(bufnr, "filetype", "python")
-
   -- Disable formatters. The buffer holds raw cell source from multiple cells;
   -- running ruff/black/conform over it would corrupt multi-cell content and
   -- trigger spurious re-renders.
@@ -89,13 +86,13 @@ local function attach_lsp(bufnr)
   end
 
   -- Strategy 1: re-fire FileType so lspconfig autostart logic runs.
-  -- pattern="python" is used instead of buf=bufnr (buf= requires Neovim 0.10+).
-  -- The double vim.schedule at the call site ensures this fires two ticks after
-  -- BufReadCmd, by which point all single-tick deferrals (kernel.start, etc.)
-  -- have settled and the notebook buffer is reliably the current buffer.
-  vim.api.nvim_exec_autocmds("FileType", { pattern = "python" })
+  -- The buffer filetype is set by cell.render() from notebook metadata before
+  -- this function is called.  pattern= must match the actual filetype so the
+  -- correct LSP server attaches (e.g. r_language_server for R notebooks).
+  local buf_ft = vim.api.nvim_buf_get_option(bufnr, "filetype")
+  vim.api.nvim_exec_autocmds("FileType", { pattern = buf_ft })
 
-  -- Strategy 2: attach any already-running Python LSP client.
+  -- Strategy 2: attach any already-running LSP client that serves this filetype.
   local get_clients = vim.lsp.get_clients or vim.lsp.get_active_clients
   for _, client in ipairs(get_clients()) do
     if vim.lsp.buf_is_attached(bufnr, client.id) then
@@ -103,7 +100,7 @@ local function attach_lsp(bufnr)
     end
     local fts = (client.config or {}).filetypes or {}
     for _, ft in ipairs(fts) do
-      if ft == "python" then
+      if ft == buf_ft then
         pcall(vim.lsp.buf_attach_client, bufnr, client.id)
         break
       end
@@ -328,8 +325,9 @@ function M.open(path, bufnr)
 
   -- Filter LSP diagnostics that fall inside markdown cell ranges.
   --
-  -- The buffer filetype is python so pyright/pylsp attach and publish
-  -- diagnostics for the whole buffer.  Markdown prose (English sentences,
+  -- The buffer filetype matches the notebook kernel language, so the
+  -- attached LSP publishes diagnostics for the whole buffer.  Markdown
+  -- prose (English sentences,
   -- bullet points, etc.) is not Python code and produces false "undefined
   -- name" / syntax errors.  After every diagnostic publish cycle, walk each
   -- LSP client's namespace and drop diagnostics whose line falls inside a

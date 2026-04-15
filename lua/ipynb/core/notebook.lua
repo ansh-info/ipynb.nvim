@@ -185,6 +185,22 @@ function M.kernel_name(notebook)
   return "python3"
 end
 
+--- Code language for the notebook (from kernelspec / language_info metadata).
+--- Used to set the buffer filetype so treesitter and LSP match the kernel.
+---@param notebook table
+---@return string
+function M.notebook_language(notebook)
+  local ks = (notebook.metadata or {}).kernelspec
+  if ks and ks.language then
+    return ks.language
+  end
+  local li = (notebook.metadata or {}).language_info
+  if li and li.name then
+    return li.name
+  end
+  return "python"
+end
+
 --- Language name for a cell (looks at notebook kernelspec metadata).
 ---@param notebook table
 ---@param cell table
