@@ -2,6 +2,37 @@
 
 <!-- version list -->
 
+## v1.10.1 (2026-04-17)
+
+### Bug Fixes
+
+- **lua**: Apply stylua formatting to kernel/init.lua
+  ([`460e151`](https://github.com/ansh-info/ipynb.nvim/commit/460e151cfc87ba4f946aae56b3efc905af0e6806))
+
+- **lua**: Migrate deprecated APIs and add BufWinEnter window options
+  ([`9e8dc08`](https://github.com/ansh-info/ipynb.nvim/commit/9e8dc08eca3529f7da2d2150e50f949e4b9cbde4))
+
+- **lua**: Migrate deprecated APIs and consolidate cell ID generation
+  ([`a50ddf4`](https://github.com/ansh-info/ipynb.nvim/commit/a50ddf49cd8562ad639a88f417898806c423325e))
+
+- **lua**: Migrate vim.loop to vim.uv and add auto-start retry limit
+  ([`be5b4fc`](https://github.com/ansh-info/ipynb.nvim/commit/be5b4fcbf1f66466b0995b25343a0015d142303e))
+
+- **lua**: Preserve nbformat_minor from parsed notebook and export gen_cell_id
+  ([`24ad2a3`](https://github.com/ansh-info/ipynb.nvim/commit/24ad2a37c09a8c90c589db4eaeec01bcef0a3556))
+
+- **python**: Send interrupt via control channel for attached kernels
+  ([`d37ebf0`](https://github.com/ansh-info/ipynb.nvim/commit/d37ebf0969979ba46c89d3c0544252ca22bdc596))
+
+### Documentation
+
+- **docs**: Add missing keymaps, commands, and config to README
+  ([`2afc8b0`](https://github.com/ansh-info/ipynb.nvim/commit/2afc8b079627d4f90c7a99b4f7a386f250d1ecea))
+
+- **docs**: Sync CLAUDE.md file tree and module paths with codebase
+  ([`9372efa`](https://github.com/ansh-info/ipynb.nvim/commit/9372efa8363be7ee39b2dce9f6fb2ed7fd110f02))
+
+
 ## v1.10.0 (2026-04-15)
 
 ### Bug Fixes
