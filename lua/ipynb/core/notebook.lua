@@ -83,6 +83,7 @@ function M.parse(raw, path)
   local notebook = {
     path = path,
     nbformat = nbformat,
+    nbformat_minor = raw.nbformat_minor or 5,
     metadata = raw.metadata or {},
     cells = cells,
   }
@@ -138,8 +139,8 @@ function M.save(notebook)
   end
 
   local raw = {
-    nbformat = 4,
-    nbformat_minor = 5,
+    nbformat = notebook.nbformat or 4,
+    nbformat_minor = notebook.nbformat_minor or 5,
     metadata = notebook.metadata or {},
     cells = raw_cells,
   }
@@ -225,5 +226,7 @@ function M.cell_language(notebook, cell)
 
   return "python"
 end
+
+M.gen_cell_id = gen_cell_id
 
 return M
