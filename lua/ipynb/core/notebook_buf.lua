@@ -26,14 +26,21 @@ local managed_paths = {}
 
 -- ── Buffer setup ──────────────────────────────────────────────────────────────
 
+--- Apply window-level options to whatever window is displaying this buffer.
+---@param winid integer
+local function setup_win_options(winid)
+  vim.wo[winid].conceallevel = 2
+  vim.wo[winid].signcolumn = "yes"
+end
+
 --- Configure buffer-level options for a notebook buffer.
 ---@param bufnr integer
 local function setup_buf_options(bufnr)
   -- Treat as a normal editable buffer.
-  vim.api.nvim_buf_set_option(bufnr, "buftype", "")
-  vim.api.nvim_buf_set_option(bufnr, "modifiable", true)
-  vim.api.nvim_buf_set_option(bufnr, "readonly", false)
-  vim.api.nvim_buf_set_option(bufnr, "swapfile", false)
+  vim.bo[bufnr].buftype = ""
+  vim.bo[bufnr].modifiable = true
+  vim.bo[bufnr].readonly = false
+  vim.bo[bufnr].swapfile = false
 
   -- Disable formatters. The buffer holds raw cell source from multiple cells;
   -- running ruff/black/conform over it would corrupt multi-cell content and
@@ -47,8 +54,7 @@ local function setup_buf_options(bufnr)
   -- window 0 which may be a different split.
   local win = vim.fn.bufwinid(bufnr)
   if win ~= -1 then
-    vim.api.nvim_win_set_option(win, "conceallevel", 2)
-    vim.api.nvim_win_set_option(win, "signcolumn", "yes")
+    setup_win_options(win)
   end
 end
 
@@ -89,7 +95,7 @@ local function attach_lsp(bufnr)
   -- The buffer filetype is set by cell.render() from notebook metadata before
   -- this function is called.  pattern= must match the actual filetype so the
   -- correct LSP server attaches (e.g. r_language_server for R notebooks).
-  local buf_ft = vim.api.nvim_buf_get_option(bufnr, "filetype")
+  local buf_ft = vim.bo[bufnr].filetype
   vim.api.nvim_exec_autocmds("FileType", { pattern = buf_ft })
 
   -- Strategy 2: attach any already-running LSP client that serves this filetype.
@@ -216,6 +222,18 @@ function M.open(path, bufnr)
       -- Remove from both tracking tables so the path can be reopened.
       managed_paths[norm_path] = nil
       managed[bufnr] = nil
+    end,
+  })
+
+  -- Apply window options when the buffer first appears in a window (handles
+  -- background-loaded buffers from session restore, :badd, etc.).
+  vim.api.nvim_create_autocmd("BufWinEnter", {
+    buffer = bufnr,
+    callback = function()
+      local win = vim.fn.bufwinid(bufnr)
+      if win ~= -1 then
+        setup_win_options(win)
+      end
     end,
   })
 
@@ -404,7 +422,7 @@ function M.open(path, bufnr)
   })
 
   -- Mark buffer as not modified after initial load.
-  vim.api.nvim_buf_set_option(bufnr, "modified", false)
+  vim.bo[bufnr].modified = false
 
   -- Move cursor to line 1. BufReadCmd can trigger a shada position restore
   -- via BufEnter autocmds after this handler returns, so defer until the
@@ -439,7 +457,7 @@ function M.save(bufnr)
 
   local ok, err = notebook.save(nb)
   if ok then
-    vim.api.nvim_buf_set_option(bufnr, "modified", false)
+    vim.bo[bufnr].modified = false
     utils.info("Notebook saved: " .. vim.fn.fnamemodify(nb.path, ":t"))
   else
     utils.err("Save failed: " .. (err or "unknown error"))

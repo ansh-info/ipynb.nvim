@@ -243,8 +243,8 @@ function M.render(bufnr, notebook, opts)
   state.cells = {}
 
   -- Unlock the buffer for writing.
-  vim.api.nvim_buf_set_option(bufnr, "modifiable", true)
-  vim.api.nvim_buf_set_option(bufnr, "readonly", false)
+  vim.bo[bufnr].modifiable = true
+  vim.bo[bufnr].readonly = false
 
   -- Optionally make all nvim_buf_set_lines calls undo-invisible.
   --
@@ -260,8 +260,8 @@ function M.render(bufnr, notebook, opts)
   local preserve_undo = opts and opts.preserve_undo or false
   local saved_ul
   if not preserve_undo then
-    saved_ul = vim.api.nvim_buf_get_option(bufnr, "undolevels")
-    vim.api.nvim_buf_set_option(bufnr, "undolevels", -1)
+    saved_ul = vim.bo[bufnr].undolevels
+    vim.bo[bufnr].undolevels = -1
   end
 
   -- Clear everything.
@@ -342,11 +342,11 @@ function M.render(bufnr, notebook, opts)
 
   -- Set filetype from notebook kernel language for correct treesitter / LSP.
   local ft = require("ipynb.core.notebook").notebook_language(notebook)
-  vim.api.nvim_buf_set_option(bufnr, "filetype", ft)
+  vim.bo[bufnr].filetype = ft
 
   -- Restore undo tracking (only when we suppressed it above).
   if not preserve_undo then
-    vim.api.nvim_buf_set_option(bufnr, "undolevels", saved_ul)
+    vim.bo[bufnr].undolevels = saved_ul
   end
 
   -- Notify render hooks (e.g. kernel remap of pending cell_state refs).
@@ -510,14 +510,12 @@ function M.add_cell_below(bufnr, idx, cell_type)
   cell_type = cell_type or "code"
   -- Insert a new empty cell into the notebook model.
   local new_cell = {
-    id = require("ipynb.core.notebook").gen_cell_id
-        and require("ipynb.core.notebook").gen_cell_id()
-      or utils.uid(),
+    id = require("ipynb.core.notebook").gen_cell_id(),
     cell_type = cell_type,
     source = "",
     outputs = cell_type == "code" and {} or nil,
     metadata = {},
-    execution_count = cell_type == "code" and nil or nil,
+    execution_count = nil,
   }
   table.insert(notebook.cells, idx + 1, new_cell)
 
@@ -556,7 +554,7 @@ function M.add_cell_above(bufnr, idx, cell_type)
 
   cell_type = cell_type or "code"
   local new_cell = {
-    id = utils.uid(),
+    id = require("ipynb.core.notebook").gen_cell_id(),
     cell_type = cell_type,
     source = "",
     outputs = cell_type == "code" and {} or nil,
@@ -663,7 +661,7 @@ function M.duplicate_cell(bufnr, idx)
   end
 
   local copy = vim.deepcopy(notebook.cells[idx])
-  copy.id = utils.uid()
+  copy.id = require("ipynb.core.notebook").gen_cell_id()
   copy.execution_count = nil
   if copy.outputs then
     copy.outputs = {}
@@ -721,7 +719,7 @@ function M.paste_cell(bufnr, idx)
   end
 
   local pasted = vim.deepcopy(_yank_register)
-  pasted.id = utils.uid()
+  pasted.id = require("ipynb.core.notebook").gen_cell_id()
   pasted.execution_count = nil
   if pasted.outputs then
     pasted.outputs = {}
@@ -821,9 +819,7 @@ function M.split_cell(bufnr, idx)
 
   -- Insert a new cell below with the lower portion.
   local new_cell = {
-    id = require("ipynb.core.notebook").gen_cell_id
-        and require("ipynb.core.notebook").gen_cell_id()
-      or utils.uid(),
+    id = require("ipynb.core.notebook").gen_cell_id(),
     cell_type = c.cell_type,
     source = table.concat(lower_lines, "\n"),
     outputs = c.cell_type == "code" and {} or nil,

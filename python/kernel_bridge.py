@@ -428,8 +428,13 @@ def cmd_interrupt(_data: dict) -> None:
             _km.interrupt_kernel()
         except Exception as exc:
             send({"type": "error_internal", "message": f"Interrupt failed: {exc}"})
+    elif _kc is not None:
+        try:
+            _kc.session.send(_kc.control_channel.socket, "interrupt_request")
+        except Exception as exc:
+            send({"type": "error_internal", "message": f"Interrupt (attached) failed: {exc}"})
     else:
-        send({"type": "error_internal", "message": "No kernel manager (cannot interrupt attached kernel)."})
+        send({"type": "error_internal", "message": "No kernel connected."})
 
 
 def cmd_shutdown(_data: dict) -> None:
