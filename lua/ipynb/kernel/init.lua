@@ -195,7 +195,7 @@ local function dispatch(bufnr, msg)
         if state == "busy" then
           cell.update_status(bufnr, pending.cell_state, "busy", nil)
         elseif state == "idle" then
-          local elapsed_ms = vim.loop.now() - pending.start_ms
+          local elapsed_ms = vim.uv.now() - pending.start_ms
           cell.update_status(bufnr, pending.cell_state, "idle", elapsed_ms)
           s.pending[id] = nil
           -- Auto-save after execution if configured.
@@ -256,7 +256,7 @@ local function dispatch(bufnr, msg)
             end
           end
           -- Mark buffer modified so Neovim warns on :q with unsaved outputs.
-          pcall(vim.api.nvim_buf_set_option, bufnr, "modified", true)
+          pcall(function() vim.bo[bufnr].modified = true end)
         end
         if t == "error" then
           cell.update_status(bufnr, pending.cell_state, "error", nil)
@@ -384,7 +384,7 @@ local function spawn_bridge(bufnr)
           local kn_saved = st.kernel_name
           if config.get().kernel.restart_on_crash then
             -- Track crash timestamps and prune those outside the window.
-            local now = vim.loop.now() / 1000
+            local now = vim.uv.now() / 1000
             local recent = {}
             for _, t in ipairs(st._crash_times or {}) do
               if now - t < CRASH_WINDOW_SECS then
@@ -531,6 +531,10 @@ function M.attach(bufnr, connection_file)
   if connection_file then
     cmd.connection_file = connection_file
   end
+  local cfg = config.get()
+  if cfg.kernel.connection_dir then
+    cmd.connection_dir = cfg.kernel.connection_dir
+  end
   send(bufnr, cmd)
 end
 
@@ -560,9 +564,16 @@ function M.run_current_cell(bufnr)
     if cfg.kernel.auto_start then
       M.start(bufnr, nil)
       -- Poll every 500 ms until the kernel signals idle, then run.
+      local retries = 0
+      local max_retries = 60
       local function _await_and_run()
         local st = get_state(bufnr)
         if not st.job_id or st.status == "stopped" then
+          return
+        end
+        retries = retries + 1
+        if retries > max_retries then
+          utils.warn("Kernel did not become ready after 30s - aborting cell execution")
           return
         end
         if st.status == "idle" then
@@ -582,7 +593,7 @@ function M.run_current_cell(bufnr)
 
   local mid = next_msg_id(bufnr)
   s.pending[mid] =
-    { cell_state = cs, cell_id = cs.cell_id, bufnr = bufnr, start_ms = vim.loop.now() }
+    { cell_state = cs, cell_id = cs.cell_id, bufnr = bufnr, start_ms = vim.uv.now() }
 
   cell.update_status(bufnr, cs, "busy", nil)
   local code = cell.get_cell_source(bufnr, cs)
@@ -631,7 +642,7 @@ function M.run_all(bufnr)
       clear_cell_output(bufnr, cs)
       local mid = next_msg_id(bufnr)
       s.pending[mid] =
-        { cell_state = cs, cell_id = cs.cell_id, bufnr = bufnr, start_ms = vim.loop.now() }
+        { cell_state = cs, cell_id = cs.cell_id, bufnr = bufnr, start_ms = vim.uv.now() }
       cell.update_status(bufnr, cs, "busy", nil)
       send(bufnr, { cmd = "execute", code = cell.get_cell_source(bufnr, cs), msg_id = mid })
     end
@@ -656,7 +667,7 @@ function M.run_all_above(bufnr)
       clear_cell_output(bufnr, cs)
       local mid = next_msg_id(bufnr)
       s.pending[mid] =
-        { cell_state = cs, cell_id = cs.cell_id, bufnr = bufnr, start_ms = vim.loop.now() }
+        { cell_state = cs, cell_id = cs.cell_id, bufnr = bufnr, start_ms = vim.uv.now() }
       cell.update_status(bufnr, cs, "busy", nil)
       send(bufnr, { cmd = "execute", code = cell.get_cell_source(bufnr, cs), msg_id = mid })
     end
@@ -682,7 +693,7 @@ function M.run_all_below(bufnr)
       clear_cell_output(bufnr, cs)
       local mid = next_msg_id(bufnr)
       s.pending[mid] =
-        { cell_state = cs, cell_id = cs.cell_id, bufnr = bufnr, start_ms = vim.loop.now() }
+        { cell_state = cs, cell_id = cs.cell_id, bufnr = bufnr, start_ms = vim.uv.now() }
       cell.update_status(bufnr, cs, "busy", nil)
       send(bufnr, { cmd = "execute", code = cell.get_cell_source(bufnr, cs), msg_id = mid })
     end
@@ -738,7 +749,7 @@ function M.show_info(bufnr)
 
   local buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-  vim.api.nvim_buf_set_option(buf, "modifiable", false)
+  vim.bo[buf].modifiable = false
 
   local width = math.min(38, vim.o.columns - 4)
   local height = math.min(#lines, vim.o.lines - 4)
