@@ -256,7 +256,9 @@ local function dispatch(bufnr, msg)
             end
           end
           -- Mark buffer modified so Neovim warns on :q with unsaved outputs.
-          pcall(function() vim.bo[bufnr].modified = true end)
+          pcall(function()
+            vim.bo[bufnr].modified = true
+          end)
         end
         if t == "error" then
           cell.update_status(bufnr, pending.cell_state, "error", nil)
@@ -592,8 +594,7 @@ function M.run_current_cell(bufnr)
   clear_cell_output(bufnr, cs)
 
   local mid = next_msg_id(bufnr)
-  s.pending[mid] =
-    { cell_state = cs, cell_id = cs.cell_id, bufnr = bufnr, start_ms = vim.uv.now() }
+  s.pending[mid] = { cell_state = cs, cell_id = cs.cell_id, bufnr = bufnr, start_ms = vim.uv.now() }
 
   cell.update_status(bufnr, cs, "busy", nil)
   local code = cell.get_cell_source(bufnr, cs)
