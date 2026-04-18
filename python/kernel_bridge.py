@@ -337,9 +337,10 @@ def cmd_attach(data: dict) -> None:
     """Attach to an already-running kernel via its connection file."""
     global _kc
     cf = data.get("connection_file")
+    conn_dir = data.get("connection_dir")
     try:
         if not cf:
-            cf = find_connection_file()
+            cf = find_connection_file(path=conn_dir) if conn_dir else find_connection_file()
         _kc = BlockingKernelClient(connection_file=cf)
         _kc.load_connection_file()
         _kc.start_channels()
