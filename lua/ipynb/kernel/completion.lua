@@ -85,8 +85,7 @@ function M.omnifunc(findstart, base)
     result = msg
   end)
 
-  -- Block until the kernel replies, up to 1.5 s (non-interactive safe).
-  vim.wait(1500, function()
+  vim.wait(500, function()
     return result ~= nil
   end, 10)
 
@@ -163,7 +162,7 @@ end
 ---@param bufnr integer
 function M.attach(bufnr)
   -- Set omnifunc so <C-x><C-o> works without any extra plugins.
-  vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.require'ipynb.kernel.completion'.omnifunc")
+  vim.bo[bufnr].omnifunc = "v:lua.require'ipynb.kernel.completion'.omnifunc"
 
   -- Register nvim-cmp source once if cmp is available.
   local ok, cmp = pcall(require, "cmp")
