@@ -272,8 +272,8 @@ function M.show_help()
 
   local buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-  vim.api.nvim_buf_set_option(buf, "modifiable", false)
-  vim.api.nvim_buf_set_option(buf, "buftype", "nofile")
+  vim.bo[buf].modifiable = false
+  vim.bo[buf].buftype = "nofile"
 
   local width = math.min(44, vim.o.columns - 4)
   local height = math.min(#lines, vim.o.lines - 4)
