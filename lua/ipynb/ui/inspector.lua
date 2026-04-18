@@ -216,8 +216,8 @@ function M.open(bufnr)
 
     local ibuf = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_lines(ibuf, 0, -1, false, lines)
-    vim.api.nvim_buf_set_option(ibuf, "modifiable", false)
-    vim.api.nvim_buf_set_option(ibuf, "buftype", "nofile")
+    vim.bo[ibuf].modifiable = false
+    vim.bo[ibuf].buftype = "nofile"
 
     highlight_inspector_buf(ibuf, line_map)
 
@@ -289,8 +289,8 @@ function M.inspect_var(bufnr, var_name)
 
     local dbuf = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_lines(dbuf, 0, -1, false, lines)
-    vim.api.nvim_buf_set_option(dbuf, "modifiable", false)
-    vim.api.nvim_buf_set_option(dbuf, "filetype", "markdown")
+    vim.bo[dbuf].modifiable = false
+    vim.bo[dbuf].filetype = "markdown"
 
     local dwin = vim.api.nvim_open_win(dbuf, true, {
       relative = "editor",
