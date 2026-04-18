@@ -2,6 +2,31 @@
 
 <!-- version list -->
 
+## v1.10.2 (2026-04-18)
+
+### Bug Fixes
+
+- **lua**: Migrate deprecated nvim_buf_set_option in inspector
+  ([`1c05559`](https://github.com/ansh-info/ipynb.nvim/commit/1c05559a81e0ed37e80863623cfd9f60f84dfbbc))
+
+- **lua**: Migrate deprecated nvim_buf_set_option in keymaps
+  ([`252c23c`](https://github.com/ansh-info/ipynb.nvim/commit/252c23c3b41ac68b8fd6a5ee4b6a682256e59195))
+
+- **lua**: Reduce omnifunc timeout and migrate deprecated API
+  ([`c9a59c5`](https://github.com/ansh-info/ipynb.nvim/commit/c9a59c53f6d45f72da2ac570425d833b92f204cf))
+
+- **lua**: Remove render-markdown.nvim integration that applies to whole buffer
+  ([`81103e2`](https://github.com/ansh-info/ipynb.nvim/commit/81103e20ebced1d156fdf57abc0d6eec17a2d512))
+
+- **python**: Wire connection_dir config to find_connection_file
+  ([`80cbd03`](https://github.com/ansh-info/ipynb.nvim/commit/80cbd03b76d9680a5209cf051c403982764d747f))
+
+### Documentation
+
+- **docs**: Remove render-markdown.nvim from optional dependencies
+  ([`39233bc`](https://github.com/ansh-info/ipynb.nvim/commit/39233bc168c3f3979f1aa6f1e9a9dafec5a0c783))
+
+
 ## v1.10.1 (2026-04-17)
 
 ### Bug Fixes
