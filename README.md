@@ -53,10 +53,6 @@ rendering, full Vim modal editing, live kernel execution, and inline output.
   set-option -g focus-events on
   ```
 
-**Optional - richer markdown cells**
-
-- [render-markdown.nvim](https://github.com/MeanderingProgrammer/render-markdown.nvim)
-
 **Optional - completion**
 
 - [nvim-cmp](https://github.com/hrsh7th/nvim-cmp)
@@ -104,7 +100,6 @@ return {
           image = { enabled = true },
         },
       },
-      { "MeanderingProgrammer/render-markdown.nvim", opts = {} },
       { "hrsh7th/nvim-cmp" },
       { "nvim-tree/nvim-web-devicons" },
     },

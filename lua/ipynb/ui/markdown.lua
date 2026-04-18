@@ -280,16 +280,9 @@ function M.render(bufnr)
   define_highlights()
   vim.api.nvim_buf_clear_namespace(bufnr, NS, 0, -1)
 
-  -- Try render-markdown.nvim first (much richer output).
-  if require("ipynb.utils").has_plugin("render-markdown") then
-    -- render-markdown.nvim works on markdown buffers; we enable it
-    -- selectively per-buffer by calling its API if available.
-    local ok, rm = pcall(require, "render-markdown")
-    if ok and rm.enable then
-      pcall(rm.enable)
-      return
-    end
-  end
+  -- render-markdown.nvim integration removed: it applies decorations to the
+  -- entire buffer (including code cells) because it expects a pure markdown
+  -- filetype. The built-in decorator below is cell-aware.
 
   local ns = cell.namespace()
   local cells = cell.get_cells(bufnr)
