@@ -198,7 +198,8 @@ end
 ---@return table
 local function get_state(bufnr)
   if not buf_state[bufnr] then
-    buf_state[bufnr] = { cells = {}, notebook = nil, undo_stack = {}, redo_stack = {}, undo_base_seq = 0 }
+    buf_state[bufnr] =
+      { cells = {}, notebook = nil, undo_stack = {}, redo_stack = {}, undo_base_seq = 0 }
   end
   return buf_state[bufnr]
 end
