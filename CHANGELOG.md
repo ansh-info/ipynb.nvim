@@ -2,6 +2,33 @@
 
 <!-- version list -->
 
+## v1.10.3 (2026-04-19)
+
+### Bug Fixes
+
+- **lua**: Add smart undo/redo keymaps and sync-before-rerender
+  ([`893ab01`](https://github.com/ansh-info/ipynb.nvim/commit/893ab01de4d8ebe4dd6179f50cf4930852d69743))
+
+- **lua**: Apply stylua formatting to cell.lua
+  ([`cc26b42`](https://github.com/ansh-info/ipynb.nvim/commit/cc26b425060d74a2970b41bf560af18f0a0d34df))
+
+- **lua**: Implement notebook-level undo for structural cell operations
+  ([`c2d1129`](https://github.com/ansh-info/ipynb.nvim/commit/c2d1129634692e3d6a9353275bc9118bb620a126))
+
+### Documentation
+
+- **docs**: Add smart undo/redo keymaps to README
+  ([`a080c9f`](https://github.com/ansh-info/ipynb.nvim/commit/a080c9fa587ff884de5c2bd89ece3782e8c2484f))
+
+- **docs**: Update CLAUDE.md undo architecture and session notes
+  ([`417ae65`](https://github.com/ansh-info/ipynb.nvim/commit/417ae6597891c563c351c966c3e5abb927104117))
+
+### Testing
+
+- **lua**: Add assertions for notebook undo/redo public API
+  ([`cbd7f5e`](https://github.com/ansh-info/ipynb.nvim/commit/cbd7f5eeb6458adf28d97e25080a8f6509460c4c))
+
+
 ## v1.10.2 (2026-04-18)
 
 ### Bug Fixes
