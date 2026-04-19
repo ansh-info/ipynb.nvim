@@ -199,6 +199,8 @@ Press `<leader>jh` to show the help overlay at any time.
 | `<leader>cm` | Merge cell with the cell below |
 | `<leader>cx` | Clear current cell output |
 | `<leader>cX` | Clear all cell outputs |
+| `u` | Smart undo (text edits or structural cell ops) |
+| `<C-r>` | Smart redo (text edits or structural cell ops) |
 | `<leader>w` | Save notebook |
 | `<leader>ji` | Variable inspector |
 | `<leader>jh` | Keymap help overlay |

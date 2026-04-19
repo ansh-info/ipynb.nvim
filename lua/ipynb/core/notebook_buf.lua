@@ -279,6 +279,34 @@ function M.open(path, bufnr)
     end,
   })
 
+  -- Smart undo/redo: route to notebook-level undo when the native undo tree
+  -- is at the baseline (no text edits since last structural render), otherwise
+  -- fall through to native undo.  This gives correct behavior for both
+  -- in-cell text edits (native u) and structural ops (notebook undo).
+  vim.keymap.set("n", "u", function()
+    local seq = vim.fn.undotree().seq_cur or 0
+    local base = cell.get_undo_base_seq(bufnr)
+    if seq <= base and cell.has_notebook_undo(bufnr) then
+      cell.notebook_undo(bufnr)
+    else
+      vim.cmd("silent! undo")
+      cell.reanchor_end_marks(bufnr, nil)
+      cell.check_structural_integrity(bufnr)
+    end
+  end, { buffer = bufnr, silent = true, desc = "Jupyter: smart undo" })
+
+  vim.keymap.set("n", "<C-r>", function()
+    local seq = vim.fn.undotree().seq_cur or 0
+    local base = cell.get_undo_base_seq(bufnr)
+    if seq == base and cell.has_notebook_redo(bufnr) then
+      cell.notebook_redo(bufnr)
+    else
+      vim.cmd("silent! redo")
+      cell.reanchor_end_marks(bufnr, nil)
+      cell.check_structural_integrity(bufnr)
+    end
+  end, { buffer = bufnr, silent = true, desc = "Jupyter: smart redo" })
+
   -- Re-render borders when the window width changes.  Border text is built
   -- once at render time using the current window width; they need to be
   -- redrawn whenever that width changes.
@@ -286,7 +314,6 @@ function M.open(path, bufnr)
   -- VimResized fires on terminal resize but NOT when the user opens or closes
   -- a vertical split.  WinEnter fires on every window switch, so we track the
   -- last rendered width and skip the re-render when width is unchanged.
-  -- preserve_undo keeps in-cell typing history intact across both events.
   local _last_win_width = vim.api.nvim_win_get_width(0)
 
   local function rerender_if_width_changed()
@@ -297,19 +324,19 @@ function M.open(path, bufnr)
     local w = vim.api.nvim_win_get_width(0)
     if w ~= _last_win_width then
       _last_win_width = w
-      cell.render(bufnr, nb2, { preserve_undo = true })
+      cell.sync_sources_from_buf(bufnr, nil)
+      cell.render(bufnr, nb2)
     end
   end
 
   vim.api.nvim_create_autocmd("VimResized", {
     buffer = bufnr,
     callback = function()
-      -- Terminal resize: width always changes, update unconditionally and
-      -- reset the tracker so WinEnter after the resize is also a no-op.
       local nb2 = cell.get_notebook(bufnr)
       if nb2 then
         _last_win_width = vim.api.nvim_win_get_width(0)
-        cell.render(bufnr, nb2, { preserve_undo = true })
+        cell.sync_sources_from_buf(bufnr, nil)
+        cell.render(bufnr, nb2)
       end
     end,
   })
