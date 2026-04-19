@@ -252,11 +252,14 @@ ImageMagick dependency. Support is detected via `terminal.env().placeholders`.
 Modules that depend on optional features (kernel, image, markdown, nvim-cmp) are
 always loaded via `pcall(require, "...")`.
 
-### Undo stability
-Neovim undo operates on raw buffer lines and has no concept of cells. Guards in
-`cell.lua` (`reanchor_end_marks`, `snap_cursor_to_nearest`) prevent crashes by
-skipping stale extmarks beyond buffer length. Structural undo (undoing add/delete
-cell) still leaves borders out of sync - a deeper fix is tracked in open issues.
+### Notebook-level undo
+Structural cell operations (add, delete, move, split, merge, duplicate, paste,
+toggle type) are tracked by a notebook-level undo stack in `cell.lua`, not by
+Neovim's buffer undo tree. All `render()` calls are undo-invisible
+(`undolevels=-1`). Smart `u`/`<C-r>` keymaps in `notebook_buf.lua` route to
+notebook undo when the native undo tree is at the render baseline, and to native
+undo otherwise. Guards in `cell.lua` (`reanchor_end_marks`,
+`snap_cursor_to_nearest`) still protect against stale extmarks.
 
 ---
 
@@ -278,6 +281,6 @@ cell) still leaves borders out of sync - a deeper fix is tracked in open issues.
 4. If adding a new feature: Python first -> Lua (core/kernel/ui) -> test spec -> docs, one file per commit.
 5. If fixing a bug: read the affected module, understand the design, minimal fix.
 6. After any Lua change: run `make ci` locally or let CI verify on the PR.
-7. Known open architectural issue: structural undo (undoing add/delete cell) leaves
-   cell borders out of sync. Guards prevent crashes but a full fix requires tracking
-   undo at the notebook level. Check open issues before working in this area.
+7. Structural undo is handled by notebook-level undo stack (see Architecture
+   decisions above). Native `u` handles in-cell text edits; notebook undo
+   handles structural ops. Both are routed by smart keymaps in `notebook_buf.lua`.
