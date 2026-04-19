@@ -163,6 +163,9 @@ end
 -- Map: bufnr → { cells = CellState[], notebook = Notebook }
 local buf_state = {}
 
+-- Forward declaration: defined after Navigation helpers section.
+local cell_line_range
+
 -- Guard: prevents check_structural_integrity from triggering on the
 -- TextChanged event that render() itself fires during recovery.
 local _integrity_guard = {}
@@ -195,7 +198,7 @@ end
 ---@return table
 local function get_state(bufnr)
   if not buf_state[bufnr] then
-    buf_state[bufnr] = { cells = {}, notebook = nil }
+    buf_state[bufnr] = { cells = {}, notebook = nil, undo_stack = {}, redo_stack = {}, undo_base_seq = 0 }
   end
   return buf_state[bufnr]
 end
@@ -203,6 +206,113 @@ end
 --- Free state when a buffer is wiped.
 function M.on_buf_delete(bufnr)
   buf_state[bufnr] = nil
+end
+
+--- Snapshot notebook.cells onto the undo stack before a structural operation.
+--- Also records which cell the cursor was in so undo can restore position.
+---@param bufnr integer
+---@param cursor_idx integer|nil  1-based cell index to restore on undo
+local function push_undo(bufnr, cursor_idx)
+  local state = get_state(bufnr)
+  local nb = state.notebook
+  if not nb then
+    return
+  end
+  state.undo_stack[#state.undo_stack + 1] = {
+    cells = vim.deepcopy(nb.cells),
+    cursor_idx = cursor_idx,
+  }
+  state.redo_stack = {}
+end
+
+--- Undo the last structural cell operation.
+---@param bufnr integer
+---@return boolean  true if a notebook-level undo was performed
+function M.notebook_undo(bufnr)
+  local state = get_state(bufnr)
+  local nb = state.notebook
+  if not nb or #state.undo_stack == 0 then
+    return false
+  end
+
+  local _, cur_idx = M.cell_at_cursor(bufnr)
+  state.redo_stack[#state.redo_stack + 1] = {
+    cells = vim.deepcopy(nb.cells),
+    cursor_idx = cur_idx,
+  }
+
+  local entry = table.remove(state.undo_stack)
+  nb.cells = entry.cells
+  M.render(bufnr, nb)
+
+  local target_cs = entry.cursor_idx and state.cells[entry.cursor_idx] or nil
+  if target_cs then
+    vim.schedule(function()
+      if not vim.api.nvim_buf_is_valid(bufnr) then
+        return
+      end
+      local s, _ = cell_line_range(bufnr, target_cs)
+      vim.api.nvim_win_set_cursor(0, { s + 1, 0 })
+    end)
+  end
+  return true
+end
+
+--- Redo the last undone structural cell operation.
+---@param bufnr integer
+---@return boolean  true if a notebook-level redo was performed
+function M.notebook_redo(bufnr)
+  local state = get_state(bufnr)
+  local nb = state.notebook
+  if not nb or #state.redo_stack == 0 then
+    return false
+  end
+
+  local _, cur_idx = M.cell_at_cursor(bufnr)
+  state.undo_stack[#state.undo_stack + 1] = {
+    cells = vim.deepcopy(nb.cells),
+    cursor_idx = cur_idx,
+  }
+
+  local entry = table.remove(state.redo_stack)
+  nb.cells = entry.cells
+  M.render(bufnr, nb)
+
+  local target_cs = entry.cursor_idx and state.cells[entry.cursor_idx] or nil
+  if target_cs then
+    vim.schedule(function()
+      if not vim.api.nvim_buf_is_valid(bufnr) then
+        return
+      end
+      local s, _ = cell_line_range(bufnr, target_cs)
+      vim.api.nvim_win_set_cursor(0, { s + 1, 0 })
+    end)
+  end
+  return true
+end
+
+--- Return the undo base sequence number for smart u/C-r routing.
+---@param bufnr integer
+---@return integer
+function M.get_undo_base_seq(bufnr)
+  local state = get_state(bufnr)
+  return state.undo_base_seq or 0
+end
+
+--- Return true if the notebook undo stack is non-empty.
+---@param bufnr integer
+---@return boolean
+function M.has_notebook_undo(bufnr)
+  local state = get_state(bufnr)
+  return #state.undo_stack > 0
+end
+
+--- Return true if the notebook redo stack is non-empty.
+---@param bufnr integer
+---@return boolean
+function M.has_notebook_redo(bufnr)
+  local state = get_state(bufnr)
+  return #state.redo_stack > 0
 end
 
 -- ── Core render ───────────────────────────────────────────────────────────────
@@ -213,15 +323,10 @@ end
 ---
 ---@param bufnr integer
 ---@param notebook table  Notebook from notebook.lua
----@param opts table|nil  Options:
----   opts.preserve_undo (boolean) - when true, skip the undolevels=-1 block so
----   that in-cell typing undo history is preserved across the render call.
----   Pass this from user-facing structural ops (add/delete/move/etc.) so that
----   typing done before the op remains undoable afterwards.
----   Omit (or false) for initial file load, VimResized, and integrity-recovery
----   renders where starting with a clean undo tree is correct.
-function M.render(bufnr, notebook, opts)
+function M.render(bufnr, notebook)
   define_highlights()
+
+  _integrity_guard[bufnr] = true
 
   local state = get_state(bufnr)
 
@@ -246,23 +351,12 @@ function M.render(bufnr, notebook, opts)
   vim.bo[bufnr].modifiable = true
   vim.bo[bufnr].readonly = false
 
-  -- Optionally make all nvim_buf_set_lines calls undo-invisible.
-  --
-  -- When preserve_undo is false (default): set undolevels=-1 before writes so
-  -- render() entries never appear in the undo tree.  Used for initial file load
-  -- and check_structural_integrity recovery where a clean undo start is correct.
-  --
-  -- When preserve_undo is true: skip this block so that typing the user did
-  -- before a structural op (add/delete/move/duplicate/paste/toggle) stays
-  -- undoable after the op.  The render() writes for structural ops do enter the
-  -- undo tree, but check_structural_integrity will recover if the user undoes
-  -- through them (it detects divergence and re-renders from the notebook model).
-  local preserve_undo = opts and opts.preserve_undo or false
-  local saved_ul
-  if not preserve_undo then
-    saved_ul = vim.bo[bufnr].undolevels
-    vim.bo[bufnr].undolevels = -1
-  end
+  -- Make all nvim_buf_set_lines calls undo-invisible.  Structural cell ops
+  -- are tracked by notebook-level undo (push_undo/notebook_undo), not by
+  -- Neovim's buffer undo tree.  This prevents the full buffer wipe-and-rewrite
+  -- from polluting the undo tree (#178).
+  local saved_ul = vim.bo[bufnr].undolevels
+  vim.bo[bufnr].undolevels = -1
 
   -- Clear everything.
   vim.api.nvim_buf_clear_namespace(bufnr, NS, 0, -1)
@@ -344,10 +438,11 @@ function M.render(bufnr, notebook, opts)
   local ft = require("ipynb.core.notebook").notebook_language(notebook)
   vim.bo[bufnr].filetype = ft
 
-  -- Restore undo tracking (only when we suppressed it above).
-  if not preserve_undo then
-    vim.bo[bufnr].undolevels = saved_ul
-  end
+  -- Restore undo tracking and record the undo baseline.
+  vim.bo[bufnr].undolevels = saved_ul
+  state.undo_base_seq = vim.fn.undotree().seq_cur or 0
+
+  _integrity_guard[bufnr] = nil
 
   -- Notify render hooks (e.g. kernel remap of pending cell_state refs).
   -- state.cells is fully built at this point.
@@ -376,7 +471,7 @@ end
 ---@param bufnr integer
 ---@param cell_state table
 ---@return integer start_line, integer end_line
-local function cell_line_range(bufnr, cell_state)
+cell_line_range = function(bufnr, cell_state)
   local sm = vim.api.nvim_buf_get_extmark_by_id(bufnr, NS, cell_state.start_mark, {})
   local em = vim.api.nvim_buf_get_extmark_by_id(bufnr, NS, cell_state.end_mark, {})
   return sm[1] or 0, em[1] or 0
@@ -508,7 +603,10 @@ function M.add_cell_below(bufnr, idx, cell_type)
   end
 
   cell_type = cell_type or "code"
-  -- Insert a new empty cell into the notebook model.
+
+  M.sync_sources_from_buf(bufnr, nil)
+  push_undo(bufnr, idx)
+
   local new_cell = {
     id = require("ipynb.core.notebook").gen_cell_id(),
     cell_type = cell_type,
@@ -519,9 +617,7 @@ function M.add_cell_below(bufnr, idx, cell_type)
   }
   table.insert(notebook.cells, idx + 1, new_cell)
 
-  -- Re-render the whole buffer to reflect the new cell.
-  -- preserve_undo keeps any typing the user did before this op undoable.
-  M.render(bufnr, notebook, { preserve_undo = true })
+  M.render(bufnr, notebook)
 
   -- Defer cursor placement until after render-triggered autocmds settle.
   -- M.render() rebuilds all extmarks; CursorMoved fires during the rebuild
@@ -553,6 +649,10 @@ function M.add_cell_above(bufnr, idx, cell_type)
   end
 
   cell_type = cell_type or "code"
+
+  M.sync_sources_from_buf(bufnr, nil)
+  push_undo(bufnr, idx)
+
   local new_cell = {
     id = require("ipynb.core.notebook").gen_cell_id(),
     cell_type = cell_type,
@@ -563,7 +663,7 @@ function M.add_cell_above(bufnr, idx, cell_type)
   }
   table.insert(notebook.cells, idx, new_cell)
 
-  M.render(bufnr, notebook, { preserve_undo = true })
+  M.render(bufnr, notebook)
 
   local captured_idx = idx
   vim.schedule(function()
@@ -593,8 +693,11 @@ function M.delete_cell(bufnr, idx)
     return
   end
 
+  M.sync_sources_from_buf(bufnr, nil)
+  push_undo(bufnr, idx)
+
   table.remove(notebook.cells, idx)
-  M.render(bufnr, notebook, { preserve_undo = true })
+  M.render(bufnr, notebook)
 end
 
 --- Move the cell at `idx` one position up (swap with the cell above).
@@ -607,8 +710,11 @@ function M.move_cell_up(bufnr, idx)
     return
   end
 
+  M.sync_sources_from_buf(bufnr, nil)
+  push_undo(bufnr, idx)
+
   notebook.cells[idx], notebook.cells[idx - 1] = notebook.cells[idx - 1], notebook.cells[idx]
-  M.render(bufnr, notebook, { preserve_undo = true })
+  M.render(bufnr, notebook)
 
   local captured = idx - 1
   vim.schedule(function()
@@ -633,8 +739,11 @@ function M.move_cell_down(bufnr, idx)
     return
   end
 
+  M.sync_sources_from_buf(bufnr, nil)
+  push_undo(bufnr, idx)
+
   notebook.cells[idx], notebook.cells[idx + 1] = notebook.cells[idx + 1], notebook.cells[idx]
-  M.render(bufnr, notebook, { preserve_undo = true })
+  M.render(bufnr, notebook)
 
   local captured = idx + 1
   vim.schedule(function()
@@ -660,6 +769,9 @@ function M.duplicate_cell(bufnr, idx)
     return
   end
 
+  M.sync_sources_from_buf(bufnr, nil)
+  push_undo(bufnr, idx)
+
   local copy = vim.deepcopy(notebook.cells[idx])
   copy.id = require("ipynb.core.notebook").gen_cell_id()
   copy.execution_count = nil
@@ -668,7 +780,7 @@ function M.duplicate_cell(bufnr, idx)
   end
 
   table.insert(notebook.cells, idx + 1, copy)
-  M.render(bufnr, notebook, { preserve_undo = true })
+  M.render(bufnr, notebook)
 
   local captured = idx + 1
   vim.schedule(function()
@@ -718,6 +830,9 @@ function M.paste_cell(bufnr, idx)
     return
   end
 
+  M.sync_sources_from_buf(bufnr, nil)
+  push_undo(bufnr, idx)
+
   local pasted = vim.deepcopy(_yank_register)
   pasted.id = require("ipynb.core.notebook").gen_cell_id()
   pasted.execution_count = nil
@@ -726,7 +841,7 @@ function M.paste_cell(bufnr, idx)
   end
 
   table.insert(notebook.cells, idx + 1, pasted)
-  M.render(bufnr, notebook, { preserve_undo = true })
+  M.render(bufnr, notebook)
 
   local captured = idx + 1
   vim.schedule(function()
@@ -752,6 +867,9 @@ function M.toggle_cell_type(bufnr, idx)
     return
   end
 
+  M.sync_sources_from_buf(bufnr, nil)
+  push_undo(bufnr, idx)
+
   local c = notebook.cells[idx]
   if c.cell_type == "code" then
     c.cell_type = "markdown"
@@ -763,7 +881,7 @@ function M.toggle_cell_type(bufnr, idx)
     c.execution_count = nil
   end
 
-  M.render(bufnr, notebook, { preserve_undo = true })
+  M.render(bufnr, notebook)
 
   local captured = idx
   vim.schedule(function()
@@ -794,6 +912,9 @@ function M.split_cell(bufnr, idx)
   if not cs then
     return
   end
+
+  M.sync_sources_from_buf(bufnr, nil)
+  push_undo(bufnr, idx)
 
   -- Determine the split line relative to the cell start.
   local s, e = cell_line_range(bufnr, cs)
@@ -828,7 +949,7 @@ function M.split_cell(bufnr, idx)
   }
   table.insert(notebook.cells, idx + 1, new_cell)
 
-  M.render(bufnr, notebook, { preserve_undo = true })
+  M.render(bufnr, notebook)
 
   -- Place cursor at the start of the new lower cell.
   local captured = idx + 1
@@ -860,6 +981,9 @@ function M.merge_cell_below(bufnr, idx)
     return
   end
 
+  M.sync_sources_from_buf(bufnr, nil)
+  push_undo(bufnr, idx)
+
   local upper = notebook.cells[idx]
   local lower = notebook.cells[idx + 1]
 
@@ -879,7 +1003,7 @@ function M.merge_cell_below(bufnr, idx)
   -- Remove the lower cell from the notebook model.
   table.remove(notebook.cells, idx + 1)
 
-  M.render(bufnr, notebook, { preserve_undo = true })
+  M.render(bufnr, notebook)
 
   -- Place cursor at the original cell position.
   local captured = idx
@@ -1135,17 +1259,14 @@ function M.sync_sources_from_buf(bufnr, active_idx)
   end
 end
 
---- Detect and recover from structural undo (undoing add_cell / delete_cell).
+--- Fallback safety net: detect buffer/model divergence and recover.
 ---
---- When undo reverts the buffer lines written by render(), state.cells and
---- notebook.cells still reflect the post-operation count. This function counts
---- cells whose start_mark is within the current buffer length. If that count
---- is less than #state.cells, structural divergence has occurred: notebook.cells
---- is rebuilt from the valid cells (with sources read from the buffer) and a
---- full re-render is scheduled.
----
---- A blank-buffer edge case (line_count == 0) is handled separately: the
---- current notebook model is re-rendered without rebuilding cells.
+--- Structural cell operations are now tracked by notebook-level undo and
+--- renders are undo-invisible.  This function handles edge cases where the
+--- buffer state drifts from the model (e.g. external buffer mutations, plugin
+--- conflicts).  It counts cells whose start_mark is within the buffer; if
+--- fewer than expected, it rebuilds notebook.cells from the buffer and
+--- re-renders.
 ---@param bufnr integer
 function M.check_structural_integrity(bufnr)
   if _integrity_guard[bufnr] then
