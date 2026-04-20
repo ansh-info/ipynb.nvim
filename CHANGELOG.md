@@ -2,6 +2,37 @@
 
 <!-- version list -->
 
+## v1.11.0 (2026-04-20)
+
+### Bug Fixes
+
+- **lua**: Use line-based assertions in pretty-print JSON tests
+  ([`0e32bbc`](https://github.com/ansh-info/ipynb.nvim/commit/0e32bbc126c1952dc8ee3ec257a4a1afa01a7d0b))
+
+### Continuous Integration
+
+- **config**: Add Python syntax check and headless test jobs
+  ([`7515579`](https://github.com/ansh-info/ipynb.nvim/commit/7515579ae2393a610ead0a693777058a3509c941))
+
+### Features
+
+- **lua**: Pretty-print saved .ipynb JSON for git-friendly diffs
+  ([`fa405b8`](https://github.com/ansh-info/ipynb.nvim/commit/fa405b887c2136714827450db385ffbb6b063f45))
+
+### Refactoring
+
+- **lua**: Remove dead code from utils.lua
+  ([`386f30f`](https://github.com/ansh-info/ipynb.nvim/commit/386f30f3a6808f991ce62420017123669f0bc64c))
+
+### Testing
+
+- **lua**: Add specs for pretty-print JSON output format
+  ([`379566e`](https://github.com/ansh-info/ipynb.nvim/commit/379566eb963bb260cdc75342ee37596cc416bb72))
+
+- **lua**: Remove specs for deleted utils functions
+  ([`b972eb9`](https://github.com/ansh-info/ipynb.nvim/commit/b972eb907e4b52ba5da54e334dfe1bc321d36286))
+
+
 ## v1.10.3 (2026-04-19)
 
 ### Bug Fixes
