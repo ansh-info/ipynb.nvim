@@ -34,6 +34,32 @@ jobs:
         env:
           VUSTED_NVIM: ${{ steps.vim.outputs.executable }}
 
+  # ── Python syntax check ─────────────────────────────────────────────────────
+  python-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+
+      - name: Verify kernel_bridge.py compiles
+        run: uv run --project python/ python -m py_compile python/kernel_bridge.py
+
+  # ── Headless integration tests ──────────────────────────────────────────────
+  headless-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: rhysd/action-setup-vim@v1
+        id: vim
+        with:
+          neovim: true
+          version: stable
+
+      - name: Run headless tests
+        run: ${{ steps.vim.outputs.executable }} --headless -u NONE -c "set rtp+=." -l test/headless_test.lua
+
   # ── Lint (luacheck) ─────────────────────────────────────────────────────────
   lint:
     runs-on: ubuntu-latest
