@@ -207,5 +207,39 @@ describe("ipynb.notebook", function()
       assert.are.equal("markdown", notebook2.cells[2].cell_type)
       os.remove(tmp)
     end)
+
+    it("saves with 1-space indented JSON for git-friendly diffs", function()
+      local tmp = os.tmpname() .. ".ipynb"
+      local raw = make_raw_nb({ code_cell("x=1", "aabbccdd") })
+      local notebook = nb.parse(raw, tmp)
+      nb.save(notebook)
+
+      local f = io.open(tmp, "r")
+      local content = f:read("*a")
+      f:close()
+
+      assert.is_truthy(content:match("^\n"), "expected top-level opening brace")
+      assert.is_truthy(content:match('\n "cells":'), "expected 1-space indented keys")
+      assert.is_truthy(content:match('\n  "cell_type":'), "expected 2-space indent for cell fields")
+      assert.is_truthy(content:match("\n$"), "expected trailing newline")
+      assert.is_falsy(content:match("^{[^\n]"), "expected multi-line, not compact JSON")
+
+      os.remove(tmp)
+    end)
+
+    it("saves empty metadata as {} not multi-line", function()
+      local tmp = os.tmpname() .. ".ipynb"
+      local raw = make_raw_nb({ code_cell("x=1", "aabbccdd") })
+      local notebook = nb.parse(raw, tmp)
+      nb.save(notebook)
+
+      local f = io.open(tmp, "r")
+      local content = f:read("*a")
+      f:close()
+
+      assert.is_truthy(content:match('"metadata": {}'), "empty metadata should be compact {}")
+
+      os.remove(tmp)
+    end)
   end)
 end)
