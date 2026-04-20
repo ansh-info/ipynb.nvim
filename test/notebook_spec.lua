@@ -218,11 +218,20 @@ describe("ipynb.notebook", function()
       local content = f:read("*a")
       f:close()
 
-      assert.is_truthy(content:match("^\n"), "expected top-level opening brace")
-      assert.is_truthy(content:match('\n "cells":'), "expected 1-space indented keys")
-      assert.is_truthy(content:match('\n  "cell_type":'), "expected 2-space indent for cell fields")
-      assert.is_truthy(content:match("\n$"), "expected trailing newline")
-      assert.is_falsy(content:match("^{[^\n]"), "expected multi-line, not compact JSON")
+      local lines = vim.split(content, "\n", { plain = true })
+      assert.are.equal("{", lines[1], "expected top-level opening brace on first line")
+      assert.is_truthy(lines[2]:match('^ "cells":'), "expected 1-space indented keys")
+
+      local has_cell_type = false
+      for _, line in ipairs(lines) do
+        if line:match('^  "cell_type":') then
+          has_cell_type = true
+          break
+        end
+      end
+      assert.is_true(has_cell_type, "expected 2-space indent for cell fields")
+      assert.are.equal("", lines[#lines], "expected trailing newline")
+      assert.are.equal("}", lines[#lines - 1], "expected closing brace on last content line")
 
       os.remove(tmp)
     end)
@@ -237,7 +246,14 @@ describe("ipynb.notebook", function()
       local content = f:read("*a")
       f:close()
 
-      assert.is_truthy(content:match('"metadata": {}'), "empty metadata should be compact {}")
+      local has_compact_metadata = false
+      for line in content:gmatch("[^\n]+") do
+        if line:match('"metadata": {}') then
+          has_compact_metadata = true
+          break
+        end
+      end
+      assert.is_true(has_compact_metadata, "empty metadata should be compact {}")
 
       os.remove(tmp)
     end)
