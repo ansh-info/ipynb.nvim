@@ -207,5 +207,55 @@ describe("ipynb.notebook", function()
       assert.are.equal("markdown", notebook2.cells[2].cell_type)
       os.remove(tmp)
     end)
+
+    it("saves with 1-space indented JSON for git-friendly diffs", function()
+      local tmp = os.tmpname() .. ".ipynb"
+      local raw = make_raw_nb({ code_cell("x=1", "aabbccdd") })
+      local notebook = nb.parse(raw, tmp)
+      nb.save(notebook)
+
+      local f = io.open(tmp, "r")
+      local content = f:read("*a")
+      f:close()
+
+      local lines = vim.split(content, "\n", { plain = true })
+      assert.are.equal("{", lines[1], "expected top-level opening brace on first line")
+      assert.is_truthy(lines[2]:match('^ "cells":'), "expected 1-space indented keys")
+
+      local has_cell_type = false
+      for _, line in ipairs(lines) do
+        if line:match('^  "cell_type":') then
+          has_cell_type = true
+          break
+        end
+      end
+      assert.is_true(has_cell_type, "expected 2-space indent for cell fields")
+      assert.are.equal("", lines[#lines], "expected trailing newline")
+      assert.are.equal("}", lines[#lines - 1], "expected closing brace on last content line")
+
+      os.remove(tmp)
+    end)
+
+    it("saves empty metadata as {} not multi-line", function()
+      local tmp = os.tmpname() .. ".ipynb"
+      local raw = make_raw_nb({ code_cell("x=1", "aabbccdd") })
+      local notebook = nb.parse(raw, tmp)
+      nb.save(notebook)
+
+      local f = io.open(tmp, "r")
+      local content = f:read("*a")
+      f:close()
+
+      local has_compact_metadata = false
+      for line in content:gmatch("[^\n]+") do
+        if line:match('"metadata": {}') then
+          has_compact_metadata = true
+          break
+        end
+      end
+      assert.is_true(has_compact_metadata, "empty metadata should be compact {}")
+
+      os.remove(tmp)
+    end)
   end)
 end)

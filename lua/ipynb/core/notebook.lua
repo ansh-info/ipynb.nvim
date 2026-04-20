@@ -42,6 +42,72 @@ local function gen_cell_id()
   return string.format("%08x", math.random(0, 0xFFFFFFFF))
 end
 
+-- ── JSON pretty-printer (1-space indent, Jupyter-compatible) ─────────────────
+
+--- Encode a Lua value as a JSON string with 1-space indentation.
+--- Matches Jupyter's nbformat output: sorted keys, 1-space indent, trailing newline.
+---@param value any
+---@param indent integer
+---@return string
+local function json_encode_pretty(value, indent)
+  indent = indent or 0
+  local t = type(value)
+
+  if value == vim.NIL then
+    return "null"
+  elseif t == "boolean" then
+    return value and "true" or "false"
+  elseif t == "number" then
+    if value ~= value then
+      return "NaN"
+    end
+    if value == math.huge then
+      return "Infinity"
+    end
+    if value == -math.huge then
+      return "-Infinity"
+    end
+    if value == math.floor(value) then
+      return string.format("%d", value)
+    end
+    return tostring(value)
+  elseif t == "string" then
+    return vim.json.encode(value)
+  elseif t == "table" then
+    if (vim.islist or vim.tbl_islist)(value) then
+      if #value == 0 then
+        return "[]"
+      end
+      local items = {}
+      local child_indent = indent + 1
+      local prefix = string.rep(" ", child_indent)
+      for _, v in ipairs(value) do
+        items[#items + 1] = prefix .. json_encode_pretty(v, child_indent)
+      end
+      return "[\n" .. table.concat(items, ",\n") .. "\n" .. string.rep(" ", indent) .. "]"
+    else
+      local keys = {}
+      for k in pairs(value) do
+        keys[#keys + 1] = k
+      end
+      if #keys == 0 then
+        return "{}"
+      end
+      table.sort(keys)
+      local items = {}
+      local child_indent = indent + 1
+      local prefix = string.rep(" ", child_indent)
+      for _, k in ipairs(keys) do
+        local encoded_key = vim.json.encode(k)
+        local encoded_val = json_encode_pretty(value[k], child_indent)
+        items[#items + 1] = prefix .. encoded_key .. ": " .. encoded_val
+      end
+      return "{\n" .. table.concat(items, ",\n") .. "\n" .. string.rep(" ", indent) .. "}"
+    end
+  end
+  return "null"
+end
+
 -- ── Parsing ───────────────────────────────────────────────────────────────────
 
 --- Parse a raw notebook JSON table into the internal Notebook structure.
@@ -133,7 +199,7 @@ function M.save(notebook)
     }
     if cell.cell_type == "code" then
       rc.outputs = cell.outputs or {}
-      rc.execution_count = cell.execution_count
+      rc.execution_count = cell.execution_count or vim.NIL
     end
     raw_cells[#raw_cells + 1] = rc
   end
@@ -145,15 +211,12 @@ function M.save(notebook)
     cells = raw_cells,
   }
 
-  local ok_enc, json = pcall(vim.json.encode, raw)
+  local ok_enc, json = pcall(json_encode_pretty, raw, 0)
   if not ok_enc then
     return false, "JSON encoding failed: " .. tostring(json)
   end
 
-  -- Pretty-print: vim.json.encode produces compact JSON; decode + re-encode
-  -- is not available in all Neovim versions, so we leave it compact.
-  -- Users can run `python3 -m json.tool` externally if they want indented output.
-  local ok_write, werr = utils.write_file(notebook.path, json)
+  local ok_write, werr = utils.write_file(notebook.path, json .. "\n")
   if not ok_write then
     return false, "cannot write file: " .. (werr or notebook.path)
   end
