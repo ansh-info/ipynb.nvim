@@ -59,13 +59,13 @@ local function json_encode_pretty(value, indent)
     return value and "true" or "false"
   elseif t == "number" then
     if value ~= value then
-      return "NaN"
+      return "null"
     end
     if value == math.huge then
-      return "Infinity"
+      return "null"
     end
     if value == -math.huge then
-      return "-Infinity"
+      return "null"
     end
     if value == math.floor(value) then
       return string.format("%d", value)
