@@ -224,12 +224,12 @@ describe("ipynb.notebook", function()
 
       local has_cell_type = false
       for _, line in ipairs(lines) do
-        if line:match('^  "cell_type":') then
+        if line:match('^   "cell_type":') then
           has_cell_type = true
           break
         end
       end
-      assert.is_true(has_cell_type, "expected 2-space indent for cell fields")
+      assert.is_true(has_cell_type, "expected 3-space indent for cell fields")
       assert.are.equal("", lines[#lines], "expected trailing newline")
       assert.are.equal("}", lines[#lines - 1], "expected closing brace on last content line")
 
