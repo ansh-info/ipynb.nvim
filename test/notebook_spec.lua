@@ -236,6 +236,30 @@ describe("ipynb.notebook", function()
       os.remove(tmp)
     end)
 
+    it("encodes NaN and Infinity as null for valid JSON", function()
+      local tmp = os.tmpname() .. ".ipynb"
+      local raw = make_raw_nb({ code_cell("x=1", "aabbccdd") })
+      local notebook = nb.parse(raw, tmp)
+      notebook.cells[1].execution_count = 0 / 0 -- NaN
+      notebook.cells[1].metadata = { inf_val = math.huge, neg_inf = -math.huge }
+
+      local ok, err = nb.save(notebook)
+      assert.is_true(ok, "save failed: " .. tostring(err))
+
+      local f = io.open(tmp, "r")
+      local content = f:read("*a")
+      f:close()
+
+      assert.is_nil(content:match("NaN"), "NaN must not appear in saved JSON")
+      assert.is_nil(content:match("Infinity"), "Infinity must not appear in saved JSON")
+
+      local notebook2, err2 = nb.load(tmp)
+      assert.is_nil(err2, "re-open failed: " .. tostring(err2))
+      assert.is_not_nil(notebook2, "notebook should be parseable after save")
+
+      os.remove(tmp)
+    end)
+
     it("saves empty metadata as {} not multi-line", function()
       local tmp = os.tmpname() .. ".ipynb"
       local raw = make_raw_nb({ code_cell("x=1", "aabbccdd") })
