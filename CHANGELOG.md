@@ -2,6 +2,25 @@
 
 <!-- version list -->
 
+## v1.11.1 (2026-04-21)
+
+### Bug Fixes
+
+- **lua**: Correct indent assertion in pretty-print JSON test
+  ([`69468fa`](https://github.com/ansh-info/ipynb.nvim/commit/69468fa2f054d3795832e915a573ff3436278b63))
+
+- **lua**: Emit null instead of NaN/Infinity in json_encode_pretty
+  ([`132f0d6`](https://github.com/ansh-info/ipynb.nvim/commit/132f0d6e8d79ea2df1010daed8efe188ba19ec4a))
+
+- **lua**: Use vim.empty_dict() for empty metadata in save
+  ([`69d2f64`](https://github.com/ansh-info/ipynb.nvim/commit/69d2f6488b7710ec277d201804148b06555c9b7c))
+
+### Testing
+
+- **lua**: Add spec for NaN/Infinity null encoding in save
+  ([`e95dfd6`](https://github.com/ansh-info/ipynb.nvim/commit/e95dfd66cf53c152095bd07ba5d1af0170338e5f))
+
+
 ## v1.11.0 (2026-04-20)
 
 ### Bug Fixes
