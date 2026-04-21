@@ -59,13 +59,13 @@ local function json_encode_pretty(value, indent)
     return value and "true" or "false"
   elseif t == "number" then
     if value ~= value then
-      return "NaN"
+      return "null"
     end
     if value == math.huge then
-      return "Infinity"
+      return "null"
     end
     if value == -math.huge then
-      return "-Infinity"
+      return "null"
     end
     if value == math.floor(value) then
       return string.format("%d", value)
@@ -191,11 +191,15 @@ function M.save(notebook)
       source_lines[i] = (i < #lines) and (line .. "\n") or line
     end
 
+    local meta = cell.metadata
+    if not meta or next(meta) == nil then
+      meta = vim.empty_dict()
+    end
     local rc = {
       id = cell.id,
       cell_type = cell.cell_type,
       source = source_lines,
-      metadata = cell.metadata or {},
+      metadata = meta,
     }
     if cell.cell_type == "code" then
       rc.outputs = cell.outputs or {}
@@ -204,10 +208,14 @@ function M.save(notebook)
     raw_cells[#raw_cells + 1] = rc
   end
 
+  local nb_meta = notebook.metadata
+  if not nb_meta or next(nb_meta) == nil then
+    nb_meta = vim.empty_dict()
+  end
   local raw = {
     nbformat = notebook.nbformat or 4,
     nbformat_minor = notebook.nbformat_minor or 5,
-    metadata = notebook.metadata or {},
+    metadata = nb_meta,
     cells = raw_cells,
   }
 

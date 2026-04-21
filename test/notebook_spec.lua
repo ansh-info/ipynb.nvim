@@ -224,14 +224,38 @@ describe("ipynb.notebook", function()
 
       local has_cell_type = false
       for _, line in ipairs(lines) do
-        if line:match('^  "cell_type":') then
+        if line:match('^   "cell_type":') then
           has_cell_type = true
           break
         end
       end
-      assert.is_true(has_cell_type, "expected 2-space indent for cell fields")
+      assert.is_true(has_cell_type, "expected 3-space indent for cell fields")
       assert.are.equal("", lines[#lines], "expected trailing newline")
       assert.are.equal("}", lines[#lines - 1], "expected closing brace on last content line")
+
+      os.remove(tmp)
+    end)
+
+    it("encodes NaN and Infinity as null for valid JSON", function()
+      local tmp = os.tmpname() .. ".ipynb"
+      local raw = make_raw_nb({ code_cell("x=1", "aabbccdd") })
+      local notebook = nb.parse(raw, tmp)
+      notebook.cells[1].execution_count = 0 / 0 -- NaN
+      notebook.cells[1].metadata = { inf_val = math.huge, neg_inf = -math.huge }
+
+      local ok, err = nb.save(notebook)
+      assert.is_true(ok, "save failed: " .. tostring(err))
+
+      local f = io.open(tmp, "r")
+      local content = f:read("*a")
+      f:close()
+
+      assert.is_nil(content:match("NaN"), "NaN must not appear in saved JSON")
+      assert.is_nil(content:match("Infinity"), "Infinity must not appear in saved JSON")
+
+      local notebook2, err2 = nb.load(tmp)
+      assert.is_nil(err2, "re-open failed: " .. tostring(err2))
+      assert.is_not_nil(notebook2, "notebook should be parseable after save")
 
       os.remove(tmp)
     end)
