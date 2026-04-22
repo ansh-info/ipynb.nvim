@@ -591,6 +591,9 @@ function M.run_current_cell(bufnr)
     return
   end
 
+  local _, cur_idx = cell.cell_at_cursor(bufnr)
+  cell.push_undo(bufnr, cur_idx)
+
   clear_cell_output(bufnr, cs)
 
   local mid = next_msg_id(bufnr)
@@ -638,6 +641,8 @@ function M.run_all(bufnr)
     utils.warn("No kernel running.")
     return
   end
+  local _, cur_idx = cell.cell_at_cursor(bufnr)
+  cell.push_undo(bufnr, cur_idx)
   for _, cs in ipairs(cells) do
     if cs.cell_type == "code" then
       clear_cell_output(bufnr, cs)
@@ -662,6 +667,7 @@ function M.run_all_above(bufnr)
     utils.warn("No kernel running.")
     return
   end
+  cell.push_undo(bufnr, idx)
   for _, entry in ipairs(cell.cells_above(bufnr, idx)) do
     local cs = entry.cell_state
     if cs.cell_type == "code" then
@@ -688,6 +694,7 @@ function M.run_all_below(bufnr)
     utils.warn("No kernel running.")
     return
   end
+  cell.push_undo(bufnr, idx)
   for i = idx, #cells do
     local cs = cells[i]
     if cs.cell_type == "code" then
