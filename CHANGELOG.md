@@ -2,6 +2,17 @@
 
 <!-- version list -->
 
+## v1.11.3 (2026-04-22)
+
+### Bug Fixes
+
+- **lua**: Export push_undo from cell module for execution undo
+  ([`5365fa8`](https://github.com/ansh-info/ipynb.nvim/commit/5365fa8147bc8e4d3653efd4ea1d5311915ef01b))
+
+- **lua**: Snapshot undo before cell execution for output revert
+  ([`0e1ee1c`](https://github.com/ansh-info/ipynb.nvim/commit/0e1ee1cb1097bc0561e3a99cca1af4203d189331))
+
+
 ## v1.11.2 (2026-04-22)
 
 ### Bug Fixes
