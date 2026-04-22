@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.11.5 (2026-04-22)
+
+### Bug Fixes
+
+- **lua**: Use buffer-only arg in FileType autocmd to avoid pattern conflict
+  ([`2de02a6`](https://github.com/ansh-info/ipynb.nvim/commit/2de02a6c7910ec630c3250208f29ffa358f7798a))
+
+
 ## v1.11.4 (2026-04-22)
 
 ### Bug Fixes
