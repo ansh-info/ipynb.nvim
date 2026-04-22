@@ -96,7 +96,7 @@ local function attach_lsp(bufnr)
   -- this function is called.  pattern= must match the actual filetype so the
   -- correct LSP server attaches (e.g. r_language_server for R notebooks).
   local buf_ft = vim.bo[bufnr].filetype
-  vim.api.nvim_exec_autocmds("FileType", { pattern = buf_ft })
+  vim.api.nvim_exec_autocmds("FileType", { pattern = buf_ft, buffer = bufnr })
 
   -- Strategy 2: attach any already-running LSP client that serves this filetype.
   local get_clients = vim.lsp.get_clients or vim.lsp.get_active_clients
@@ -184,6 +184,9 @@ function M.open(path, bufnr)
 
   setup_buf_options(bufnr)
   set_buf_name(bufnr, path)
+
+  local ft = require("ipynb.core.notebook").notebook_language(nb)
+  vim.bo[bufnr].filetype = ft
 
   cell.render(bufnr, nb)
   keymaps.attach(bufnr)

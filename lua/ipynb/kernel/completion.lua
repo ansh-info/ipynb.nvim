@@ -162,7 +162,12 @@ end
 ---@param bufnr integer
 function M.attach(bufnr)
   -- Set omnifunc so <C-x><C-o> works without any extra plugins.
-  vim.bo[bufnr].omnifunc = "v:lua.require'ipynb.kernel.completion'.omnifunc"
+  -- Preserve the LSP omnifunc if an LSP client is already attached.
+  local get_clients = vim.lsp.get_clients or vim.lsp.get_active_clients
+  local has_lsp = #get_clients({ bufnr = bufnr }) > 0
+  if not has_lsp then
+    vim.bo[bufnr].omnifunc = "v:lua.require'ipynb.kernel.completion'.omnifunc"
+  end
 
   -- Register nvim-cmp source once if cmp is available.
   local ok, cmp = pcall(require, "cmp")
