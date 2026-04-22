@@ -2,6 +2,17 @@
 
 <!-- version list -->
 
+## v1.11.4 (2026-04-22)
+
+### Bug Fixes
+
+- **lua**: Preserve LSP omnifunc when LSP client is attached
+  ([`13f0a7b`](https://github.com/ansh-info/ipynb.nvim/commit/13f0a7bcc4cfe76063da25a851111903fe71aece))
+
+- **lua**: Target correct buffer in LSP FileType autocmd and set filetype early
+  ([`4129100`](https://github.com/ansh-info/ipynb.nvim/commit/4129100ce9d6bdfd90f7d1ffa26da7f326757b56))
+
+
 ## v1.11.3 (2026-04-22)
 
 ### Bug Fixes
