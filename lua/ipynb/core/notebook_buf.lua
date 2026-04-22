@@ -132,7 +132,12 @@ local function sync_all_cells(bufnr)
       local source = cell.get_cell_source(bufnr, cs)
       nb.cells[cs.index].source = source
     else
-      utils.warn(("sync skipped cell %d: index out of range (notebook has %d cells)"):format(cs.index, nb_len))
+      utils.warn(
+        ("sync skipped cell %d: index out of range (notebook has %d cells)"):format(
+          cs.index,
+          nb_len
+        )
+      )
     end
   end
 end
