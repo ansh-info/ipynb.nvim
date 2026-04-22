@@ -1254,7 +1254,12 @@ function M.sync_sources_from_buf(bufnr, active_idx)
     local sm = vim.api.nvim_buf_get_extmark_by_id(bufnr, NS, cs.start_mark, {})
     if sm and #sm > 0 and sm[1] < line_count then
       if cs.index < 1 or cs.index > nb_len then
-        utils.warn(("sync skipped cell %d: index out of range (notebook has %d cells)"):format(cs.index, nb_len))
+        utils.warn(
+          ("sync skipped cell %d: index out of range (notebook has %d cells)"):format(
+            cs.index,
+            nb_len
+          )
+        )
       else
         local s = sm[1]
         local em = vim.api.nvim_buf_get_extmark_by_id(bufnr, NS, cs.end_mark, {})
