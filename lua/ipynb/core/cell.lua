@@ -1249,15 +1249,25 @@ function M.sync_sources_from_buf(bufnr, active_idx)
     cells_to_sync = state.cells
   end
 
+  local nb_len = #nb.cells
   for _, cs in ipairs(cells_to_sync) do
     local sm = vim.api.nvim_buf_get_extmark_by_id(bufnr, NS, cs.start_mark, {})
-    if sm and #sm > 0 and sm[1] < line_count and nb.cells[cs.index] then
-      local s = sm[1]
-      local em = vim.api.nvim_buf_get_extmark_by_id(bufnr, NS, cs.end_mark, {})
-      local e = (em and #em > 0) and em[1] or s
-      e = math.min(e, line_count - 1)
-      local lines = vim.api.nvim_buf_get_lines(bufnr, s, e + 1, false)
-      nb.cells[cs.index].source = table.concat(lines, "\n")
+    if sm and #sm > 0 and sm[1] < line_count then
+      if cs.index < 1 or cs.index > nb_len then
+        utils.warn(
+          ("sync skipped cell %d: index out of range (notebook has %d cells)"):format(
+            cs.index,
+            nb_len
+          )
+        )
+      else
+        local s = sm[1]
+        local em = vim.api.nvim_buf_get_extmark_by_id(bufnr, NS, cs.end_mark, {})
+        local e = (em and #em > 0) and em[1] or s
+        e = math.min(e, line_count - 1)
+        local lines = vim.api.nvim_buf_get_lines(bufnr, s, e + 1, false)
+        nb.cells[cs.index].source = table.concat(lines, "\n")
+      end
     end
   end
 end

@@ -126,9 +126,19 @@ local function sync_all_cells(bufnr)
     return
   end
 
+  local nb_len = #nb.cells
   for _, cs in ipairs(cells) do
-    local source = cell.get_cell_source(bufnr, cs)
-    nb.cells[cs.index].source = source
+    if cs.index >= 1 and cs.index <= nb_len then
+      local source = cell.get_cell_source(bufnr, cs)
+      nb.cells[cs.index].source = source
+    else
+      utils.warn(
+        ("sync skipped cell %d: index out of range (notebook has %d cells)"):format(
+          cs.index,
+          nb_len
+        )
+      )
+    end
   end
 end
 
