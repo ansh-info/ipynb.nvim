@@ -2,6 +2,23 @@
 
 <!-- version list -->
 
+## v1.11.6 (2026-04-22)
+
+### Bug Fixes
+
+- **lua**: Add bounds check to sync_all_cells to prevent save crash
+  ([`b3c9abe`](https://github.com/ansh-info/ipynb.nvim/commit/b3c9abee90abbde48e1456cd52072da118a62b2e))
+
+- **lua**: Format sync bounds warning for stylua compliance
+  ([`98b1176`](https://github.com/ansh-info/ipynb.nvim/commit/98b11762a50fd7228625ef7435c2696f050d4d90))
+
+- **lua**: Format sync bounds warning for stylua compliance
+  ([`ac85c6d`](https://github.com/ansh-info/ipynb.nvim/commit/ac85c6d03cdd719c66aa20bd5e3f463646f921bd))
+
+- **lua**: Warn instead of silent skip when sync index is out of range
+  ([`7dffc29`](https://github.com/ansh-info/ipynb.nvim/commit/7dffc29e02649a41f326679bd025d77d27356b7b))
+
+
 ## v1.11.5 (2026-04-22)
 
 ### Bug Fixes
