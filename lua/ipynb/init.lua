@@ -31,6 +31,9 @@ function M.setup(opts)
   end
   _setup_done = true
 
+  -- Seed the RNG so gen_cell_id() produces unique IDs across sessions.
+  math.randomseed(os.time() + (vim.uv or vim.loop).now())
+
   -- Merge user options into defaults.
   require("ipynb.config").setup(opts)
 
