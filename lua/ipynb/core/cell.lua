@@ -226,6 +226,8 @@ local function push_undo(bufnr, cursor_idx)
   state.redo_stack = {}
 end
 
+M.push_undo = push_undo
+
 --- Undo the last structural cell operation.
 ---@param bufnr integer
 ---@return boolean  true if a notebook-level undo was performed
