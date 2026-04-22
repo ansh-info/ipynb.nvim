@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.11.2 (2026-04-22)
+
+### Bug Fixes
+
+- **lua**: Seed math.randomseed in setup for unique cell IDs
+  ([`2955ef2`](https://github.com/ansh-info/ipynb.nvim/commit/2955ef262af7bf7866efe116e673f86db5e016bf))
+
+
 ## v1.11.1 (2026-04-21)
 
 ### Bug Fixes
