@@ -92,11 +92,10 @@ local function attach_lsp(bufnr)
   end
 
   -- Strategy 1: re-fire FileType so lspconfig autostart logic runs.
-  -- The buffer filetype is set by cell.render() from notebook metadata before
-  -- this function is called.  pattern= must match the actual filetype so the
-  -- correct LSP server attaches (e.g. r_language_server for R notebooks).
+  -- Use buffer= (not pattern=) so the event targets the correct buffer;
+  -- Neovim does not allow both at the same time.
   local buf_ft = vim.bo[bufnr].filetype
-  vim.api.nvim_exec_autocmds("FileType", { pattern = buf_ft, buffer = bufnr })
+  vim.api.nvim_exec_autocmds("FileType", { buffer = bufnr })
 
   -- Strategy 2: attach any already-running LSP client that serves this filetype.
   local get_clients = vim.lsp.get_clients or vim.lsp.get_active_clients
