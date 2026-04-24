@@ -209,10 +209,10 @@ function M.open(bufnr)
     local vars = parse_json_from_output(raw_text or "") or {}
     local lines, line_map = build_display(vars)
 
-    local width = 82
-    local height = math.min(#lines, math.floor(vim.o.lines * 0.7))
-    local row = math.floor((vim.o.lines - height) / 2)
-    local col = math.floor((vim.o.columns - width) / 2)
+    local width = math.max(1, math.min(82, vim.o.columns - 2))
+    local height = math.max(1, math.min(#lines, math.floor(vim.o.lines * 0.7)))
+    local row = math.max(0, math.floor((vim.o.lines - height) / 2))
+    local col = math.max(0, math.floor((vim.o.columns - width) / 2))
 
     local ibuf = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_lines(ibuf, 0, -1, false, lines)
@@ -284,8 +284,8 @@ function M.inspect_var(bufnr, var_name)
       table.remove(lines)
     end
 
-    local width = math.min(80, vim.o.columns - 4)
-    local height = math.min(#lines + 2, math.floor(vim.o.lines * 0.6))
+    local width = math.max(1, math.min(80, vim.o.columns - 4))
+    local height = math.max(1, math.min(#lines + 2, math.floor(vim.o.lines * 0.6)))
 
     local dbuf = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_lines(dbuf, 0, -1, false, lines)

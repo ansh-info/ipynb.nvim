@@ -275,8 +275,8 @@ function M.show_help()
   vim.bo[buf].modifiable = false
   vim.bo[buf].buftype = "nofile"
 
-  local width = math.min(44, vim.o.columns - 4)
-  local height = math.min(#lines, vim.o.lines - 4)
+  local width = math.max(1, math.min(44, vim.o.columns - 4))
+  local height = math.max(1, math.min(#lines, vim.o.lines - 4))
   local row = math.max(0, math.floor((vim.o.lines - height) / 2))
   local col = math.max(0, math.floor((vim.o.columns - width) / 2))
 
