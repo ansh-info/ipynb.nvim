@@ -2,6 +2,17 @@
 
 <!-- version list -->
 
+## v1.11.7 (2026-04-24)
+
+### Bug Fixes
+
+- **lua**: Guard floating window dimensions to prevent height=0 crash
+  ([`577a239`](https://github.com/ansh-info/ipynb.nvim/commit/577a2397499f3903e611b6ddfd641a50d3de6630))
+
+- **lua**: Guard show_help window dimensions for small terminals
+  ([`07298db`](https://github.com/ansh-info/ipynb.nvim/commit/07298dbcbe9ed76a4434ba77372dd1936199ae02))
+
+
 ## v1.11.6 (2026-04-22)
 
 ### Bug Fixes
