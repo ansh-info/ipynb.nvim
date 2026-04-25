@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.11.8 (2026-04-25)
+
+### Bug Fixes
+
+- **lua**: Wrap render body in pcall so integrity guard always clears
+  ([`7bc4ffc`](https://github.com/ansh-info/ipynb.nvim/commit/7bc4ffc22f47a8b00414334ad2547d229528f9f7))
+
+
 ## v1.11.7 (2026-04-24)
 
 ### Bug Fixes
