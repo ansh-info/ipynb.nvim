@@ -331,140 +331,146 @@ function M.render(bufnr, notebook)
 
   _integrity_guard[bufnr] = true
 
-  local state = get_state(bufnr)
+  local ok, render_err = pcall(function()
+    local state = get_state(bufnr)
 
-  -- Release output store, image placements, and re-entrancy guards for all
-  -- existing cells BEFORE the namespace wipe so old start_mark-based keys can
-  -- still be resolved.  Without this, every structural operation (move, delete,
-  -- duplicate, paste) leaks entries in output._store and image._placements,
-  -- and active image placements are never closed.
-  if state.cells and #state.cells > 0 then
-    local ok_out, output_mod = pcall(require, "ipynb.kernel.output")
-    if ok_out then
-      for _, cs in ipairs(state.cells) do
-        output_mod.clear(bufnr, cs)
+    -- Release output store, image placements, and re-entrancy guards for all
+    -- existing cells BEFORE the namespace wipe so old start_mark-based keys can
+    -- still be resolved.  Without this, every structural operation (move, delete,
+    -- duplicate, paste) leaks entries in output._store and image._placements,
+    -- and active image placements are never closed.
+    if state.cells and #state.cells > 0 then
+      local ok_out, output_mod = pcall(require, "ipynb.kernel.output")
+      if ok_out then
+        for _, cs in ipairs(state.cells) do
+          output_mod.clear(bufnr, cs)
+        end
       end
     end
-  end
 
-  state.notebook = notebook
-  state.cells = {}
+    state.notebook = notebook
+    state.cells = {}
 
-  -- Unlock the buffer for writing.
-  vim.bo[bufnr].modifiable = true
-  vim.bo[bufnr].readonly = false
+    -- Unlock the buffer for writing.
+    vim.bo[bufnr].modifiable = true
+    vim.bo[bufnr].readonly = false
 
-  -- Make all nvim_buf_set_lines calls undo-invisible.  Structural cell ops
-  -- are tracked by notebook-level undo (push_undo/notebook_undo), not by
-  -- Neovim's buffer undo tree.  This prevents the full buffer wipe-and-rewrite
-  -- from polluting the undo tree (#178).
-  local saved_ul = vim.bo[bufnr].undolevels
-  vim.bo[bufnr].undolevels = -1
+    -- Make all nvim_buf_set_lines calls undo-invisible.  Structural cell ops
+    -- are tracked by notebook-level undo (push_undo/notebook_undo), not by
+    -- Neovim's buffer undo tree.  This prevents the full buffer wipe-and-rewrite
+    -- from polluting the undo tree (#178).
+    local saved_ul = vim.bo[bufnr].undolevels
+    vim.bo[bufnr].undolevels = -1
 
-  -- Clear everything.
-  vim.api.nvim_buf_clear_namespace(bufnr, NS, 0, -1)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
+    -- Clear everything.
+    vim.api.nvim_buf_clear_namespace(bufnr, NS, 0, -1)
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
 
-  local win_width = buf_win_width(bufnr)
+    local win_width = buf_win_width(bufnr)
 
-  local current_line = 0 -- 0-based
+    local current_line = 0 -- 0-based
 
-  for i, cell in ipairs(notebook.cells) do
-    local source_lines = vim.split(cell.source, "\n", { plain = true })
-    -- Ensure at least one line so the cell is addressable.
-    if #source_lines == 0 then
-      source_lines = { "" }
-    end
+    for i, cell in ipairs(notebook.cells) do
+      local source_lines = vim.split(cell.source, "\n", { plain = true })
+      -- Ensure at least one line so the cell is addressable.
+      if #source_lines == 0 then
+        source_lines = { "" }
+      end
 
-    local start_line = current_line
+      local start_line = current_line
 
-    -- Insert source into buffer.
-    vim.api.nvim_buf_set_lines(bufnr, current_line, current_line, false, source_lines)
-    local end_line = current_line + #source_lines - 1 -- last line of this cell (0-based, inclusive)
+      -- Insert source into buffer.
+      vim.api.nvim_buf_set_lines(bufnr, current_line, current_line, false, source_lines)
+      local end_line = current_line + #source_lines - 1 -- last line of this cell (0-based, inclusive)
 
-    local language = require("ipynb.core.notebook").cell_language(notebook, cell)
+      local language = require("ipynb.core.notebook").cell_language(notebook, cell)
 
-    -- ── Top border extmark ──────────────────────────────────────────────
-    local top_vl = top_border(cell.cell_type, language, cell.execution_count, win_width)
-    local start_mark = vim.api.nvim_buf_set_extmark(bufnr, NS, start_line, 0, {
-      virt_lines = { top_vl },
-      virt_lines_above = true,
-      priority = 100,
-    })
+      -- ── Top border extmark ──────────────────────────────────────────────
+      local top_vl = top_border(cell.cell_type, language, cell.execution_count, win_width)
+      local start_mark = vim.api.nvim_buf_set_extmark(bufnr, NS, start_line, 0, {
+        virt_lines = { top_vl },
+        virt_lines_above = true,
+        priority = 100,
+      })
 
-    -- ── Bottom border extmark ───────────────────────────────────────────
-    local bot_vl = bottom_border(nil, nil, win_width)
-    local end_mark = vim.api.nvim_buf_set_extmark(bufnr, NS, end_line, 0, {
-      virt_lines = { bot_vl },
-      virt_lines_above = false,
-      priority = 100,
-    })
+      -- ── Bottom border extmark ───────────────────────────────────────────
+      local bot_vl = bottom_border(nil, nil, win_width)
+      local end_mark = vim.api.nvim_buf_set_extmark(bufnr, NS, end_line, 0, {
+        virt_lines = { bot_vl },
+        virt_lines_above = false,
+        priority = 100,
+      })
 
-    -- ── Record cell state ───────────────────────────────────────────────
-    state.cells[i] = {
-      index = i,
-      cell_id = cell.id, -- stable notebook cell id; used to remap kernel pending
-      cell_type = cell.cell_type,
-      language = language,
-      execution_count = cell.execution_count,
-      start_mark = start_mark,
-      end_mark = end_mark,
-      output_mark = nil,
-      bufnr = bufnr,
-      status = nil,
-      elapsed_ms = nil,
-    }
+      -- ── Record cell state ───────────────────────────────────────────────
+      state.cells[i] = {
+        index = i,
+        cell_id = cell.id, -- stable notebook cell id; used to remap kernel pending
+        cell_type = cell.cell_type,
+        language = language,
+        execution_count = cell.execution_count,
+        start_mark = start_mark,
+        end_mark = end_mark,
+        output_mark = nil,
+        bufnr = bufnr,
+        status = nil,
+        elapsed_ms = nil,
+      }
 
-    -- Restore saved outputs from the notebook file (deferred so extmarks
-    -- are fully placed before image positioning is attempted).
-    if cell.outputs and #cell.outputs > 0 then
-      local cs = state.cells[i]
-      vim.schedule(function()
-        if vim.api.nvim_buf_is_valid(bufnr) then
-          local ok, output = pcall(require, "ipynb.kernel.output")
-          if ok then
-            output.restore(bufnr, cs, cell.outputs)
+      -- Restore saved outputs from the notebook file (deferred so extmarks
+      -- are fully placed before image positioning is attempted).
+      if cell.outputs and #cell.outputs > 0 then
+        local cs = state.cells[i]
+        vim.schedule(function()
+          if vim.api.nvim_buf_is_valid(bufnr) then
+            local ok_r, output = pcall(require, "ipynb.kernel.output")
+            if ok_r then
+              output.restore(bufnr, cs, cell.outputs)
+            end
           end
+        end)
+      end
+
+      -- Advance: add a blank separator line between cells (not after the last).
+      current_line = end_line + 1
+      if i < #notebook.cells then
+        vim.api.nvim_buf_set_lines(bufnr, current_line, current_line, false, { "" })
+        current_line = current_line + 1
+      end
+    end
+
+    -- Set filetype from notebook kernel language for correct treesitter / LSP.
+    local ft = require("ipynb.core.notebook").notebook_language(notebook)
+    vim.bo[bufnr].filetype = ft
+
+    -- Restore undo tracking and record the undo baseline.
+    vim.bo[bufnr].undolevels = saved_ul
+    state.undo_base_seq = vim.fn.undotree().seq_cur or 0
+
+    -- Notify render hooks (e.g. kernel remap of pending cell_state refs).
+    -- state.cells is fully built at this point.
+    for _, hook in ipairs(_render_hooks) do
+      pcall(hook, bufnr, state.cells)
+    end
+
+    -- Apply markdown decorations after all cells are placed.
+    -- Deferred so extmark positions are stable before markdown.render() reads them.
+    vim.schedule(function()
+      if vim.api.nvim_buf_is_valid(bufnr) then
+        local ok_md, markdown = pcall(require, "ipynb.ui.markdown")
+        if ok_md then
+          markdown.render(bufnr)
         end
-      end)
-    end
+      end
+    end)
 
-    -- Advance: add a blank separator line between cells (not after the last).
-    current_line = end_line + 1
-    if i < #notebook.cells then
-      vim.api.nvim_buf_set_lines(bufnr, current_line, current_line, false, { "" })
-      current_line = current_line + 1
-    end
-  end
-
-  -- Set filetype from notebook kernel language for correct treesitter / LSP.
-  local ft = require("ipynb.core.notebook").notebook_language(notebook)
-  vim.bo[bufnr].filetype = ft
-
-  -- Restore undo tracking and record the undo baseline.
-  vim.bo[bufnr].undolevels = saved_ul
-  state.undo_base_seq = vim.fn.undotree().seq_cur or 0
+    utils.info(string.format("Loaded notebook: %d cells", #notebook.cells))
+  end)
 
   _integrity_guard[bufnr] = nil
 
-  -- Notify render hooks (e.g. kernel remap of pending cell_state refs).
-  -- state.cells is fully built at this point.
-  for _, hook in ipairs(_render_hooks) do
-    pcall(hook, bufnr, state.cells)
+  if not ok then
+    error(render_err)
   end
-
-  -- Apply markdown decorations after all cells are placed.
-  -- Deferred so extmark positions are stable before markdown.render() reads them.
-  vim.schedule(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      local ok, markdown = pcall(require, "ipynb.ui.markdown")
-      if ok then
-        markdown.render(bufnr)
-      end
-    end
-  end)
-
-  utils.info(string.format("Loaded notebook: %d cells", #notebook.cells))
 end
 
 -- ── Navigation helpers ────────────────────────────────────────────────────────
