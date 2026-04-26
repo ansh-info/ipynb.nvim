@@ -1343,10 +1343,7 @@ function M.check_structural_integrity(bufnr)
       local lines = vim.api.nvim_buf_get_lines(bufnr, s, e + 1, false)
       local orig = nb.cells[cs.index]
       if orig then
-        local rebuilt = {}
-        for k, v in pairs(orig) do
-          rebuilt[k] = v
-        end
+        local rebuilt = vim.deepcopy(orig)
         rebuilt.source = table.concat(lines, "\n")
         new_cells[#new_cells + 1] = rebuilt
       end
