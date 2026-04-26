@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.11.9 (2026-04-26)
+
+### Bug Fixes
+
+- **lua**: Deep copy cells in integrity rebuild to prevent undo corruption
+  ([`7d68a7c`](https://github.com/ansh-info/ipynb.nvim/commit/7d68a7c1b153aa6b05c5a7da11900c3885df74c0))
+
+
 ## v1.11.8 (2026-04-25)
 
 ### Bug Fixes
