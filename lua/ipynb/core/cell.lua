@@ -473,6 +473,20 @@ function M.render(bufnr, notebook)
   end
 end
 
+--- Find a cell_state by its stable cell_id after a render may have rebuilt state.cells.
+---@param bufnr integer
+---@param cell_id string
+---@return table|nil cell_state
+local function find_cell_by_id(bufnr, cell_id)
+  local state = get_state(bufnr)
+  for _, cs in ipairs(state.cells) do
+    if cs.cell_id == cell_id then
+      return cs
+    end
+  end
+  return nil
+end
+
 -- ── Navigation helpers ────────────────────────────────────────────────────────
 
 --- Return the line range [start, end] (0-based, inclusive) of a cell by
@@ -628,16 +642,12 @@ function M.add_cell_below(bufnr, idx, cell_type)
 
   M.render(bufnr, notebook)
 
-  -- Defer cursor placement until after render-triggered autocmds settle.
-  -- M.render() rebuilds all extmarks; CursorMoved fires during the rebuild
-  -- and snap_cursor_to_nearest can fire with incomplete state.  Waiting one
-  -- tick ensures extmarks are stable before we move the cursor.
-  local captured_idx = idx
+  local target_id = new_cell.id
   vim.schedule(function()
     if not vim.api.nvim_buf_is_valid(bufnr) then
       return
     end
-    local new_cs = state.cells[captured_idx + 1]
+    local new_cs = find_cell_by_id(bufnr, target_id)
     if new_cs then
       local s, _ = cell_line_range(bufnr, new_cs)
       vim.api.nvim_win_set_cursor(0, { s + 1, 0 })
@@ -674,12 +684,12 @@ function M.add_cell_above(bufnr, idx, cell_type)
 
   M.render(bufnr, notebook)
 
-  local captured_idx = idx
+  local target_id = new_cell.id
   vim.schedule(function()
     if not vim.api.nvim_buf_is_valid(bufnr) then
       return
     end
-    local new_cs = state.cells[captured_idx]
+    local new_cs = find_cell_by_id(bufnr, target_id)
     if new_cs then
       local s, _ = cell_line_range(bufnr, new_cs)
       vim.api.nvim_win_set_cursor(0, { s + 1, 0 })
@@ -722,15 +732,15 @@ function M.move_cell_up(bufnr, idx)
   M.sync_sources_from_buf(bufnr, nil)
   push_undo(bufnr, idx)
 
+  local target_id = notebook.cells[idx].id
   notebook.cells[idx], notebook.cells[idx - 1] = notebook.cells[idx - 1], notebook.cells[idx]
   M.render(bufnr, notebook)
 
-  local captured = idx - 1
   vim.schedule(function()
     if not vim.api.nvim_buf_is_valid(bufnr) then
       return
     end
-    local cs = state.cells[captured]
+    local cs = find_cell_by_id(bufnr, target_id)
     if cs then
       local s, _ = cell_line_range(bufnr, cs)
       vim.api.nvim_win_set_cursor(0, { s + 1, 0 })
@@ -751,15 +761,15 @@ function M.move_cell_down(bufnr, idx)
   M.sync_sources_from_buf(bufnr, nil)
   push_undo(bufnr, idx)
 
+  local target_id = notebook.cells[idx].id
   notebook.cells[idx], notebook.cells[idx + 1] = notebook.cells[idx + 1], notebook.cells[idx]
   M.render(bufnr, notebook)
 
-  local captured = idx + 1
   vim.schedule(function()
     if not vim.api.nvim_buf_is_valid(bufnr) then
       return
     end
-    local cs = state.cells[captured]
+    local cs = find_cell_by_id(bufnr, target_id)
     if cs then
       local s, _ = cell_line_range(bufnr, cs)
       vim.api.nvim_win_set_cursor(0, { s + 1, 0 })
@@ -791,12 +801,12 @@ function M.duplicate_cell(bufnr, idx)
   table.insert(notebook.cells, idx + 1, copy)
   M.render(bufnr, notebook)
 
-  local captured = idx + 1
+  local target_id = copy.id
   vim.schedule(function()
     if not vim.api.nvim_buf_is_valid(bufnr) then
       return
     end
-    local cs = state.cells[captured]
+    local cs = find_cell_by_id(bufnr, target_id)
     if cs then
       local s, _ = cell_line_range(bufnr, cs)
       vim.api.nvim_win_set_cursor(0, { s + 1, 0 })
@@ -852,12 +862,12 @@ function M.paste_cell(bufnr, idx)
   table.insert(notebook.cells, idx + 1, pasted)
   M.render(bufnr, notebook)
 
-  local captured = idx + 1
+  local target_id = pasted.id
   vim.schedule(function()
     if not vim.api.nvim_buf_is_valid(bufnr) then
       return
     end
-    local cs = state.cells[captured]
+    local cs = find_cell_by_id(bufnr, target_id)
     if cs then
       local s, _ = cell_line_range(bufnr, cs)
       vim.api.nvim_win_set_cursor(0, { s + 1, 0 })
@@ -892,12 +902,12 @@ function M.toggle_cell_type(bufnr, idx)
 
   M.render(bufnr, notebook)
 
-  local captured = idx
+  local target_id = c.id
   vim.schedule(function()
     if not vim.api.nvim_buf_is_valid(bufnr) then
       return
     end
-    local cs = state.cells[captured]
+    local cs = find_cell_by_id(bufnr, target_id)
     if cs then
       local s, _ = cell_line_range(bufnr, cs)
       vim.api.nvim_win_set_cursor(0, { s + 1, 0 })
@@ -960,13 +970,12 @@ function M.split_cell(bufnr, idx)
 
   M.render(bufnr, notebook)
 
-  -- Place cursor at the start of the new lower cell.
-  local captured = idx + 1
+  local target_id = new_cell.id
   vim.schedule(function()
     if not vim.api.nvim_buf_is_valid(bufnr) then
       return
     end
-    local new_cs = state.cells[captured]
+    local new_cs = find_cell_by_id(bufnr, target_id)
     if new_cs then
       local ns, _ = cell_line_range(bufnr, new_cs)
       vim.api.nvim_win_set_cursor(0, { ns + 1, 0 })
@@ -1014,13 +1023,12 @@ function M.merge_cell_below(bufnr, idx)
 
   M.render(bufnr, notebook)
 
-  -- Place cursor at the original cell position.
-  local captured = idx
+  local target_id = upper.id
   vim.schedule(function()
     if not vim.api.nvim_buf_is_valid(bufnr) then
       return
     end
-    local cs = state.cells[captured]
+    local cs = find_cell_by_id(bufnr, target_id)
     if cs then
       local ns, _ = cell_line_range(bufnr, cs)
       vim.api.nvim_win_set_cursor(0, { ns + 1, 0 })
