@@ -390,37 +390,45 @@ def cmd_complete(data: dict) -> None:
     if _kc is None:
         send({"type": "error_internal", "message": "No kernel connected."})
         return
-    code       = data.get("code", "")
-    cursor_pos = data.get("cursor_pos", len(code))
-    lua_id     = data.get("msg_id", "")
-    try:
-        zmq_id  = _kc.complete(code, cursor_pos)
-        content = _get_shell_reply(zmq_id)
-        send({
-            "type":         "complete",
-            "matches":      content.get("matches", []),
-            "cursor_start": content.get("cursor_start", cursor_pos),
-            "cursor_end":   content.get("cursor_end",   cursor_pos),
-            "msg_id":       lua_id,
-        })
-    except Exception as exc:
-        send({"type": "error_internal", "message": f"Complete failed: {exc}"})
+
+    def _do_complete() -> None:
+        code       = data.get("code", "")
+        cursor_pos = data.get("cursor_pos", len(code))
+        lua_id     = data.get("msg_id", "")
+        try:
+            zmq_id  = _kc.complete(code, cursor_pos)
+            content = _get_shell_reply(zmq_id)
+            send({
+                "type":         "complete",
+                "matches":      content.get("matches", []),
+                "cursor_start": content.get("cursor_start", cursor_pos),
+                "cursor_end":   content.get("cursor_end",   cursor_pos),
+                "msg_id":       lua_id,
+            })
+        except Exception as exc:
+            send({"type": "error_internal", "message": f"Complete failed: {exc}"})
+
+    threading.Thread(target=_do_complete, daemon=True).start()
 
 
 def cmd_inspect(data: dict) -> None:
     if _kc is None:
         send({"type": "error_internal", "message": "No kernel connected."})
         return
-    code       = data.get("code", "")
-    cursor_pos = data.get("cursor_pos", len(code))
-    lua_id     = data.get("msg_id", "")
-    try:
-        zmq_id   = _kc.inspect(code, cursor_pos)
-        content  = _get_shell_reply(zmq_id)
-        raw_text = content.get("data", {}).get("text/plain", "")
-        send({"type": "inspect", "text": _strip_ansi(raw_text), "msg_id": lua_id})
-    except Exception as exc:
-        send({"type": "error_internal", "message": f"Inspect failed: {exc}"})
+
+    def _do_inspect() -> None:
+        code       = data.get("code", "")
+        cursor_pos = data.get("cursor_pos", len(code))
+        lua_id     = data.get("msg_id", "")
+        try:
+            zmq_id   = _kc.inspect(code, cursor_pos)
+            content  = _get_shell_reply(zmq_id)
+            raw_text = content.get("data", {}).get("text/plain", "")
+            send({"type": "inspect", "text": _strip_ansi(raw_text), "msg_id": lua_id})
+        except Exception as exc:
+            send({"type": "error_internal", "message": f"Inspect failed: {exc}"})
+
+    threading.Thread(target=_do_inspect, daemon=True).start()
 
 
 def cmd_interrupt(_data: dict) -> None:
