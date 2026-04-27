@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.11.10 (2026-04-27)
+
+### Bug Fixes
+
+- **lua**: Use NormalFloat instead of FloatBorder for help window text
+  ([`ab7bedd`](https://github.com/ansh-info/ipynb.nvim/commit/ab7bedd67c7fc85fda3dabc5e53e65e839446c27))
+
+
 ## v1.11.9 (2026-04-26)
 
 ### Bug Fixes
