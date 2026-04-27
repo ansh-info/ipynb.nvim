@@ -223,10 +223,25 @@ function M._render(bufnr, cell_state)
     end
   end
 
+  local cid = cell_state.cell_id
+
   -- Render in the main event loop so extmarks and image positions are stable.
   vim.schedule(function()
     if not vim.api.nvim_buf_is_valid(bufnr) then
       return
+    end
+
+    -- Re-resolve cell_state by stable cell_id.  A VimResized or structural
+    -- edit between scheduling and execution replaces all extmarks, making the
+    -- captured cell_state stale.
+    local cs = cell_state
+    if cid then
+      for _, c in ipairs(cell.get_cells(bufnr) or {}) do
+        if c.cell_id == cid then
+          cs = c
+          break
+        end
+      end
     end
 
     -- Guard against re-entrant renders.
@@ -240,11 +255,11 @@ function M._render(bufnr, cell_state)
     _active[key] = true
 
     -- 1. Place text virt_lines.
-    cell.set_output_virt_lines(bufnr, cell_state, all_vl)
+    cell.set_output_virt_lines(bufnr, cs, all_vl)
 
     -- 2. Clear old image renders.
     if ok_img then
-      image.clear(bufnr, cell_state)
+      image.clear(bufnr, cs)
     end
 
     -- 3. Render image chunks in a nested vim.schedule so that Neovim has one
@@ -259,14 +274,24 @@ function M._render(bufnr, cell_state)
           _active[key] = nil
           return
         end
+        -- Re-resolve again for the nested tick.
+        local cs2 = cs
+        if cid then
+          for _, c in ipairs(cell.get_cells(bufnr) or {}) do
+            if c.cell_id == cid then
+              cs2 = c
+              break
+            end
+          end
+        end
         -- render() creates one snacks Placement per chunk; placements stack
         -- at end_row and move with the buffer automatically.
-        image.render(bufnr, cell_state, img_chunks)
+        image.render(bufnr, cs2, img_chunks)
         -- Release guard and process any render that arrived during this cycle.
         _active[key] = nil
         if _pending[key] then
           _pending[key] = nil
-          M._render(bufnr, cell_state)
+          M._render(bufnr, cs2)
         end
       end)
     else
@@ -274,7 +299,7 @@ function M._render(bufnr, cell_state)
       _active[key] = nil
       if _pending[key] then
         _pending[key] = nil
-        M._render(bufnr, cell_state)
+        M._render(bufnr, cs)
       end
     end
   end)
