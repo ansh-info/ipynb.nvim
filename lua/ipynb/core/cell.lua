@@ -34,13 +34,7 @@ local NS = vim.api.nvim_create_namespace("ipynb_cells")
 
 -- ── Highlight groups (defined once on first load) ─────────────────────────────
 
-local hl_defined = false
 local function define_highlights()
-  if hl_defined then
-    return
-  end
-  hl_defined = true
-
   -- Cell border colours.
   vim.api.nvim_set_hl(0, "IpynbCellBorder", { fg = "#4a9eff", bold = true })
   vim.api.nvim_set_hl(0, "IpynbCellBorderMd", { fg = "#f9c74f", bold = true })
@@ -1369,5 +1363,7 @@ end
 function M.namespace()
   return NS
 end
+
+M.define_highlights = define_highlights
 
 return M
