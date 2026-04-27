@@ -22,6 +22,7 @@ local M = {}
 ---@field show_execution_count boolean
 ---@field show_elapsed_time boolean
 ---@field output_max_lines integer   Max virt_lines per output block (0 = unlimited)
+---@field output_max_store integer   Max chunks kept per cell in the output store (0 = unlimited)
 
 ---@class BorderChars
 ---@field top_left string
@@ -102,6 +103,7 @@ M.defaults = {
     show_execution_count = true,
     show_elapsed_time = true,
     output_max_lines = 50,
+    output_max_store = 5000,
   },
 
   keymaps = {
