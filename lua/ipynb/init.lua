@@ -77,6 +77,17 @@ function M._register_autocmds()
     end,
     desc = "ipynb: save .ipynb notebook",
   })
+
+  vim.api.nvim_create_autocmd("VimLeavePre", {
+    group = group,
+    callback = function()
+      local ok, kernel = pcall(require, "ipynb.kernel")
+      if ok then
+        kernel.stop_all()
+      end
+    end,
+    desc = "ipynb: shut down all kernels before Neovim exits",
+  })
 end
 
 -- ── Convenience public API ────────────────────────────────────────────────────
