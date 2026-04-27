@@ -273,4 +273,9 @@ function M.has_ansi(text)
   return text:find("\27%[") ~= nil
 end
 
+function M.reset_highlights()
+  _hl_cache = {}
+  _hl_counter = 0
+end
+
 return M
