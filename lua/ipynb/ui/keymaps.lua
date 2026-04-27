@@ -299,7 +299,7 @@ function M.show_help()
     end, { buffer = buf, noremap = true, silent = true })
   end
 
-  vim.api.nvim_set_option_value("winhl", "Normal:FloatBorder", { win = win })
+  vim.api.nvim_set_option_value("winhl", "Normal:NormalFloat", { win = win })
 end
 
 return M
