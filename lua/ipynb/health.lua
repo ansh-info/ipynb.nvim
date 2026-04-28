@@ -14,17 +14,19 @@ end
 
 local function check_python()
   vim.health.start("Python runtime")
-  local out = vim.fn.system("python3 --version 2>&1")
+  local cfg = require("ipynb.config").get()
+  local py = cfg.kernel.python_path
+  local out = vim.fn.system(py .. " --version 2>&1")
   local ver = out:match("Python (%d+%.%d+)")
   if not ver then
-    vim.health.error("python3 not found in PATH", { "Install Python >= 3.12" })
+    vim.health.error(py .. " not found in PATH", { "Install Python >= 3.12" })
     return
   end
   local major, minor = ver:match("(%d+)%.(%d+)")
-  if tonumber(major) >= 3 and tonumber(minor) >= 12 then
-    vim.health.ok("python3 " .. ver)
+  if tonumber(major) > 3 or (tonumber(major) == 3 and tonumber(minor) >= 12) then
+    vim.health.ok(py .. " " .. ver)
   else
-    vim.health.warn("python3 " .. ver .. " found; >= 3.12 recommended")
+    vim.health.warn(py .. " " .. ver .. " found; >= 3.12 recommended")
   end
 end
 
