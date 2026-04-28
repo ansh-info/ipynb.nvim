@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.11.11 (2026-04-28)
+
+### Bug Fixes
+
+- **lua**: Use configured python_path in health check and fix version comparison
+  ([`110ecde`](https://github.com/ansh-info/ipynb.nvim/commit/110ecde18c4f88446be90b13397a181801f5d496))
+
+
 ## v1.11.10 (2026-04-27)
 
 ### Bug Fixes
