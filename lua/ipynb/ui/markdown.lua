@@ -30,13 +30,7 @@ local NS = vim.api.nvim_create_namespace("ipynb_markdown")
 
 -- ── Highlights ────────────────────────────────────────────────────────────────
 
-local _hl_done = false
 local function define_highlights()
-  if _hl_done then
-    return
-  end
-  _hl_done = true
-
   vim.api.nvim_set_hl(0, "IpynbMdH1", { fg = "#ff9e64", bold = true, underline = true })
   vim.api.nvim_set_hl(0, "IpynbMdH2", { fg = "#e0af68", bold = true })
   vim.api.nvim_set_hl(0, "IpynbMdH3", { fg = "#9ece6a", bold = true })
@@ -340,5 +334,7 @@ end
 function M.clear(bufnr)
   vim.api.nvim_buf_clear_namespace(bufnr, NS, 0, -1)
 end
+
+M.define_highlights = define_highlights
 
 return M

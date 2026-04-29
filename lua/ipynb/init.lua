@@ -77,6 +77,23 @@ function M._register_autocmds()
     end,
     desc = "ipynb: save .ipynb notebook",
   })
+
+  vim.api.nvim_create_autocmd("ColorScheme", {
+    group = group,
+    callback = function()
+      require("ipynb.core.cell").define_highlights()
+      require("ipynb.ui.ansi").reset_highlights()
+      local ok_md, md = pcall(require, "ipynb.ui.markdown")
+      if ok_md then
+        md.define_highlights()
+      end
+      local ok_ins, ins = pcall(require, "ipynb.ui.inspector")
+      if ok_ins then
+        ins.define_highlights()
+      end
+    end,
+    desc = "ipynb: re-register highlights after colorscheme change",
+  })
 end
 
 -- ── Convenience public API ────────────────────────────────────────────────────
