@@ -2,6 +2,26 @@
 
 <!-- version list -->
 
+## v1.11.12 (2026-04-29)
+
+### Bug Fixes
+
+- **lua**: Add reset_highlights to clear ANSI highlight cache on colorscheme change
+  ([`1c09227`](https://github.com/ansh-info/ipynb.nvim/commit/1c0922720e8e39a335b2ae42047fc5cef1795554))
+
+- **lua**: Make cell highlight definitions idempotent and export for reuse
+  ([`34c299f`](https://github.com/ansh-info/ipynb.nvim/commit/34c299fae00756e9de02dc7c926d303cb8a0c171))
+
+- **lua**: Make inspector highlight definitions idempotent and export for reuse
+  ([`f957906`](https://github.com/ansh-info/ipynb.nvim/commit/f9579066fb09fa3b6d28b72082a5cff566910f86))
+
+- **lua**: Make markdown highlight definitions idempotent and export for reuse
+  ([`50407a9`](https://github.com/ansh-info/ipynb.nvim/commit/50407a9808e438b0c1c74898dcfaec396190e854))
+
+- **lua**: Register ColorScheme autocmd to re-create highlights after theme change
+  ([`b382e06`](https://github.com/ansh-info/ipynb.nvim/commit/b382e0619770c3d3b2e5c4cd0ce3c4a049dab9e0))
+
+
 ## v1.11.11 (2026-04-28)
 
 ### Bug Fixes
