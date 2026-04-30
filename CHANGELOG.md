@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.11.13 (2026-04-30)
+
+### Bug Fixes
+
+- **lua**: Wait for kernel readiness in batch run functions to prevent error flood
+  ([`e109966`](https://github.com/ansh-info/ipynb.nvim/commit/e109966f4172bfc11a6174098896c7379d9b9059))
+
+
 ## v1.11.12 (2026-04-29)
 
 ### Bug Fixes
