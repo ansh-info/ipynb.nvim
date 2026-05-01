@@ -59,6 +59,10 @@ from jupyter_client.blocking import BlockingKernelClient
 # the main stdin-reading thread both call send().
 _stdout_lock = threading.Lock()
 
+# Serialises _kc.execute() + _pending[zmq_id] write so the IOPub thread
+# cannot observe a reply before the mapping exists.
+_pending_lock = threading.Lock()
+
 # ── ANSI escape handling ──────────────────────────────────────────────────────
 # Full strip: removes ALL ANSI escapes (SGR + cursor movement + OSC + charset).
 # Used only for contexts that render plain text (e.g. inspect/documentation).
@@ -173,7 +177,8 @@ def send(msg: dict) -> None:
 
 def _lua_id(zmq_parent_id: str) -> str:
     """Translate a ZMQ parent msg_id to the originating Lua msg_id (or keep as-is)."""
-    return _pending.get(zmq_parent_id, zmq_parent_id)
+    with _pending_lock:
+        return _pending.get(zmq_parent_id, zmq_parent_id)
 
 
 # ── IOPub listener (background thread) ────────────────────────────────────────
@@ -215,8 +220,9 @@ def _process_iopub(msg: dict) -> None:
         state = content.get("execution_state", "")
         send({"type": "status", "state": state, "msg_id": lid})
         # Clean up pending map when the kernel goes back to idle.
-        if state == "idle" and zmq_pid in _pending:
-            del _pending[zmq_pid]
+        with _pending_lock:
+            if state == "idle" and zmq_pid in _pending:
+                del _pending[zmq_pid]
 
     elif msg_type == "stream":
         send({
@@ -379,9 +385,9 @@ def cmd_execute(data: dict) -> None:
     code   = data.get("code", "")
     lua_id = data.get("msg_id", "")
     try:
-        zmq_id = _kc.execute(code, store_history=True)
-        # Register the ZMQ → Lua mapping so the IOPub thread can translate.
-        _pending[zmq_id] = lua_id
+        with _pending_lock:
+            zmq_id = _kc.execute(code, store_history=True)
+            _pending[zmq_id] = lua_id
     except Exception as exc:
         send({"type": "error_internal", "message": f"Execute failed: {exc}"})
 
