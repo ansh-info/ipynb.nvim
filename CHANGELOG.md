@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.11.14 (2026-05-01)
+
+### Bug Fixes
+
+- **python**: Add _pending_lock to prevent IOPub race with execute mapping
+  ([`ac1551d`](https://github.com/ansh-info/ipynb.nvim/commit/ac1551d5f62ced97cea1ca5d258f5df862b31ef4))
+
+
 ## v1.11.13 (2026-04-30)
 
 ### Bug Fixes
