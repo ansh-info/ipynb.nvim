@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.11.15 (2026-05-03)
+
+### Bug Fixes
+
+- **lua**: Prevent overlapping kernel restarts with _restart_pending flag
+  ([`bbc3d0b`](https://github.com/ansh-info/ipynb.nvim/commit/bbc3d0b9645017f27f765fe303b432ec8ed83770))
+
+
 ## v1.11.14 (2026-05-01)
 
 ### Bug Fixes
