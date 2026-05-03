@@ -416,6 +416,10 @@ local function spawn_bridge(bufnr)
               )
               local crash_times_saved = recent
               vim.defer_fn(function()
+                local cur = _state[bufnr]
+                if cur and cur._restart_pending then
+                  return
+                end
                 _state[bufnr] = nil
                 local new_st = get_state(bufnr)
                 new_st._crash_times = crash_times_saved
@@ -497,16 +501,15 @@ end
 function M.restart(bufnr)
   local s = get_state(bufnr)
   local kn = s.kernel_name
+  s._restart_pending = true
   output.clear_all(bufnr, cell.get_cells(bufnr))
   if s.job_id then
-    -- Kernel is still running - stop it gracefully then start fresh.
     M.stop(bufnr)
     vim.defer_fn(function()
       _state[bufnr] = nil
       M.start(bufnr, kn)
     end, 700)
   else
-    -- Kernel already stopped (e.g. after a crash) - start fresh immediately.
     _state[bufnr] = nil
     M.start(bufnr, kn)
   end
