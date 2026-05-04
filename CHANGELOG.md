@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.11.16 (2026-05-04)
+
+### Bug Fixes
+
+- **lua**: Use stable cell IDs instead of captured indices in deferred callbacks
+  ([`82181b2`](https://github.com/ansh-info/ipynb.nvim/commit/82181b2a2a588840a5679715dae94fcee52a921e))
+
+
 ## v1.11.15 (2026-05-03)
 
 ### Bug Fixes
