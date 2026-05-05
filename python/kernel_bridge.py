@@ -127,14 +127,23 @@ def _venv_kernel_python() -> Optional[str]:
     return None
 
 
+_shell_stash: list[dict] = []
+
+
 def _get_shell_reply(zmq_id: str, timeout: float = 10.0) -> dict:
     """Fetch the shell reply whose parent msg_id matches zmq_id.
 
     In jupyter_client >= 8.x, KernelClient.complete() and .inspect() return
     the ZMQ msg_id (str) rather than the reply dict.  This helper polls
-    get_shell_msg() until the matching reply arrives, discarding unrelated
-    messages (e.g. execute_reply for a concurrently running cell).
+    get_shell_msg() until the matching reply arrives.  Non-matching messages
+    are stashed and re-checked on the next call so they are never lost.
     """
+    # Check stashed messages first.
+    for i, msg in enumerate(_shell_stash):
+        if msg.get("parent_header", {}).get("msg_id") == zmq_id:
+            _shell_stash.pop(i)
+            return msg.get("content", {})
+
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         remaining = deadline - time.monotonic()
@@ -146,6 +155,7 @@ def _get_shell_reply(zmq_id: str, timeout: float = 10.0) -> dict:
             break
         if reply.get("parent_header", {}).get("msg_id") == zmq_id:
             return reply.get("content", {})
+        _shell_stash.append(reply)
     return {}
 
 
