@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.11.17 (2026-05-05)
+
+### Bug Fixes
+
+- **python**: Stash non-matching shell replies instead of discarding them
+  ([`7f9261b`](https://github.com/ansh-info/ipynb.nvim/commit/7f9261bdb2cbff37465db8630e1e33806eb78b79))
+
+
 ## v1.11.16 (2026-05-04)
 
 ### Bug Fixes
