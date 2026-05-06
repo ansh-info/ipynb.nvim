@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.11.18 (2026-05-06)
+
+### Bug Fixes
+
+- **lua**: Re-resolve cell_state in deferred render to survive extmark wipes
+  ([`3c8ef3a`](https://github.com/ansh-info/ipynb.nvim/commit/3c8ef3aa97a85233fb964b98cb7b3ec2a93c0aa7))
+
+
 ## v1.11.17 (2026-05-05)
 
 ### Bug Fixes
