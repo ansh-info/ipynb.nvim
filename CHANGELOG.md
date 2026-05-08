@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.11.19 (2026-05-08)
+
+### Bug Fixes
+
+- **python**: Run complete and inspect handlers in background threads
+  ([`ef2d173`](https://github.com/ansh-info/ipynb.nvim/commit/ef2d173d75ce86403bc0f79dd68c30047f910767))
+
+
 ## v1.11.18 (2026-05-06)
 
 ### Bug Fixes
