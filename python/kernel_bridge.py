@@ -59,6 +59,10 @@ from jupyter_client.blocking import BlockingKernelClient
 # the main stdin-reading thread both call send().
 _stdout_lock = threading.Lock()
 
+# Serialises _kc.execute() + _pending[zmq_id] write so the IOPub thread
+# cannot observe a reply before the mapping exists.
+_pending_lock = threading.Lock()
+
 # ── ANSI escape handling ──────────────────────────────────────────────────────
 # Full strip: removes ALL ANSI escapes (SGR + cursor movement + OSC + charset).
 # Used only for contexts that render plain text (e.g. inspect/documentation).
@@ -123,14 +127,23 @@ def _venv_kernel_python() -> Optional[str]:
     return None
 
 
+_shell_stash: list[dict] = []
+
+
 def _get_shell_reply(zmq_id: str, timeout: float = 10.0) -> dict:
     """Fetch the shell reply whose parent msg_id matches zmq_id.
 
     In jupyter_client >= 8.x, KernelClient.complete() and .inspect() return
     the ZMQ msg_id (str) rather than the reply dict.  This helper polls
-    get_shell_msg() until the matching reply arrives, discarding unrelated
-    messages (e.g. execute_reply for a concurrently running cell).
+    get_shell_msg() until the matching reply arrives.  Non-matching messages
+    are stashed and re-checked on the next call so they are never lost.
     """
+    # Check stashed messages first.
+    for i, msg in enumerate(_shell_stash):
+        if msg.get("parent_header", {}).get("msg_id") == zmq_id:
+            _shell_stash.pop(i)
+            return msg.get("content", {})
+
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         remaining = deadline - time.monotonic()
@@ -142,6 +155,7 @@ def _get_shell_reply(zmq_id: str, timeout: float = 10.0) -> dict:
             break
         if reply.get("parent_header", {}).get("msg_id") == zmq_id:
             return reply.get("content", {})
+        _shell_stash.append(reply)
     return {}
 
 
@@ -173,7 +187,8 @@ def send(msg: dict) -> None:
 
 def _lua_id(zmq_parent_id: str) -> str:
     """Translate a ZMQ parent msg_id to the originating Lua msg_id (or keep as-is)."""
-    return _pending.get(zmq_parent_id, zmq_parent_id)
+    with _pending_lock:
+        return _pending.get(zmq_parent_id, zmq_parent_id)
 
 
 # ── IOPub listener (background thread) ────────────────────────────────────────
@@ -215,8 +230,9 @@ def _process_iopub(msg: dict) -> None:
         state = content.get("execution_state", "")
         send({"type": "status", "state": state, "msg_id": lid})
         # Clean up pending map when the kernel goes back to idle.
-        if state == "idle" and zmq_pid in _pending:
-            del _pending[zmq_pid]
+        with _pending_lock:
+            if state == "idle" and zmq_pid in _pending:
+                del _pending[zmq_pid]
 
     elif msg_type == "stream":
         send({
@@ -379,9 +395,9 @@ def cmd_execute(data: dict) -> None:
     code   = data.get("code", "")
     lua_id = data.get("msg_id", "")
     try:
-        zmq_id = _kc.execute(code, store_history=True)
-        # Register the ZMQ → Lua mapping so the IOPub thread can translate.
-        _pending[zmq_id] = lua_id
+        with _pending_lock:
+            zmq_id = _kc.execute(code, store_history=True)
+            _pending[zmq_id] = lua_id
     except Exception as exc:
         send({"type": "error_internal", "message": f"Execute failed: {exc}"})
 
@@ -390,37 +406,45 @@ def cmd_complete(data: dict) -> None:
     if _kc is None:
         send({"type": "error_internal", "message": "No kernel connected."})
         return
-    code       = data.get("code", "")
-    cursor_pos = data.get("cursor_pos", len(code))
-    lua_id     = data.get("msg_id", "")
-    try:
-        zmq_id  = _kc.complete(code, cursor_pos)
-        content = _get_shell_reply(zmq_id)
-        send({
-            "type":         "complete",
-            "matches":      content.get("matches", []),
-            "cursor_start": content.get("cursor_start", cursor_pos),
-            "cursor_end":   content.get("cursor_end",   cursor_pos),
-            "msg_id":       lua_id,
-        })
-    except Exception as exc:
-        send({"type": "error_internal", "message": f"Complete failed: {exc}"})
+
+    def _do_complete() -> None:
+        code       = data.get("code", "")
+        cursor_pos = data.get("cursor_pos", len(code))
+        lua_id     = data.get("msg_id", "")
+        try:
+            zmq_id  = _kc.complete(code, cursor_pos)
+            content = _get_shell_reply(zmq_id)
+            send({
+                "type":         "complete",
+                "matches":      content.get("matches", []),
+                "cursor_start": content.get("cursor_start", cursor_pos),
+                "cursor_end":   content.get("cursor_end",   cursor_pos),
+                "msg_id":       lua_id,
+            })
+        except Exception as exc:
+            send({"type": "error_internal", "message": f"Complete failed: {exc}"})
+
+    threading.Thread(target=_do_complete, daemon=True).start()
 
 
 def cmd_inspect(data: dict) -> None:
     if _kc is None:
         send({"type": "error_internal", "message": "No kernel connected."})
         return
-    code       = data.get("code", "")
-    cursor_pos = data.get("cursor_pos", len(code))
-    lua_id     = data.get("msg_id", "")
-    try:
-        zmq_id   = _kc.inspect(code, cursor_pos)
-        content  = _get_shell_reply(zmq_id)
-        raw_text = content.get("data", {}).get("text/plain", "")
-        send({"type": "inspect", "text": _strip_ansi(raw_text), "msg_id": lua_id})
-    except Exception as exc:
-        send({"type": "error_internal", "message": f"Inspect failed: {exc}"})
+
+    def _do_inspect() -> None:
+        code       = data.get("code", "")
+        cursor_pos = data.get("cursor_pos", len(code))
+        lua_id     = data.get("msg_id", "")
+        try:
+            zmq_id   = _kc.inspect(code, cursor_pos)
+            content  = _get_shell_reply(zmq_id)
+            raw_text = content.get("data", {}).get("text/plain", "")
+            send({"type": "inspect", "text": _strip_ansi(raw_text), "msg_id": lua_id})
+        except Exception as exc:
+            send({"type": "error_internal", "message": f"Inspect failed: {exc}"})
+
+    threading.Thread(target=_do_inspect, daemon=True).start()
 
 
 def cmd_interrupt(_data: dict) -> None:

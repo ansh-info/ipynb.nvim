@@ -2,6 +2,98 @@
 
 <!-- version list -->
 
+## v1.11.19 (2026-05-08)
+
+### Bug Fixes
+
+- **python**: Run complete and inspect handlers in background threads
+  ([`ef2d173`](https://github.com/ansh-info/ipynb.nvim/commit/ef2d173d75ce86403bc0f79dd68c30047f910767))
+
+
+## v1.11.18 (2026-05-06)
+
+### Bug Fixes
+
+- **lua**: Re-resolve cell_state in deferred render to survive extmark wipes
+  ([`3c8ef3a`](https://github.com/ansh-info/ipynb.nvim/commit/3c8ef3aa97a85233fb964b98cb7b3ec2a93c0aa7))
+
+
+## v1.11.17 (2026-05-05)
+
+### Bug Fixes
+
+- **python**: Stash non-matching shell replies instead of discarding them
+  ([`7f9261b`](https://github.com/ansh-info/ipynb.nvim/commit/7f9261bdb2cbff37465db8630e1e33806eb78b79))
+
+
+## v1.11.16 (2026-05-04)
+
+### Bug Fixes
+
+- **lua**: Use stable cell IDs instead of captured indices in deferred callbacks
+  ([`82181b2`](https://github.com/ansh-info/ipynb.nvim/commit/82181b2a2a588840a5679715dae94fcee52a921e))
+
+
+## v1.11.15 (2026-05-03)
+
+### Bug Fixes
+
+- **lua**: Prevent overlapping kernel restarts with _restart_pending flag
+  ([`bbc3d0b`](https://github.com/ansh-info/ipynb.nvim/commit/bbc3d0b9645017f27f765fe303b432ec8ed83770))
+
+
+## v1.11.14 (2026-05-01)
+
+### Bug Fixes
+
+- **python**: Add _pending_lock to prevent IOPub race with execute mapping
+  ([`ac1551d`](https://github.com/ansh-info/ipynb.nvim/commit/ac1551d5f62ced97cea1ca5d258f5df862b31ef4))
+
+
+## v1.11.13 (2026-04-30)
+
+### Bug Fixes
+
+- **lua**: Wait for kernel readiness in batch run functions to prevent error flood
+  ([`e109966`](https://github.com/ansh-info/ipynb.nvim/commit/e109966f4172bfc11a6174098896c7379d9b9059))
+
+
+## v1.11.12 (2026-04-29)
+
+### Bug Fixes
+
+- **lua**: Add reset_highlights to clear ANSI highlight cache on colorscheme change
+  ([`1c09227`](https://github.com/ansh-info/ipynb.nvim/commit/1c0922720e8e39a335b2ae42047fc5cef1795554))
+
+- **lua**: Make cell highlight definitions idempotent and export for reuse
+  ([`34c299f`](https://github.com/ansh-info/ipynb.nvim/commit/34c299fae00756e9de02dc7c926d303cb8a0c171))
+
+- **lua**: Make inspector highlight definitions idempotent and export for reuse
+  ([`f957906`](https://github.com/ansh-info/ipynb.nvim/commit/f9579066fb09fa3b6d28b72082a5cff566910f86))
+
+- **lua**: Make markdown highlight definitions idempotent and export for reuse
+  ([`50407a9`](https://github.com/ansh-info/ipynb.nvim/commit/50407a9808e438b0c1c74898dcfaec396190e854))
+
+- **lua**: Register ColorScheme autocmd to re-create highlights after theme change
+  ([`b382e06`](https://github.com/ansh-info/ipynb.nvim/commit/b382e0619770c3d3b2e5c4cd0ce3c4a049dab9e0))
+
+
+## v1.11.11 (2026-04-28)
+
+### Bug Fixes
+
+- **lua**: Use configured python_path in health check and fix version comparison
+  ([`110ecde`](https://github.com/ansh-info/ipynb.nvim/commit/110ecde18c4f88446be90b13397a181801f5d496))
+
+
+## v1.11.10 (2026-04-27)
+
+### Bug Fixes
+
+- **lua**: Use NormalFloat instead of FloatBorder for help window text
+  ([`ab7bedd`](https://github.com/ansh-info/ipynb.nvim/commit/ab7bedd67c7fc85fda3dabc5e53e65e839446c27))
+
+
 ## v1.11.9 (2026-04-26)
 
 ### Bug Fixes

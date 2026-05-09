@@ -55,12 +55,7 @@ del __jvim_json, __jvim_skip, __jvim_vars, __jvim_name, __jvim_val, __jvim_type,
 
 -- ── Highlight groups ──────────────────────────────────────────────────────────
 
-local _hl_done = false
 local function define_highlights()
-  if _hl_done then
-    return
-  end
-  _hl_done = true
   vim.api.nvim_set_hl(0, "IpynbInspectorHeader", { fg = "#7aa2f7", bold = true })
   vim.api.nvim_set_hl(0, "IpynbInspectorName", { fg = "#c0caf5" })
   vim.api.nvim_set_hl(0, "IpynbInspectorType", { fg = "#e0af68", italic = true })
@@ -313,5 +308,7 @@ function M.inspect_var(bufnr, var_name)
     end
   end)
 end
+
+M.define_highlights = define_highlights
 
 return M

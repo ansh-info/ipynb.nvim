@@ -416,6 +416,10 @@ local function spawn_bridge(bufnr)
               )
               local crash_times_saved = recent
               vim.defer_fn(function()
+                local cur = _state[bufnr]
+                if cur and cur._restart_pending then
+                  return
+                end
                 _state[bufnr] = nil
                 local new_st = get_state(bufnr)
                 new_st._crash_times = crash_times_saved
@@ -497,16 +501,15 @@ end
 function M.restart(bufnr)
   local s = get_state(bufnr)
   local kn = s.kernel_name
+  s._restart_pending = true
   output.clear_all(bufnr, cell.get_cells(bufnr))
   if s.job_id then
-    -- Kernel is still running - stop it gracefully then start fresh.
     M.stop(bufnr)
     vim.defer_fn(function()
       _state[bufnr] = nil
       M.start(bufnr, kn)
     end, 700)
   else
-    -- Kernel already stopped (e.g. after a crash) - start fresh immediately.
     _state[bufnr] = nil
     M.start(bufnr, kn)
   end
@@ -632,15 +635,46 @@ function M.run_cell_and_advance(bufnr)
   end
 end
 
+--- Poll until the kernel is idle, then call fn(). Gives up after 30s.
+---@param bufnr integer
+---@param fn function
+local function await_ready_then(bufnr, fn)
+  local retries = 0
+  local max_retries = 60
+  local function poll()
+    local st = get_state(bufnr)
+    if not st.job_id or st.status == "stopped" then
+      return
+    end
+    retries = retries + 1
+    if retries > max_retries then
+      utils.warn("Kernel did not become ready after 30s - aborting")
+      return
+    end
+    if st.status == "idle" then
+      fn()
+    else
+      vim.defer_fn(poll, 500)
+    end
+  end
+  vim.defer_fn(poll, 500)
+end
+
 --- Execute every code cell in the notebook.
 ---@param bufnr integer
 function M.run_all(bufnr)
   local s = get_state(bufnr)
-  local cells = cell.get_cells(bufnr)
   if not s.job_id then
     utils.warn("No kernel running.")
     return
   end
+  if s.status ~= "idle" then
+    await_ready_then(bufnr, function()
+      M.run_all(bufnr)
+    end)
+    return
+  end
+  local cells = cell.get_cells(bufnr)
   local _, cur_idx = cell.cell_at_cursor(bufnr)
   cell.push_undo(bufnr, cur_idx)
   for _, cs in ipairs(cells) do
@@ -667,6 +701,12 @@ function M.run_all_above(bufnr)
     utils.warn("No kernel running.")
     return
   end
+  if s.status ~= "idle" then
+    await_ready_then(bufnr, function()
+      M.run_all_above(bufnr)
+    end)
+    return
+  end
   cell.push_undo(bufnr, idx)
   for _, entry in ipairs(cell.cells_above(bufnr, idx)) do
     local cs = entry.cell_state
@@ -689,11 +729,17 @@ function M.run_all_below(bufnr)
     return
   end
   local s = get_state(bufnr)
-  local cells = cell.get_cells(bufnr)
   if not s.job_id then
     utils.warn("No kernel running.")
     return
   end
+  if s.status ~= "idle" then
+    await_ready_then(bufnr, function()
+      M.run_all_below(bufnr)
+    end)
+    return
+  end
+  local cells = cell.get_cells(bufnr)
   cell.push_undo(bufnr, idx)
   for i = idx, #cells do
     local cs = cells[i]
