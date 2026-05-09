@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.11.20 (2026-05-09)
+
+### Bug Fixes
+
+- **lua**: Close VimLeavePre autocmd block after merge conflict resolution
+  ([`e6c1e3c`](https://github.com/ansh-info/ipynb.nvim/commit/e6c1e3c23904475de2cc9f270d2d6099396b8ed2))
+
+
 ## v1.11.19 (2026-05-08)
 
 ### Bug Fixes
