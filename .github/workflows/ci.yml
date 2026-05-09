@@ -45,6 +45,17 @@ jobs:
       - name: Verify kernel_bridge.py compiles
         run: uv run --project python/ python -m py_compile python/kernel_bridge.py
 
+  # ── Python unit tests (pytest) ──────────────────────────────────────────────
+  python-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+
+      - name: Run Python tests
+        run: uv run --project python/ --extra dev pytest python/tests/ -v
+
   # ── Headless integration tests ──────────────────────────────────────────────
   headless-test:
     runs-on: ubuntu-latest
