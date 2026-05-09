@@ -635,6 +635,46 @@ function M.run_cell_and_advance(bufnr)
   end
 end
 
+--- Execute the visually selected lines within the current cell.
+--- Output is attached to the cell the cursor is in.
+---@param bufnr integer
+function M.run_selection(bufnr)
+  local cs, _ = cell.cell_at_cursor(bufnr)
+  if not cs then
+    utils.warn("Cursor is not inside a cell.")
+    return
+  end
+  if cs.cell_type ~= "code" then
+    utils.info("Not a code cell - skipping execution.")
+    return
+  end
+
+  local s = get_state(bufnr)
+  if not s.job_id then
+    utils.warn("No kernel running. Use :IpynbKernelStart.")
+    return
+  end
+
+  local start_line = vim.fn.line("'<") - 1
+  local end_line = vim.fn.line("'>") - 1
+  local lines = vim.api.nvim_buf_get_lines(bufnr, start_line, end_line + 1, false)
+  local code = table.concat(lines, "\n")
+
+  if vim.trim(code) == "" then
+    utils.info("Selection is empty.")
+    return
+  end
+
+  clear_cell_output(bufnr, cs)
+
+  local mid = next_msg_id(bufnr)
+  s.pending[mid] = { cell_state = cs, cell_id = cs.cell_id, bufnr = bufnr, start_ms = vim.uv.now() }
+
+  cell.update_status(bufnr, cs, "busy", nil)
+  utils.info("Executing selection [" .. mid .. "]: " .. vim.trim(code):sub(1, 40))
+  send(bufnr, { cmd = "execute", code = code, msg_id = mid })
+end
+
 --- Poll until the kernel is idle, then call fn(). Gives up after 30s.
 ---@param bufnr integer
 ---@param fn function
