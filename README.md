@@ -247,11 +247,16 @@ or `setup()` to override.
 
 ```lua
 require("ipynb").setup({
+  cell = {
+    highlight_cell = true,       -- highlight the active cell background
+    hl_group       = "CursorLine",
+  },
   kernel = {
     default_kernel   = "python3",
     auto_start       = true,       -- start kernel automatically on first run
     python_path      = "python3",  -- fallback if uv venv is not found
     restart_on_crash = false,      -- auto-restart kernel after unexpected crash
+    connection_dir   = "~/.local/share/jupyter/runtime",
   },
   ui = {
     show_execution_count = true,
@@ -289,7 +294,8 @@ require("ipynb").setup({
     merge_cell          = "<leader>cm",
   },
   notebook = {
-    auto_save = false,
+    auto_save            = false,
+    default_kernel_name  = "python3",
   },
 })
 ```
