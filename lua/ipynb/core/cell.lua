@@ -119,7 +119,10 @@ local function bottom_border(status, elapsed_ms, width)
   -- Status icon + elapsed time.
   local meta = ""
   if status == "busy" then
-    meta = "  … "
+    local spinner_frames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }
+    local frame_idx = elapsed_ms and (math.floor(elapsed_ms / 100) % #spinner_frames + 1) or 1
+    local secs = elapsed_ms and elapsed_ms / 1000 or 0
+    meta = "  " .. spinner_frames[frame_idx] .. string.format(" %.1fs ", secs)
   elseif status == "error" then
     meta = "  ✗ "
   elseif status == "idle" and elapsed_ms and cfg.ui.show_elapsed_time then
@@ -1063,12 +1066,24 @@ function M.clear_output(bufnr, cell_state)
   M.set_output_virt_lines(bufnr, cell_state, {})
 end
 
+--- Stop the spinner timer for a cell if one is running.
+---@param cell_state table
+local function stop_spinner(cell_state)
+  if cell_state._spinner_timer then
+    cell_state._spinner_timer:stop()
+    cell_state._spinner_timer:close()
+    cell_state._spinner_timer = nil
+  end
+  cell_state._exec_start_ms = nil
+end
+
 --- Update the bottom border of a cell to show status + elapsed time.
 ---@param bufnr integer
 ---@param cell_state table
 ---@param status "idle"|"busy"|"error"
 ---@param elapsed_ms integer|nil
 function M.update_status(bufnr, cell_state, status, elapsed_ms)
+  stop_spinner(cell_state)
   cell_state.status = status
   cell_state.elapsed_ms = elapsed_ms
 
@@ -1082,6 +1097,33 @@ function M.update_status(bufnr, cell_state, status, elapsed_ms)
     virt_lines_above = false,
     priority = 100,
   })
+
+  if status == "busy" then
+    cell_state._exec_start_ms = vim.uv.now()
+    local timer = vim.uv.new_timer()
+    cell_state._spinner_timer = timer
+    timer:start(100, 100, vim.schedule_wrap(function()
+      if not cell_state._spinner_timer or cell_state.status ~= "busy" then
+        stop_spinner(cell_state)
+        return
+      end
+      local now_elapsed = vim.uv.now() - cell_state._exec_start_ms
+      local w = buf_win_width(bufnr)
+      local vl = bottom_border("busy", now_elapsed, w)
+      local ok, row = pcall(function()
+        local _, er = cell_line_range(bufnr, cell_state)
+        return er
+      end)
+      if ok and row then
+        pcall(vim.api.nvim_buf_set_extmark, bufnr, NS, row, 0, {
+          id = cell_state.end_mark,
+          virt_lines = { vl },
+          virt_lines_above = false,
+          priority = 100,
+        })
+      end
+    end))
+  end
 end
 
 --- Update the top border execution count display.
