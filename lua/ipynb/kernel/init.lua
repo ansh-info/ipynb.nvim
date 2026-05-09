@@ -863,9 +863,28 @@ end
 function M.on_buf_delete(bufnr)
   local s = _state[bufnr]
   if s and s.job_id then
-    vim.fn.jobstop(s.job_id)
+    s.status = "stopped"
+    send(bufnr, { cmd = "shutdown" })
+    local job = s.job_id
+    vim.defer_fn(function()
+      pcall(vim.fn.jobstop, job)
+    end, 500)
   end
   _state[bufnr] = nil
+end
+
+--- Gracefully shut down all active kernel bridges.
+--- Called from VimLeavePre to avoid orphaned ipykernel processes.
+function M.stop_all()
+  for bufnr, s in pairs(_state) do
+    if s.job_id then
+      s.status = "stopped"
+      pcall(vim.fn.chansend, s.job_id, vim.fn.json_encode({ cmd = "shutdown" }) .. "\n")
+      pcall(vim.fn.jobwait, { s.job_id }, 1000)
+      pcall(vim.fn.jobstop, s.job_id)
+    end
+    _state[bufnr] = nil
+  end
 end
 
 -- ── Post-render hook: remap stale pending cell_state references ───────────────
