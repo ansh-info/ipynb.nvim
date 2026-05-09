@@ -87,6 +87,8 @@ function M._register_autocmds()
       end
     end,
     desc = "ipynb: shut down all kernels before Neovim exits",
+  })
+
   vim.api.nvim_create_autocmd("ColorScheme", {
     group = group,
     callback = function()
