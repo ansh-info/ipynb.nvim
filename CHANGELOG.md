@@ -2,6 +2,20 @@
 
 <!-- version list -->
 
+## v1.11.21 (2026-05-11)
+
+### Bug Fixes
+
+- **lua**: Add output_max_store config option for chunk eviction
+  ([`b90a590`](https://github.com/ansh-info/ipynb.nvim/commit/b90a590710485e3a25e4bf408facb106bd65cd92))
+
+- **lua**: Add output_max_store to test config stub
+  ([`f5f0882`](https://github.com/ansh-info/ipynb.nvim/commit/f5f0882459e63b9a831570d32a7a3416523b76b8))
+
+- **lua**: Evict oldest chunks when output store exceeds max_store limit
+  ([`4a4cb83`](https://github.com/ansh-info/ipynb.nvim/commit/4a4cb8370a89ffe7e26e4e3f70a834fd865370e1))
+
+
 ## v1.11.20 (2026-05-09)
 
 ### Bug Fixes
