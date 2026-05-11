@@ -20,7 +20,7 @@ describe("ipynb.output", function()
   local function make_config_stub(max_lines)
     return {
       get = function()
-        return { ui = { output_max_lines = max_lines or 50 } }
+        return { ui = { output_max_lines = max_lines or 50, output_max_store = 0 } }
       end,
     }
   end

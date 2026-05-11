@@ -178,7 +178,15 @@ function M.append(bufnr, cell_state, chunk)
   if not _store[key] then
     _store[key] = {}
   end
-  _store[key][#_store[key] + 1] = chunk
+  local store = _store[key]
+  store[#store + 1] = chunk
+
+  local max_store = config.get().ui.output_max_store
+  if max_store > 0 then
+    while #store > max_store do
+      table.remove(store, 1)
+    end
+  end
 
   M._render(bufnr, cell_state)
 end
