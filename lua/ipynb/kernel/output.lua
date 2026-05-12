@@ -35,7 +35,7 @@ local HL = {
 }
 
 -- ── Per-cell output accumulator ───────────────────────────────────────────────
--- Key: bufnr .. ":" .. cell_state.start_mark   (unique per cell per buffer)
+-- Key: bufnr .. ":" .. cell_state.cell_id   (stable across renders)
 -- Value: list of chunk tables
 local _store = {}
 
@@ -51,7 +51,7 @@ local _active = {}
 local _pending = {}
 
 local function cell_key(bufnr, cell_state)
-  return tostring(bufnr) .. ":" .. tostring(cell_state.start_mark)
+  return tostring(bufnr) .. ":" .. tostring(cell_state.cell_id)
 end
 
 --- Return accumulated chunks for a cell (empty list if none).

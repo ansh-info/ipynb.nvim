@@ -57,7 +57,7 @@ describe("ipynb.output", function()
   end)
 
   local function fake_cell(mark_id)
-    return { start_mark = mark_id or 1 }
+    return { start_mark = mark_id or 1, cell_id = "cell_" .. tostring(mark_id or 1) }
   end
 
   -- ── M.get_chunks() ───────────────────────────────────────────────────────────
