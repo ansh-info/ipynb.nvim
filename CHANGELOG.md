@@ -2,6 +2,17 @@
 
 <!-- version list -->
 
+## v1.11.22 (2026-05-12)
+
+### Bug Fixes
+
+- **lua**: Add cell_id to test fake_cell stub for stable store key
+  ([`dcca78f`](https://github.com/ansh-info/ipynb.nvim/commit/dcca78fb7db8183bb7fb5f8eca0ef22765223cfd))
+
+- **lua**: Use stable cell_id instead of start_mark for output store key
+  ([`eb36235`](https://github.com/ansh-info/ipynb.nvim/commit/eb3623551015cbe453bfb227a2e0be163d01abf1))
+
+
 ## v1.11.21 (2026-05-11)
 
 ### Bug Fixes
