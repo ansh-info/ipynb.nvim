@@ -250,6 +250,22 @@ function M.setup()
     end
   end, { desc = "Merge the current cell with the cell below" })
 
+  -- ── Navigation commands ─────────────────────────────────────────────────
+
+  vim.api.nvim_create_user_command("IpynbGotoCell", function(args)
+    local cell_mod = require("ipynb.core.cell")
+    local bufnr = vim.api.nvim_get_current_buf()
+    local n = tonumber(args.args)
+    if not n then
+      vim.notify("Usage: :IpynbGotoCell <number>", vim.log.levels.WARN)
+      return
+    end
+    cell_mod.goto_cell(bufnr, n)
+  end, {
+    nargs = 1,
+    desc = "Jump to cell N (1-based index)",
+  })
+
   -- ── Output commands ───────────────────────────────────────────────────
 
   vim.api.nvim_create_user_command("IpynbClearOutput", function()
