@@ -9,11 +9,11 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v4
         with: { fetch-depth: 0, ref: "${{ github.ref_name }}" }
       - name: Force release branch to workflow SHA
         run: git reset --hard ${{ github.sha }}
-      - uses: actions/setup-python@v6.2.0
+      - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - uses: python-semantic-release/python-semantic-release@v10.5.3
         with:
