@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.11.23 (2026-05-20)
+
+### Bug Fixes
+
+- **config**: Use existing action versions in release workflow
+  ([`95b1747`](https://github.com/ansh-info/ipynb.nvim/commit/95b1747964fdc0bb601690c07c2988e84e6a0d88))
+
+
 ## v1.11.22 (2026-05-12)
 
 ### Bug Fixes
