@@ -1,7 +1,7 @@
 [project]
 name = "ipynb"
 version = "0.1.0"
-description = "Add your description here"
+description = "ZMQ kernel bridge daemon for ipynb.nvim - Jupyter kernel management via JSON-line stdio"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
