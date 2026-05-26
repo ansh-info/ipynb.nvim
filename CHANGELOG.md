@@ -2,6 +2,17 @@
 
 <!-- version list -->
 
+## v1.12.0 (2026-05-26)
+
+### Features
+
+- **lua**: Add :IpynbGotoCell N command for cell navigation
+  ([`2aa9846`](https://github.com/ansh-info/ipynb.nvim/commit/2aa9846536502c047f2dc20e4495083d92841a56))
+
+- **lua**: Add goto_cell(bufnr, n) for jumping to cell by index
+  ([`cd791f4`](https://github.com/ansh-info/ipynb.nvim/commit/cd791f46580b4cb468c5f16666e8be85605706db))
+
+
 ## v1.11.23 (2026-05-20)
 
 ### Bug Fixes

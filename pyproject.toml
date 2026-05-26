@@ -1,6 +1,6 @@
 [project]
 name = "ipynb"
-version = "1.11.23"
+version = "1.12.0"
 description = "Neovim plugin for editing Jupyter notebooks natively with kernel execution and inline output"
 readme = "README.md"
 requires-python = ">=3.12"
