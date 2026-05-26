@@ -580,6 +580,20 @@ function M.goto_prev_cell(bufnr)
   vim.api.nvim_win_set_cursor(0, { s + 1, 0 })
 end
 
+--- Jump to cell N (1-based index).
+---@param bufnr integer
+---@param n integer
+function M.goto_cell(bufnr, n)
+  local state = get_state(bufnr)
+  if n < 1 or n > #state.cells then
+    utils.warn("Cell " .. n .. " does not exist (notebook has " .. #state.cells .. " cells)")
+    return
+  end
+  local cs = state.cells[n]
+  local s, _ = cell_line_range(bufnr, cs)
+  vim.api.nvim_win_set_cursor(0, { s + 1, 0 })
+end
+
 -- ── Cell source extraction ────────────────────────────────────────────────────
 
 --- Return the current source text of a cell as a string, read from the buffer.
