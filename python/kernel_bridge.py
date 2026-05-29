@@ -209,6 +209,30 @@ def _iopub_listener() -> None:
             pass
 
 
+def _stdin_listener() -> None:
+    """Drain the stdin channel for input_request messages from the kernel."""
+    global _running
+    while _running:
+        if _kc is None:
+            time.sleep(0.05)
+            continue
+        try:
+            msg = _kc.get_stdin_msg(timeout=0.1)
+            msg_type = msg.get("header", {}).get("msg_type", "")
+            if msg_type == "input_request":
+                content = msg.get("content", {})
+                zmq_pid = msg.get("parent_header", {}).get("msg_id", "")
+                lid = _lua_id(zmq_pid)
+                send({
+                    "type": "input_request",
+                    "prompt": content.get("prompt", ""),
+                    "password": content.get("password", False),
+                    "msg_id": lid,
+                })
+        except Exception:
+            pass
+
+
 def _process_iopub(msg: dict) -> None:
     """Translate a single IOPub message into a JSON-line sent to Neovim."""
     msg_type = msg.get("header", {}).get("msg_type", "")
@@ -294,11 +318,17 @@ def _process_iopub(msg: dict) -> None:
 
 # ── Command handlers ───────────────────────────────────────────────────────────
 
+_stdin_thread: Optional[threading.Thread] = None
+
+
 def _start_iopub_thread() -> None:
-    global _iopub_thread
+    global _iopub_thread, _stdin_thread
     if _iopub_thread is None or not _iopub_thread.is_alive():
         _iopub_thread = threading.Thread(target=_iopub_listener, daemon=True)
         _iopub_thread.start()
+    if _stdin_thread is None or not _stdin_thread.is_alive():
+        _stdin_thread = threading.Thread(target=_stdin_listener, daemon=True)
+        _stdin_thread.start()
 
 
 def cmd_start(data: dict) -> None:
@@ -462,6 +492,18 @@ def cmd_interrupt(_data: dict) -> None:
         send({"type": "error_internal", "message": "No kernel connected."})
 
 
+def cmd_input_reply(data: dict) -> None:
+    """Send an input_reply to the kernel (response to input() prompt)."""
+    if _kc is None:
+        send({"type": "error_internal", "message": "No kernel connected."})
+        return
+    value = data.get("value", "")
+    try:
+        _kc.input(value)
+    except Exception as exc:
+        send({"type": "error_internal", "message": f"Input reply failed: {exc}"})
+
+
 def cmd_shutdown(_data: dict) -> None:
     global _running
     _running = False
@@ -487,6 +529,7 @@ _HANDLERS: dict = {
     "inspect":     cmd_inspect,
     "kernel_info": cmd_kernel_info,
     "interrupt":   cmd_interrupt,
+    "input_reply": cmd_input_reply,
     "shutdown":    cmd_shutdown,
 }
 

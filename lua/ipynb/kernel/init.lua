@@ -293,6 +293,16 @@ local function dispatch(bufnr, msg)
       s.pending[id] = nil
     end
 
+  -- ── input_request (kernel calling input()) ─────────────────────────────────
+  elseif t == "input_request" then
+    local prompt = msg.prompt or ""
+    local is_password = msg.password or false
+    vim.schedule(function()
+      local input_fn = is_password and vim.fn.inputsecret or vim.fn.input
+      local value = input_fn(prompt ~= "" and prompt or "Input: ")
+      send(bufnr, { cmd = "input_reply", value = value })
+    end)
+
   -- ── internal bridge errors ────────────────────────────────────────────────
   elseif t == "error_internal" then
     -- Suppress "No kernel connected" during the brief startup window — the
