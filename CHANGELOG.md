@@ -2,6 +2,25 @@
 
 <!-- version list -->
 
+## v1.13.0 (2026-05-29)
+
+### Documentation
+
+- **docs**: Add missing config options to README
+  ([`e87379c`](https://github.com/ansh-info/ipynb.nvim/commit/e87379c96c9c7c159486f42ce7abe09dd960c0f0))
+
+- **python**: Replace placeholder description in kernel bridge pyproject.toml
+  ([`7184384`](https://github.com/ansh-info/ipynb.nvim/commit/7184384584f6c99627782640215ed2308be2ece7))
+
+### Features
+
+- **lua**: Prompt user on kernel input_request via vim.fn.input
+  ([`a7c0fb0`](https://github.com/ansh-info/ipynb.nvim/commit/a7c0fb0e8db905d2d0c29529f1744538513f3188))
+
+- **python**: Handle input_request and input_reply in kernel bridge
+  ([`dfb40f2`](https://github.com/ansh-info/ipynb.nvim/commit/dfb40f2fe6fb2a6ec7ff5e280154c390df9fb807))
+
+
 ## v1.12.0 (2026-05-26)
 
 ### Features
