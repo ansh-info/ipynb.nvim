@@ -122,6 +122,14 @@ function M.setup()
     end
   end, { desc = "Execute all cells below the cursor" })
 
+  vim.api.nvim_create_user_command("IpynbRunSelection", function()
+    local bufnr = vim.api.nvim_get_current_buf()
+    local ok, kernel = pcall(require, "ipynb.kernel")
+    if ok then
+      kernel.run_selection(bufnr)
+    end
+  end, { range = true, desc = "Execute the visually selected lines" })
+
   -- ── Cell editing commands ──────────────────────────────────────────────
 
   vim.api.nvim_create_user_command("IpynbCellAdd", function()
