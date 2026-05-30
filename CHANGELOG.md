@@ -2,6 +2,17 @@
 
 <!-- version list -->
 
+## v1.14.0 (2026-05-30)
+
+### Features
+
+- **lua**: Add :IpynbRunSelection command for visual execution
+  ([`d021385`](https://github.com/ansh-info/ipynb.nvim/commit/d021385c4e5cd850bb2480a839c62731d4d26331))
+
+- **lua**: Add run_selection() for executing visual selection
+  ([`4cffb5b`](https://github.com/ansh-info/ipynb.nvim/commit/4cffb5b10bff7b24f37d152cbb2b5ee00d29fcf0))
+
+
 ## v1.13.0 (2026-05-29)
 
 ### Documentation
