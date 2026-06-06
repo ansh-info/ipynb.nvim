@@ -2,6 +2,29 @@
 
 <!-- version list -->
 
+## v1.15.0 (2026-06-06)
+
+### Chores
+
+- **python**: Add pytest dev dependency
+  ([`18387d3`](https://github.com/ansh-info/ipynb.nvim/commit/18387d3cfcb1beb94af9831bb7238b76031b0a30))
+
+### Continuous Integration
+
+- Add python-test job to run pytest in CI
+  ([`05732f9`](https://github.com/ansh-info/ipynb.nvim/commit/05732f932a07442ce20de251fb897c8c0a709f9b))
+
+### Features
+
+- **lua**: Add animated spinner with elapsed time for busy cells
+  ([`2d2d178`](https://github.com/ansh-info/ipynb.nvim/commit/2d2d17870f2a1f5000dff5f6a3bbb23343bdb22f))
+
+### Testing
+
+- **python**: Add pytest unit tests for kernel_bridge.py
+  ([`17e8b68`](https://github.com/ansh-info/ipynb.nvim/commit/17e8b680ffea0c84cb59e5e08c409583b8b84b79))
+
+
 ## v1.14.0 (2026-05-30)
 
 ### Features
